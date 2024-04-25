@@ -15,8 +15,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.7</maven.compiler.source>
-    <maven.compiler.target>1.7</maven.compiler.target>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
 
   <dependencies>
@@ -69,6 +69,21 @@
         </plugin>
       </plugins>
     </pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>de.hpi.ai4se.mutations</groupId>
+				<artifactId>mutations-maven-plugin</artifactId>
+				<version>0.0.1</version>
+				<executions>
+					<execution>
+						<id>generate-mutations</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
   </build>
   <reporting>
     <plugins>
