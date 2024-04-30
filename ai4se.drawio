@@ -1,0 +1,94 @@
+<mxfile host="Electron" modified="2024-04-30T10:57:54.361Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.2.5 Chrome/120.0.6099.109 Electron/28.1.0 Safari/537.36" etag="cZxasxvbIia8RyGDTWki" version="24.2.5" type="device">
+  <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
+    <mxGraphModel dx="1495" dy="898" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
+        <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-1" value="Maven Plugin" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="40" y="80" width="340" height="440" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="nVs6uc6tPWpQJNTOph-O-1" source="nVs6uc6tPWpQJNTOph-O-3" target="nVs6uc6tPWpQJNTOph-O-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-3" value="Scan Source Files&lt;br&gt;(for Annotations)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="nVs6uc6tPWpQJNTOph-O-1">
+          <mxGeometry x="70" y="20" width="170" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="nVs6uc6tPWpQJNTOph-O-1" source="nVs6uc6tPWpQJNTOph-O-5" target="nVs6uc6tPWpQJNTOph-O-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-5" value="Generate Mutations" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="nVs6uc6tPWpQJNTOph-O-1">
+          <mxGeometry x="70" y="70" width="170" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="nVs6uc6tPWpQJNTOph-O-1" source="nVs6uc6tPWpQJNTOph-O-6" target="nVs6uc6tPWpQJNTOph-O-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-6" value="Generate Java Class Files" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="nVs6uc6tPWpQJNTOph-O-1">
+          <mxGeometry x="70" y="120" width="170" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-10" value="Run Tests" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;" vertex="1" parent="nVs6uc6tPWpQJNTOph-O-1">
+          <mxGeometry x="70" y="190" width="170" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="nVs6uc6tPWpQJNTOph-O-10" source="nVs6uc6tPWpQJNTOph-O-16" target="nVs6uc6tPWpQJNTOph-O-18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-16" value="Replace Class with Mutation" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="nVs6uc6tPWpQJNTOph-O-10">
+          <mxGeometry x="40" y="30" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="nVs6uc6tPWpQJNTOph-O-10" source="nVs6uc6tPWpQJNTOph-O-18" target="nVs6uc6tPWpQJNTOph-O-20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-18" value="Run Test Suit" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="nVs6uc6tPWpQJNTOph-O-10">
+          <mxGeometry x="40" y="100" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-20" value="Evaluate Result" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="nVs6uc6tPWpQJNTOph-O-10">
+          <mxGeometry x="40" y="150" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="nVs6uc6tPWpQJNTOph-O-1" source="nVs6uc6tPWpQJNTOph-O-10" target="nVs6uc6tPWpQJNTOph-O-10">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="190" y="170" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="155" y="420" />
+              <mxPoint x="260" y="420" />
+              <mxPoint x="260" y="170" />
+              <mxPoint x="198" y="170" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-15" value="For each Mutation" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="nVs6uc6tPWpQJNTOph-O-1">
+          <mxGeometry x="270" y="260" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-2" value="AI (LLM)" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;flipH=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="430" y="135" width="210" height="195" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="nVs6uc6tPWpQJNTOph-O-2" source="nVs6uc6tPWpQJNTOph-O-22" target="nVs6uc6tPWpQJNTOph-O-23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-22" value="Load Model" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="nVs6uc6tPWpQJNTOph-O-2">
+          <mxGeometry x="20" y="20" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="nVs6uc6tPWpQJNTOph-O-2" source="nVs6uc6tPWpQJNTOph-O-23" target="nVs6uc6tPWpQJNTOph-O-27">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-23" value="" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="nVs6uc6tPWpQJNTOph-O-2">
+          <mxGeometry x="76.25" y="70" width="17.5" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="nVs6uc6tPWpQJNTOph-O-2" source="nVs6uc6tPWpQJNTOph-O-27" target="nVs6uc6tPWpQJNTOph-O-23">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="100" y="185" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="85" y="175" />
+              <mxPoint x="165" y="175" />
+              <mxPoint x="165" y="80" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-27" value="Generate Mutations" style="whiteSpace=wrap;html=1;" vertex="1" parent="nVs6uc6tPWpQJNTOph-O-2">
+          <mxGeometry x="25" y="105" width="120" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="nVs6uc6tPWpQJNTOph-O-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="nVs6uc6tPWpQJNTOph-O-6" target="nVs6uc6tPWpQJNTOph-O-23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
