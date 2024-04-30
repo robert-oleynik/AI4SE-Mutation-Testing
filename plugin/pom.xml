@@ -66,6 +66,16 @@
 			<version>1.18.32</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>io.github.bonede</groupId>
+			<artifactId>tree-sitter</artifactId>
+			<version>0.22.5</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.bonede</groupId>
+			<artifactId>tree-sitter-java</artifactId>
+			<version>0.21.0</version>
+		</dependency>
   </dependencies>
   <build>
 		<pluginManagement>
@@ -134,14 +144,10 @@
           </execution>
         </executions>
       </plugin>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <configuration>
-                <source>11</source>
-                <target>11</target>
-            </configuration>
-        </plugin>
+			<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
     </plugins>
   </build>
   <profiles>

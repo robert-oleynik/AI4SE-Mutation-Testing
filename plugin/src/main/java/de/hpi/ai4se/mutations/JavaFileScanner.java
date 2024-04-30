@@ -23,16 +23,19 @@ public class JavaFileScanner {
 	 *	@param root Source root to scan for Java source files.
 	 */
 	public void scanRoot(Path sourceRoot) throws IOException {
-		try(DirectoryStream<Path> stream = Files.newDirectoryStream(sourceRoot)) {
+		this.scanRoot(sourceRoot, sourceRoot);
+	}
+
+	public void scanRoot(Path sourceRoot, Path subdir) throws IOException {
+		try(DirectoryStream<Path> stream = Files.newDirectoryStream(subdir)) {
 			for (Path path : stream) {
 				if (Files.isDirectory(path)) {
 					this.scanRoot(sourceRoot, path);
 				} else if (path.toString().endsWith(".java")) {
+					System.out.println(path);
 					this.sources.add(new Source(sourceRoot, path));
 				}
 			}
 		}
 	}
-
-	public void scanRoot(Path sourceRoot, Path subdir) throws IOException {}
 }

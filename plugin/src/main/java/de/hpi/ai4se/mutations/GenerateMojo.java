@@ -55,6 +55,12 @@ public class GenerateMojo extends AbstractMojo {
 		List<SourceMutation> mutations = scanner.getSources()
 			.stream()
 			.filter((Source source) -> {
+				try {
+					source.identifyMutations();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				// TODO: Ignore non-mutated files
 				return true;
 			})
