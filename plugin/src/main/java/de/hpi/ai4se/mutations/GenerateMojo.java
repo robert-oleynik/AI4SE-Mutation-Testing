@@ -17,7 +17,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
-public class Generate extends AbstractMojo {
+public class GenerateMojo extends AbstractMojo {
 	@Parameter(property = "project", required = true, readonly = true)
 	protected MavenProject project;
 
