@@ -1,0 +1,27 @@
+[project]
+name = "Mutator"
+version = "0.1.0"
+description = "A LLM powered mutation testing tool"
+readme = "README.md"
+# TODO: License
+requires-python = ">=3.12"
+dependencies = [
+	"pytest>=8.2.0"
+]
+
+[project.scripts]
+mutator = "mutator.cli:main"
+
+[tool.pyright]
+pythonVersion = "3.12"
+include = ["src/mutator", "tests"]
+typeCheckingMode = "basic"
+
+[tool.ruff]
+src = ["src"]
+fix = true
+show-fixes = true
+output-format = "full"
+
+[tool.ruff.lint]
+select = [ "B", "E", "F", "I", "UP", "W" ]
