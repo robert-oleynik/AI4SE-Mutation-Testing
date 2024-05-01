@@ -1,5 +1,6 @@
 import argparse
 import logging
+import test
 from pathlib import Path
 
 
@@ -8,8 +9,8 @@ def main():
         description="Run tests with mutated source code.")
     parser.add_argument("-v", "--verbose", action="count", default=0)
     subcommands = parser.add_subparsers(required=True,dest="command")
-    test = subcommands.add_parser("test")
-    test.add_argument("-c", "--chdir",
+    test_parser = subcommands.add_parser("test")
+    test_parser.add_argument("-c", "--chdir",
         action="store",
         type=Path,
         help="Set working directory. Defaults to current directory.")
