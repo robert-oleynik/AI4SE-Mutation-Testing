@@ -1,7 +1,8 @@
 import argparse
 import logging
-import test
 from pathlib import Path
+
+from .test import run_tests
 
 
 def main():
@@ -27,7 +28,7 @@ def main():
     match args.command:
         case "test":
             logging.debug("executing test command")
-            test.run(workingDir=args.chdir)
+            run_tests(workingDir=args.chdir)
         case "help":
             parser.print_help()
 
