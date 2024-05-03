@@ -1,6 +1,7 @@
-from mutator.helper.decorator import Mutate
-import mutator.helper.decorator
 import mutator.helper
+import mutator.helper.decorator
+from mutator.helper.decorator import Mutate
+
 
 @Mutate
 def some_func():
