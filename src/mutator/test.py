@@ -1,11 +1,11 @@
-from pathlib import Path
-
 from .project import Project
+import pathlib
+import pytest
 
+def run_tests(workingDir: pathlib.Path | None = None) -> None:
+    workingDir = pathlib.Path.cwd() if workingDir is None else workingDir
+    p = Project(workingDir)
+    p.log_info()
 
-def run_tests(workingDir: Path | None = None) -> None:
-    workingDir = Path.cwd() if workingDir is None else workingDir
-    project = Project(workingDir)
-    project.log_info()
-
-    project.scan_files()
+    p.scan_files()
+    pytest.main()
