@@ -1,4 +1,7 @@
 iniconfig==2.0.0
+-e git+ssh://git@github.com/robert-oleynik/AI4SE-Mutation-Testing.git@d27589da07a23f7cddffea7934a721b9afc85230#egg=Mutator
 packaging==24.0
 pluggy==1.5.0
 pytest==8.2.0
+tree-sitter==0.21.3
+tree-sitter-python==0.21.0

@@ -6,10 +6,16 @@ import mutator.helper
 def some_func():
     pass
 
+@DeprecationWarning
+@Mutate
+def some_other_func():
+    pass
+
 @mutator.helper.decorator.Mutate
 def foo():
     pass
 
-@mutator.helper.Mutate
-def bar():
-    pass
+class Foo:
+    @mutator.helper.Mutate
+    def bar():
+        pass
