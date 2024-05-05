@@ -20,3 +20,6 @@ class Foo:
     @mutator.helper.Mutate
     def bar():
         pass
+
+def test_foo():
+    assert False

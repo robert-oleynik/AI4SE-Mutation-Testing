@@ -57,8 +57,18 @@ class SourceFile:
     Stores and manages all mutation targets of a source file.
     """
 
-    def __init__(self, path: pathlib.Path):
+    def __init__(self, sourceRoot: pathlib.Path, path: pathlib.Path):
         self.path = path
+        sourceRel = path.relative_to(sourceRoot)
+
+        self.module = self.path.stem
+        for parent in sourceRel.parents:
+            if parent != parent.parent:
+                self.module = parent.name + "." + self.module
+        if self.module.endswith(".__init__"):
+            self.module = self.module[:-9]
+        logging.debug("file[%s]: %s", self.module, self.path)
+
         self.targets = []
         with open(path, "rb") as file:
             self.content = file.read()
@@ -73,6 +83,7 @@ class SourceFile:
                     el, eo = captures["target"].end_point
                     logging.debug("  target: %d:%d to %d:%d", bl, bo, el, eo)
                     self.targets.append(target)
+            file.close()
 
 
 class Project:
@@ -82,14 +93,11 @@ class Project:
 
     def __init__(self, dir: pathlib.Path):
         self.projectDir = dir
-
-    def scan_files(self) -> list[SourceFile]:
-        sources = []
-        paths = pathlib.Path(self.projectDir.joinpath("src")).rglob("*.py")
+        self.sources = []
+        self.sourceRoot = pathlib.Path(self.projectDir.joinpath("src")).resolve()
+        paths = self.sourceRoot.rglob("*.py")
         for file in paths:
-            logging.debug("source file: %s", file)
-            sources.append(SourceFile(file))
-        return sources
+            self.sources.append(SourceFile(self.sourceRoot, file))
 
     def log_info(self):
         logging.info("project directory: %s", self.projectDir)
