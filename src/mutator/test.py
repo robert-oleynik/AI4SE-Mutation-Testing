@@ -5,6 +5,7 @@ import pytest
 
 from .dependency_injector import DependencyInjector
 from .mutation import Mutation, MutationStore
+from .mutator import Mutator
 from .project import Project
 
 
@@ -17,12 +18,14 @@ def run_tests(workingDir: pathlib.Path | None = None,
 
     p = Project(workingDir)
     p.log_info()
+    mutator = Mutator(p, model_id="google/codegemma-2b", max_new_tokens=100)
 
     mutations = []
     for source in p.sources:
-        for target in source.targets:
-            # TODO : Generate mutation
-            mutation = target.content(source.content)
+        for index, target in enumerate(source.targets):
+            logging.info("mutating target %s of %s", index, source.module)
+            mutation = mutator.mutate(source, target)
+            logging.info("result:\n=============\n%s\n=============", mutation)
             mutations.append(Mutation(source, target, mutation))
     mutationStore = MutationStore(buildDir, mutations)
 
