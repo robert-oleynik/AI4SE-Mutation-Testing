@@ -8,16 +8,19 @@ Install the requirement dependencies:
 
 ```sh
 # Dependencies required to run the program
-pip install -r ./requirements.txt
+pip install .
 ```
 
 The program can be executed using the following command:
 
 ```sh
-python3 ./main.py help
+mutator -h
 ```
 
 ## Development
+
+> This section contains tools used and the recommended project setup for development.
+> It is not mandatory for running the tool.
 
 Required tools:
 
