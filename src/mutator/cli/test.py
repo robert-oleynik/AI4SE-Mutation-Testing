@@ -61,7 +61,7 @@ class Test:
                     ]
                     process = subprocess.Popen(
                             args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    while process.poll() == None:
+                    while process.poll() is None:
                         time.sleep(.1)
                         spinner.next()
                         print(f" {spinner} {target_name:<32} [{i}/{len(target)}]", end="\r")

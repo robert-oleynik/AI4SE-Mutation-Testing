@@ -1,8 +1,10 @@
 from .generator import Mutation, MutationGenerator
 from .identity import Identity
+from .simple import Simple
 
 generators = {
         "identity": Identity(),
+        "simple": Simple(),
 }
 
 
@@ -19,5 +21,6 @@ __all__ = [
         "MutationGenerator",
         "Mutation",
         "Identity",
+        "Simple",
         "generators"
 ]

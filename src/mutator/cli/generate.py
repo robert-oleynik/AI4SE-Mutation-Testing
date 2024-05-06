@@ -1,6 +1,5 @@
 import argparse
 import pathlib
-import subprocess
 
 from ..generator import GeneratorNotFound, generators
 from ..source import SourceFile
@@ -57,7 +56,5 @@ class Generate:
 
             for sourceFile in sourceFiles:
                 for target in sourceFile.targets:
-                    ident = target.ident(sourceFile.content).decode()
-                    print(f"{sourceFile.module}:{ident}")
                     for mutation in g.generate(sourceFile, target):
                         store.add(sourceFile, target, mutation)

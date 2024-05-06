@@ -9,7 +9,11 @@ dependencies = [
 	"pytest>=8.2.0",
 	"tree-sitter>=0.21.3",
 	"tree-sitter-python>=0.21.0",
-	"pytest>=8.2.0"
+	"pytest>=8.2.0",
+	"accelerate>=0.30.0",
+	"sentencepiece>=0.2.0",
+	"torch>=2.3.0",
+	"transformers>=4.40.1",
 ]
 
 [project.scripts]
