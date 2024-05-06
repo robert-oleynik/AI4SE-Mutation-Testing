@@ -1,6 +1,9 @@
 import argparse
 import pathlib
 
+import mutator.ai
+
+from ..ai import LLM
 from ..generator import GeneratorNotFound, generators
 from ..source import SourceFile
 from ..store import MutationStore
@@ -29,14 +32,26 @@ class Generate:
                 type=pathlib.Path,
                 default=pathlib.Path.cwd(),
                 help="Change working directory.")
+        parser.add_argument("-d", "--device", action="store")
+        parser.add_argument("-m", "--model", action="store")
+        parser.add_argument("--max-new-tokens", type=int, action="store")
 
     def run(self,
             out_dir: pathlib.Path | None,
             generator: list[str] | None,
-            chdir: list[pathlib.Path] | None,
+            chdir: pathlib.Path | None,
+            device: str | None,
+            model: str | None,
+            max_new_tokens: int,
             **other) -> int:
+        if device is None:
+            device = "cuda:0"
+        if model is None:
+            model = "google/codegemma-2b"
+        mutator.ai.llm = LLM(device, model, max_new_tokens=max_new_tokens)
+
         if generator is None:
-            generator = ["identity"]
+            generator = ["simple"]
         if chdir is None:
             chdir = pathlib.Path.cwd()
         if out_dir is None:
@@ -58,3 +73,4 @@ class Generate:
                 for target in sourceFile.targets:
                     for mutation in g.generate(sourceFile, target):
                         store.add(sourceFile, target, mutation)
+        return 0

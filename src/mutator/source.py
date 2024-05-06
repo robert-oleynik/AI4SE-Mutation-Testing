@@ -44,17 +44,17 @@ class MutationTarget:
     Stores offset/positions of target identifier and content.
     """
 
-    def __init__(self, lines: list[str], node: ts.Node):
+    def __init__(self, lines: list[bytes], node: ts.Node):
         self.node = node
-        self.ident_begin, self.ident_end = 0, 0
+        self.idbegin, self.idend = 0, 0
         if self.node.type == "function_definition":
             ident = self.node.child_by_field_name("name")
             if ident is not None and ident.type == "identifier":
-                self.ident_begin, self.ident_end = _map_tsnode_pos_to_byte_range(lines, ident)
+                self.idbegin, self.idend = _map_tsnode_pos_to_byte_range(lines, ident)
         self.begin, self.end = _map_tsnode_pos_to_byte_range(lines, self.node)
 
     def ident(self, content: bytes) -> bytes:
-        return content[self.ident_begin:self.ident_end-1]
+        return content[self.idbegin:self.idend-1]
 
     def content(self, content: bytes) -> bytes:
         return content[self.begin:self.end]

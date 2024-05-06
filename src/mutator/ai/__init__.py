@@ -1,6 +1,6 @@
 from .llm import LLM
 
-llm = None
+llm: LLM
 
 __all__ = [
     "LLM",

@@ -1,5 +1,6 @@
 import collections.abc
 import importlib.abc
+import importlib.machinery
 import pathlib
 import sys
 import types
@@ -30,7 +31,8 @@ class DependencyInjector(importlib.abc.MetaPathFinder):
             self,
             fullname: str,
             path: collections.abc.Sequence[str] | None,
-            target: types.ModuleType | None = ...) -> importlib.machinery.ModuleSpec | None:
+            target: types.ModuleType | None = ...
+            ) -> importlib.machinery.ModuleSpec | None:
         if fullname == self.module:
             loader = MutationLoader(self.module, self.path)
             return importlib.machinery.ModuleSpec(fullname, loader)

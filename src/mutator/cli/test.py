@@ -30,13 +30,16 @@ class Test:
             generator: list[str],
             chdir: pathlib.Path,
             skip_generation: bool,
+            device: str | None,
+            model: str | None,
+            max_new_tokens: int,
             **other):
         if chdir is None:
             chdir = pathlib.Path.cwd()
         if out_dir is None:
             out_dir = chdir.joinpath("out/mutations")
         if not skip_generation:
-            self.generate.run(out_dir, generator, chdir)
+            self.generate.run(out_dir, generator, chdir, device, model, max_new_tokens)
 
         mutation = {}
         store = MutationStore(out_dir)
@@ -52,8 +55,9 @@ class Test:
             print("Testing Module:", module_name)
             for target_name, target in module.items():
                 catched = 0
+                count = len(target)
                 for i, mutation in enumerate(target):
-                    print(f" {spinner} {target_name} [{i}/{len(target)}]", end="\r")
+                    print(f" {spinner} {target_name} [{i}/{count}]", end="\r")
                     args = [
                             "python3", "-m", "mutator.runner",
                             "-m", module_name,
@@ -64,7 +68,8 @@ class Test:
                     while process.poll() is None:
                         time.sleep(.1)
                         spinner.next()
-                        print(f" {spinner} {target_name:<32} [{i}/{len(target)}]", end="\r")
+                        print(f" {spinner} {target_name:<32} [{i}/{count}]", end="\r")
                     if process.poll() != 0:
                         catched += 1
-                print(f" ✔ {target_name:<32} [{len(target)}/{len(target)}] catched:", catched, "missed:", len(target) - catched)
+                print(f" ✔ {target_name:<32} [{count}/{count}] catched:",
+                      catched, "missed:", len(target) - catched)

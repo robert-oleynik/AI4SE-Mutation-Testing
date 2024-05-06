@@ -1,11 +1,11 @@
-from ..ai import llm
-from ..source import MutationTarget
+import mutator.ai
+from ..source import MutationTarget, SourceFile
 from .generator import Mutation, MutationGenerator
 
 
 class Simple(MutationGenerator):
     def _query(self, prompt: str) -> str:
-        answer = llm.prompt(prompt)
+        answer = mutator.ai.llm.prompt(prompt)
         return (answer
                 .strip()
                 .removeprefix("<bos>")
@@ -19,4 +19,4 @@ class Simple(MutationGenerator):
         prompt += target.content(source.content).decode()
         prompt += "\n\n# Mutated version for mutation testing\n"
         answer = self._query(prompt)
-        return [Mutation(answer[len(prompt):])]
+        return [Mutation(answer[len(prompt):].encode())]
