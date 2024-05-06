@@ -6,11 +6,15 @@ readme = "README.md"
 # TODO: License
 requires-python = ">=3.12"
 dependencies = [
+	"pytest>=8.2.0",
+	"tree-sitter>=0.21.3",
+	"tree-sitter-python>=0.21.0",
 	"pytest>=8.2.0"
 ]
 
 [project.scripts]
-mutator = "mutator.cli:main"
+mutator = "mutator:cli_main"
+mutation-runner = "mutator.runner:cli_main"
 
 [tool.pyright]
 pythonVersion = "3.12"
