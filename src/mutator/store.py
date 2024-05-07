@@ -16,7 +16,7 @@ class MutationStore:
         self.counter = {}
 
     def add(self, source: SourceFile, target: MutationTarget, mutation: Mutation):
-        ident = target.ident(source.content).decode()
+        ident = target.fullname
         path = self.base.joinpath(f"{source.module}/{ident}")
         path.mkdir(parents=True,exist_ok=True)
         if path not in self.counter:

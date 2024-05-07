@@ -30,16 +30,13 @@ class Test:
             generator: list[str],
             chdir: pathlib.Path,
             skip_generation: bool,
-            device: str | None,
-            model: str | None,
-            max_new_tokens: int,
             **other):
         if chdir is None:
             chdir = pathlib.Path.cwd()
         if out_dir is None:
             out_dir = chdir.joinpath("out/mutations")
         if not skip_generation:
-            self.generate.run(out_dir, generator, chdir, device, model, max_new_tokens)
+            self.generate.run(out_dir, generator, chdir, **other)
 
         mutation = {}
         store = MutationStore(out_dir)
@@ -64,7 +61,8 @@ class Test:
                             "-p", mutation
                     ]
                     process = subprocess.Popen(
-                            args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                            args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            cwd = chdir)
                     while process.poll() is None:
                         time.sleep(.1)
                         spinner.next()

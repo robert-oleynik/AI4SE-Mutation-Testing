@@ -1,11 +1,13 @@
 import argparse
 import pathlib
+import itertools
 
 import mutator.ai
+import mutator.generator
 
 from ..ai import LLM
 from ..generator import GeneratorNotFound, generators
-from ..source import SourceFile
+from ..source import SourceFile, Filter
 from ..store import MutationStore
 
 
@@ -20,9 +22,9 @@ class Generate:
                 action="store",
                 type=pathlib.Path,
                 help="Output directory.")
+        parser.add_argument("--clean", action="store_true", default=False)
         parser.add_argument(
                 "-g", "--generator",
-                action="append",
                 type=str,
                 nargs="*",
                 help = "Name of a generator to use.")
@@ -35,6 +37,7 @@ class Generate:
         parser.add_argument("-d", "--device", action="store")
         parser.add_argument("-m", "--model", action="store")
         parser.add_argument("--max-new-tokens", type=int, action="store")
+        parser.add_argument("filters", nargs="*", type=str)
 
     def run(self,
             out_dir: pathlib.Path | None,
@@ -43,12 +46,13 @@ class Generate:
             device: str | None,
             model: str | None,
             max_new_tokens: int,
+            filters: list[str],
             **other) -> int:
         if device is None:
             device = "cuda:0"
         if model is None:
             model = "google/codegemma-2b"
-        mutator.ai.llm = LLM(device, model, max_new_tokens=max_new_tokens)
+        # mutator.ai.llm = LLM(device, model, max_new_tokens=max_new_tokens)
 
         if generator is None:
             generator = ["simple"]
@@ -57,15 +61,25 @@ class Generate:
         if out_dir is None:
             out_dir = chdir.joinpath("out/mutations")
 
+        parsedFilters = [Filter(f) for f in filters]
         # TODO: Allow multiple source roots
         sourceRoot = pathlib.Path(chdir.joinpath("src")).resolve()
-        sourceFiles = list(filter(
-            lambda s: len(s.targets) > 0,
-            map(lambda p: SourceFile(sourceRoot, p), sourceRoot.rglob("*.py"))))
+        sourceFiles = []
+        for file in sourceRoot.rglob("*.py"):
+            source = SourceFile(sourceRoot, file)
+            if any(map(lambda f: f.match_module(source.module), iter(parsedFilters))):
+                symbols = sum(map(
+                    lambda f: f.matched_symbols(source.symbols), iter(parsedFilters)), [])
+                source.symbols = symbols
+                source.generate_targets()
+                sourceFiles.append(source)
 
         store = MutationStore(out_dir)
+        if not store.isclean():
+            print("error: found existing mutations. use flag `--clean` to generate new ones.")
+            return 1
         for gen in generator:
-            if gen not in generators:
+            if gen not in mutator.generator.generators:
                 raise GeneratorNotFound(gen)
             g = generators[gen]
 
