@@ -27,6 +27,9 @@ class MutationStore:
         file = path.joinpath(f"{self.counter[path]}.py")
         file.write_bytes(content)
 
+    def isclean(self) -> bool:
+        return len(os.listdir(self.base)) == 0
+
     def list_mutation(self) -> list[tuple[str, str, pathlib.Path]]:
         mutations = []
         for module in os.listdir(self.base):

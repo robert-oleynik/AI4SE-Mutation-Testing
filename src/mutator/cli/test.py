@@ -36,7 +36,9 @@ class Test:
         if out_dir is None:
             out_dir = chdir.joinpath("out/mutations")
         if not skip_generation:
-            self.generate.run(out_dir, generator, chdir, **other)
+            ec = self.generate.run(out_dir, generator, chdir, **other)
+            if ec != 0:
+                return ec
 
         mutation = {}
         store = MutationStore(out_dir)
@@ -50,11 +52,11 @@ class Test:
         spinner = Spinner()
         for module_name, module in mutation.items():
             print("Testing Module:", module_name)
-            for target_name, target in module.items():
+            for target_name, target in sorted(list(module.items()), key=lambda v: v[0]):
                 catched = 0
                 count = len(target)
                 for i, mutation in enumerate(target):
-                    print(f" {spinner} {target_name} [{i}/{count}]", end="\r")
+                    print(f" {spinner} {target_name:<32} [{i}/{count}]", end="\r")
                     args = [
                             "python3", "-m", "mutator.runner",
                             "-m", module_name,

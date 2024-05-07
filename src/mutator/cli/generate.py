@@ -1,6 +1,7 @@
 import argparse
 import pathlib
 import itertools
+import shutil
 
 import mutator.ai
 import mutator.generator
@@ -47,6 +48,7 @@ class Generate:
             model: str | None,
             max_new_tokens: int,
             filters: list[str],
+            clean: bool,
             **other) -> int:
         if device is None:
             device = "cuda:0"
@@ -74,6 +76,8 @@ class Generate:
                 source.generate_targets()
                 sourceFiles.append(source)
 
+        if clean:
+            shutil.rmtree(out_dir)
         store = MutationStore(out_dir)
         if not store.isclean():
             print("error: found existing mutations. use flag `--clean` to generate new ones.")
