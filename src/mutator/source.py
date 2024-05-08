@@ -59,21 +59,20 @@ class Symbol:
 
 
 class Filter:
-    def __init__(self, query: str):
-        module, symbol = query.split(":")
-        self.module = re.compile(module.replace(".", "\\.").replace("*", "[^\\.]*") + "$")
-        self.symbol = re.compile(symbol.replace(".", "\\.").replace("*", "[^\\.]*") + "$")
+    def __init__(self, filters: list[str]):
+        self.modules = []
+        self.symbols = []
+        for f in filters:
+            module, symbol = f.split(":")
+            toRegex = lambda f: re.compile(f.replace(".", "\\.").replace("*", "[^\\.]*") + "$")
+            self.modules.append(toRegex(module))
+            self.symbols.append(toRegex(symbol))
 
-    def match_module(self, module: str) -> bool:
-        return self.module.fullmatch(module) is not None
-
-    def matched_symbols(self, symbols: list[Symbol]) -> list[str]:
-        result = []
-        for symbol in symbols:
-            if self.symbol.fullmatch(symbol.name) is not None:
-                result.append(symbol)
-        return result
-
+    def match(self, module: str, symbol: str) -> bool:
+        for i, m in enumerate(self.modules):
+            if m.fullmatch(module) is not None and self.symbols[i].fullmatch(symbol):
+                return True
+        return False
 
 class MutationTarget:
     """
@@ -93,7 +92,7 @@ class SourceFile:
     Stores all information associated with a python source file.
     """
 
-    def __init__(self, root: pathlib.Path, path: pathlib.Path):
+    def __init__(self, root: pathlib.Path, path: pathlib.Path, filter: Filter):
         self.path = path.relative_to(root)
 
         self.module = self.path.stem
@@ -103,13 +102,12 @@ class SourceFile:
         if self.module.endswith(".__init__"):
             self.module = self.module[:-9]
 
-        self.symbols = []
         self.content = path.read_bytes()
-        lines = self.content.splitlines(keepends=True)
         self.tree = _tsParser.parse(self.content)
-        for _, captures in _tsFunctionQuery.matches(self.tree.root_node):
-            self.symbols.append(Symbol(self.content, lines, captures["target"]))
-
-    def generate_targets(self):
+        self.symbols = []
         lines = self.content.splitlines(keepends=True)
+        for _, captures in _tsFunctionQuery.matches(self.tree.root_node):
+            symbol = Symbol(self.content, lines, captures["target"])
+            if filter.match(self.module, symbol.name):
+                self.symbols.append(symbol)
         self.targets = [MutationTarget(lines, symbol) for symbol in self.symbols]

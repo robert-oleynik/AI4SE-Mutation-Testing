@@ -38,6 +38,7 @@ class Generate:
         parser.add_argument("-d", "--device", action="store")
         parser.add_argument("-m", "--model", action="store")
         parser.add_argument("--max-new-tokens", type=int, action="store")
+        parser.add_argument("--skip-ai", action="store_true")
         parser.add_argument("filters", nargs="*", type=str)
 
     def run(self,
@@ -48,13 +49,15 @@ class Generate:
             model: str | None,
             max_new_tokens: int,
             filters: list[str],
+            skip_ai: bool,
             clean: bool,
             **other) -> int:
         if device is None:
             device = "cuda:0"
         if model is None:
             model = "google/codegemma-2b"
-        # mutator.ai.llm = LLM(device, model, max_new_tokens=max_new_tokens)
+        if not skip_ai:
+            mutator.ai.llm = LLM(device, model, max_new_tokens=max_new_tokens)
 
         if generator is None:
             generator = ["simple"]
@@ -63,18 +66,12 @@ class Generate:
         if out_dir is None:
             out_dir = chdir.joinpath("out/mutations")
 
-        parsedFilters = [Filter(f) for f in filters]
+        f = Filter(filters)
+
         # TODO: Allow multiple source roots
         sourceRoot = pathlib.Path(chdir.joinpath("src")).resolve()
-        sourceFiles = []
-        for file in sourceRoot.rglob("*.py"):
-            source = SourceFile(sourceRoot, file)
-            if any(map(lambda f: f.match_module(source.module), iter(parsedFilters))):
-                symbols = sum(map(
-                    lambda f: f.matched_symbols(source.symbols), iter(parsedFilters)), [])
-                source.symbols = symbols
-                source.generate_targets()
-                sourceFiles.append(source)
+        sourceFiles = [SourceFile(sourceRoot, file, f) for file in sourceRoot.rglob("*.py")]
+        sourceFiles = list(filter(lambda f: len(f.symbols) > 0, sourceFiles))
 
         if clean and out_dir.exists():
             shutil.rmtree(out_dir)

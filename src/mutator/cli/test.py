@@ -4,6 +4,7 @@ import subprocess
 import time
 
 from ..store import MutationStore
+from ..source import Filter
 from .generate import Generate
 from .spinner import Spinner
 
@@ -40,6 +41,8 @@ class Test:
             if ec != 0:
                 return ec
 
+        f = Filter(other["filters"])
+
         mutation = {}
         store = MutationStore(out_dir)
         for module, target, path in store.list_mutation():
@@ -53,6 +56,8 @@ class Test:
         for module_name, module in mutation.items():
             print("Testing Module:", module_name)
             for target_name, target in sorted(list(module.items()), key=lambda v: v[0]):
+                if not f.match(module_name, target_name):
+                    continue
                 catched = 0
                 count = len(target)
                 for i, mutation in enumerate(target):
