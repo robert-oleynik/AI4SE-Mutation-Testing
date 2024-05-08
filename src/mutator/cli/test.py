@@ -58,7 +58,7 @@ class Test:
                 for i, mutation in enumerate(target):
                     print(f" {spinner} {target_name:<32} [{i}/{count}]", end="\r")
                     args = [
-                            "python3", "-m", "mutator.runner",
+                            "python3", "-m", "mutator_runner",
                             "-m", module_name,
                             "-p", mutation
                     ]
