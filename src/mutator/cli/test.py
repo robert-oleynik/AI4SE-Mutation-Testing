@@ -31,17 +31,18 @@ class Test:
             generator: list[str],
             chdir: pathlib.Path,
             skip_generation: bool,
+            filters: list[str],
             **other):
         if chdir is None:
             chdir = pathlib.Path.cwd()
         if out_dir is None:
             out_dir = chdir.joinpath("out/mutations")
         if not skip_generation:
-            ec = self.generate.run(out_dir, generator, chdir, **other)
+            ec = self.generate.run(out_dir, generator, chdir, filters=filters, **other)
             if ec != 0:
                 return ec
 
-        f = Filter(other["filters"])
+        f = Filter(filters)
 
         mutation = {}
         store = MutationStore(out_dir)

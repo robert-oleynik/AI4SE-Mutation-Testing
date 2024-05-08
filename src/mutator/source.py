@@ -59,20 +59,28 @@ class Symbol:
 
 
 class Filter:
-    def __init__(self, filters: list[str]):
-        self.modules = []
-        self.symbols = []
-        for f in filters:
+    class Matcher:
+        def __init__(self, f: str):
             module, symbol = f.split(":")
             toRegex = lambda f: re.compile(f.replace(".", "\\.").replace("*", "[^\\.]*") + "$")
-            self.modules.append(toRegex(module))
-            self.symbols.append(toRegex(symbol))
+            self.module = toRegex(module)
+            self.symbol = toRegex(symbol)
+        
+        def match(self, module: str, symbol: str) -> bool:
+            return self.module.fullmatch(module) is not None and self.symbol.fullmatch(symbol) is not None
+
+    def __init__(self, filters: list[str]):
+        self.include = []
+        self.exclude = []
+        for f in filters:
+            if f.startswith("!"):
+                self.exclude.append(self.Matcher(f[1:]))
+            else:
+                self.include.append(self.Matcher(f))
 
     def match(self, module: str, symbol: str) -> bool:
-        for i, m in enumerate(self.modules):
-            if m.fullmatch(module) is not None and self.symbols[i].fullmatch(symbol):
-                return True
-        return False
+        match = lambda m: m.match(module, symbol)
+        return any(map(match, self.include)) and not any(map(match, self.exclude))
 
 class MutationTarget:
     """
