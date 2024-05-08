@@ -28,7 +28,10 @@ class MutationStore:
         file.write_bytes(content)
 
     def isclean(self) -> bool:
-        return len(os.listdir(self.base)) == 0
+        try:
+            return len(os.listdir(self.base)) == 0
+        except FileNotFoundError:
+            return True
 
     def list_mutation(self) -> list[tuple[str, str, pathlib.Path]]:
         mutations = []

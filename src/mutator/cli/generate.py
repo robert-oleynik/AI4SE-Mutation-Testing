@@ -76,7 +76,7 @@ class Generate:
                 source.generate_targets()
                 sourceFiles.append(source)
 
-        if clean:
+        if clean and out_dir.exists():
             shutil.rmtree(out_dir)
         store = MutationStore(out_dir)
         if not store.isclean():
