@@ -1,14 +1,11 @@
 import pathlib
 import re
 
+from .treesitter.python import tsLang, tsParser
 import tree_sitter as ts
 import tree_sitter_python as tsp
 
-_tsLang = ts.Language(tsp.language(), "python")
-_tsParser = ts.Parser()
-_tsParser.set_language(_tsLang)
-
-_tsFunctionQuery = _tsLang.query("""
+_tsFunctionQuery = tsLang.query("""
 (function_definition) @target
 """)
 
@@ -111,7 +108,7 @@ class SourceFile:
             self.module = self.module[:-9]
 
         self.content = path.read_bytes()
-        self.tree = _tsParser.parse(self.content)
+        self.tree = tsParser.parse(self.content)
         self.symbols = []
         lines = self.content.splitlines(keepends=True)
         for _, captures in _tsFunctionQuery.matches(self.tree.root_node):
