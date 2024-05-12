@@ -10,6 +10,7 @@ from ..ai import LLM
 from ..generator import GeneratorNotFound, generators
 from ..source import SourceFile, Filter
 from ..store import MutationStore
+from ..ai.limiter.function import FunctionLimiter
 
 
 class Generate:
@@ -37,7 +38,6 @@ class Generate:
                 help="Change working directory.")
         parser.add_argument("-d", "--device", action="store")
         parser.add_argument("-m", "--model", action="store")
-        parser.add_argument("--max-new-tokens", type=int, action="store")
         parser.add_argument("--skip-ai", action="store_true")
         parser.add_argument("filters", nargs="*", type=str)
 
@@ -47,7 +47,6 @@ class Generate:
             chdir: pathlib.Path | None,
             device: str | None,
             model: str | None,
-            max_new_tokens: int,
             filters: list[str],
             skip_ai: bool,
             clean: bool,
@@ -57,7 +56,7 @@ class Generate:
         if model is None:
             model = "google/codegemma-2b"
         if not skip_ai:
-            mutator.ai.llm = LLM(device, model, max_new_tokens=max_new_tokens)
+            mutator.ai.llm = LLM(device, model, FunctionLimiter)
 
         if generator is None:
             generator = ["simple"]
