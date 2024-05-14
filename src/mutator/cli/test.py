@@ -79,12 +79,14 @@ class Test:
                         spinner.next()
                         print(f" {spinner} {target_name:<32} [{i}/{count}]", end="\r")
                     is_catched = process.poll() != 0
+                    output = process.stdout.read().decode()
                     result.insert(module_name,
                                   target_name,
                                   mutation.stem,
                                   mutation.absolute().relative_to(out_dir.resolve("./mutations")),
                                   source,
-                                  is_catched)
+                                  is_catched,
+                                  output)
                     if is_catched:
                         catched += 1
                 print(f" ✔ {target_name:<32} [{count}/{count}] catched:",
