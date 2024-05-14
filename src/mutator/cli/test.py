@@ -62,7 +62,7 @@ class Test:
             for target_name, target in sorted(list(module.items()), key=lambda v: v[0]):
                 if not f.match(module_name, target_name):
                     continue
-                catched = 0
+                caught = 0
                 count = len(target)
                 for i, (mutation, source) in enumerate(target):
                     print(f" {spinner} {target_name:<32} [{i}/{count}]", end="\r")
@@ -78,17 +78,17 @@ class Test:
                         time.sleep(.1)
                         spinner.next()
                         print(f" {spinner} {target_name:<32} [{i}/{count}]", end="\r")
-                    is_catched = process.poll() != 0
+                    is_caught = process.poll() != 0
                     output = process.stdout.read().decode()
                     result.insert(module_name,
                                   target_name,
                                   mutation.stem,
                                   mutation.absolute().relative_to(out_dir.resolve("./mutations")),
                                   source,
-                                  is_catched,
+                                  is_caught,
                                   output)
-                    if is_catched:
-                        catched += 1
-                print(f" ✔ {target_name:<32} [{count}/{count}] catched:",
-                      catched, "missed:", len(target) - catched)
+                    if is_caught:
+                        caught += 1
+                print(f" ✔ {target_name:<32} [{count}/{count}] caught:",
+                      caught, "missed:", len(target) - caught)
         result.write(out_dir / "test-result.json")
