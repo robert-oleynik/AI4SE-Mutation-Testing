@@ -5,6 +5,7 @@ import time
 
 from ..store import MutationStore
 from ..source import Filter
+from ..result import Result
 from .generate import Generate
 from .spinner import Spinner
 
@@ -46,12 +47,14 @@ class Test:
 
         mutation = {}
         store = MutationStore(out_dir)
-        for module, target, path in store.list_mutation():
+        for module, target, path, source in store.list_mutation():
             if module not in mutation:
                 mutation[module] = {}
             if target not in mutation[module]:
                 mutation[module][target] = []
-            mutation[module][target].append(path)
+            mutation[module][target].append((path, source))
+
+        result = Result()
 
         spinner = Spinner()
         for module_name, module in mutation.items():
@@ -61,7 +64,7 @@ class Test:
                     continue
                 catched = 0
                 count = len(target)
-                for i, mutation in enumerate(target):
+                for i, (mutation, source) in enumerate(target):
                     print(f" {spinner} {target_name:<32} [{i}/{count}]", end="\r")
                     args = [
                             "python3", "-m", "mutator_runner",
@@ -75,7 +78,15 @@ class Test:
                         time.sleep(.1)
                         spinner.next()
                         print(f" {spinner} {target_name:<32} [{i}/{count}]", end="\r")
-                    if process.poll() != 0:
+                    is_catched = process.poll() != 0
+                    result.insert(module_name,
+                                  target_name,
+                                  mutation.stem,
+                                  mutation.absolute().relative_to(out_dir.resolve("./mutations")),
+                                  source,
+                                  is_catched)
+                    if is_catched:
                         catched += 1
                 print(f" ✔ {target_name:<32} [{count}/{count}] catched:",
                       catched, "missed:", len(target) - catched)
+        result.write(out_dir / "test-result.json")

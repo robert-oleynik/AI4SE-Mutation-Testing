@@ -1,5 +1,6 @@
 import os
 import pathlib
+import typing
 
 from .generator import Mutation
 from .source import MutationTarget, SourceFile
@@ -17,14 +18,15 @@ class MutationStore:
 
     def add(self, source: SourceFile, target: MutationTarget, mutation: Mutation):
         ident = target.fullname
-        path = self.base.joinpath(f"{source.module}/{ident}")
+        path = self.base / f"{source.module}" / target.fullname
         path.mkdir(parents=True,exist_ok=True)
         if path not in self.counter:
             self.counter[path] = 0
         content = source.content[:target.begin] + \
             mutation.content + \
             source.content[target.end:]
-        file = path.joinpath(f"{self.counter[path]}.py")
+        (path / "file").write_bytes(f"{source.path}".encode())
+        file = path / f"{self.counter[path]}.py"
         file.write_bytes(content)
 
     def isclean(self) -> bool:
@@ -32,14 +34,14 @@ class MutationStore:
             return len(os.listdir(self.base)) == 0
         except FileNotFoundError:
             return True
-
-    def list_mutation(self) -> list[tuple[str, str, pathlib.Path]]:
-        mutations = []
+    
+    def list_mutation(self) -> typing.Generator[tuple[str, str, pathlib.Path, pathlib.Path], None, None]:
         for module in os.listdir(self.base):
             module_path = self.base.joinpath(module)
             for target in os.listdir(module_path):
-                target_path = module_path.joinpath(target)
+                target_path = module_path / target
+                source_file = (target_path / "file").read_bytes().decode()
                 for file in os.listdir(target_path):
-                    file_path = target_path.joinpath(file)
-                    mutations.append((module, target, file_path))
-        return mutations
+                    if file.endswith(".py"):
+                        file_path = target_path.joinpath(file)
+                        yield module, target, file_path, source_file

@@ -37,7 +37,7 @@ class Generate:
                 default=pathlib.Path.cwd(),
                 help="Change working directory.")
         parser.add_argument("-d", "--device", action="store")
-        parser.add_argument("-m", "--model", action="store")
+        parser.add_argument("-m", "--model", action="store", default="google/codegemma-2b")
         parser.add_argument("--skip-ai", action="store_true")
         parser.add_argument("filters", nargs="*", type=str)
 
@@ -53,8 +53,6 @@ class Generate:
             **other) -> int:
         if device is None:
             device = "cuda:0"
-        if model is None:
-            model = "google/codegemma-2b"
         if not skip_ai:
             mutator.ai.llm = LLM(device, model, FunctionLimiter)
 
