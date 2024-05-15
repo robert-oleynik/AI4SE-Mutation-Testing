@@ -29,12 +29,12 @@ class Inspector(textual.app.App):
     }
     .diff-code {
         width: 100%;
-        height: 2fr;
+        height: 3fr;
         border: solid white;
     }
     .diff-log {
         width: 100%;
-        height: 1fr;
+        height: 2fr;
         border: solid white;
     }
     """
@@ -50,7 +50,7 @@ class Inspector(textual.app.App):
         self.modules_tree.show_root = False
         for name, module in self.result.modules.items():
             targets = [
-                    (name, any([not r["catched"] for m, r in target.items()]))
+                    (name, any([not r["caught"] for m, r in target.items()]))
                         for name, target in module.items()
             ]
             color = "green"
@@ -91,6 +91,7 @@ class Inspector(textual.app.App):
                 tofile=f"{source}")
         diff = [l for l in lines]
         self.code.load_text("".join(diff))
+        self.textLog.load_text(self.selected_node.data[key]["output"])
 
     
     def on_tree_node_highlighted(self, msg: textual.widgets.Tree.NodeSelected):
@@ -101,7 +102,7 @@ class Inspector(textual.app.App):
         self.mutations.clear()
         for name, info in msg.node.data.items():
             label = textual.widgets.Static(f"[green]{name}[/green]")
-            if not info["catched"]:
+            if not info["caught"]:
                 label = textual.widgets.Static(f"[red]{name}[/red]")
             self.result = label.children
             self.mutations.append(textual.widgets.ListItem(label))
