@@ -21,7 +21,8 @@ class Result:
                mutation: str,
                file: pathlib.Path,
                source: pathlib.Path,
-               is_catched: bool):
+               is_caught: bool,
+               output: str):
         if module not in self.modules:
             self.modules[module] = {}
         if symbol not in self.modules[module]:
@@ -29,7 +30,8 @@ class Result:
         if mutation not in self.modules[module][symbol]:
             self.modules[module][symbol][mutation] = {
                     "file": f"{file}",
-                    "catched": is_catched,
-                    "source": source 
+                    "caught": is_caught,
+                    "source": source,
+                    "output": output,
             }
 
