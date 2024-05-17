@@ -37,17 +37,3 @@ source ./venv/bin/activate
 # Install package dependencies
 pip install -e .
 ```
-
-## TODOs
-
-- flask, codegemma beobachten
-- generators
-  - infilling
-  - Regeneration from Signature + Doc comments
-  - mid-method resampling or continuation
-- metrics
-  - mit normalem mutation tester vergleichen
-  - disjoint uncaught mutants?
-  - own baseline: use treesitter to replace + with -, and with or, ifs with if True/False, ...
-- look into Beam Group Search (Huggingface constraint beam search)
-
