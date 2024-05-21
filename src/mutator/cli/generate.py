@@ -57,7 +57,7 @@ class Generate:
             mutator.ai.llm = LLM(device, model, [FunctionLimiter], max_new_tokens=2000)
 
         if generator is None:
-            generator = ["simple"]
+            generator = ["full_body_based"]
         if chdir is None:
             chdir = pathlib.Path.cwd()
         if out_dir is None:

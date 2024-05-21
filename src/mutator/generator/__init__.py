@@ -1,10 +1,10 @@
 from .generator import Mutation, MutationGenerator
 from .identity import Identity
-from .simple import Simple
+from .full_body_based import FullBodyBasedGenerator
 
 generators = {
         "identity": Identity(),
-        "simple": Simple(),
+        "full_body_based": FullBodyBasedGenerator(),
 }
 
 
@@ -21,6 +21,6 @@ __all__ = [
         "MutationGenerator",
         "Mutation",
         "Identity",
-        "Simple",
+        "FullBodyBasedGenerator",
         "generators"
 ]

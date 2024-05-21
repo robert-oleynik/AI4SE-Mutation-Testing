@@ -4,7 +4,7 @@ from ..source import MutationTarget, SourceFile
 from .generator import Mutation, MutationGenerator
 
 
-class Simple(MutationGenerator):
+class FullBodyBasedGenerator(MutationGenerator):
     def generate(self, source: SourceFile, target: MutationTarget) -> list[Mutation]:
         prompt = "# Original version\n"
         prompt += target.content(source.content).decode()
