@@ -26,10 +26,10 @@ class Generate:
                 help="Output directory.")
         parser.add_argument("--clean", action="store_true", default=False)
         parser.add_argument(
-                "-g", "--generator",
+                "-g", "--generators",
+                default="full_body_based",
                 type=str,
-                nargs="*",
-                help = "Name of a generator to use.")
+                help = "Comma-separated list of names of generators to use.")
         parser.add_argument(
                 "-c", "--chdir",
                 action="store",
@@ -43,7 +43,7 @@ class Generate:
 
     def run(self,
             out_dir: pathlib.Path | None,
-            generator: list[str] | None,
+            generators: str,
             chdir: pathlib.Path | None,
             device: str | None,
             model: str | None,
@@ -56,8 +56,7 @@ class Generate:
         if not skip_ai:
             mutator.ai.llm = LLM(device, model, [FunctionLimiter], max_new_tokens=2000)
 
-        if generator is None:
-            generator = ["full_body_based"]
+        generator_names = generators.split(",")
         if chdir is None:
             chdir = pathlib.Path.cwd()
         if out_dir is None:
@@ -76,10 +75,10 @@ class Generate:
         if not store.isclean():
             print("error: found existing mutations. use flag `--clean` to generate new ones.")
             return 1
-        for gen in generator:
+        for gen in generator_names:
             if gen not in mutator.generator.generators:
                 raise GeneratorNotFound(gen)
-            g = generators[gen]
+            g = mutator.generator.generators[gen]
 
             for sourceFile in sourceFiles:
                 for target in sourceFile.targets:
