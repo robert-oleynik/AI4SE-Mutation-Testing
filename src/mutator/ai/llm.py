@@ -1,33 +1,38 @@
 import torch
 import transformers
 from typing import Type
-from .limiter.limiter import Limiter
+from .limiter.limiter import Limiter, OutputStoppingCriteria
 
 
 class LLM:
-    def __init__(self, device: str, model_id: str, limiter_class: Type[Limiter], **model_kwargs):
+    def __init__(self, device: str, model_id: str, limiter_classes: list[Type[Limiter]] = [], **generate_kwargs):
         self.device = torch.device(device)
         self.tokenizer = transformers.GemmaTokenizer.from_pretrained(model_id)
         self.model = transformers.AutoModelForCausalLM.from_pretrained(
                 model_id, device_map=self.device, torch_dtype=torch.float16)
-        self.limiter_class = limiter_class
-        self.model_kwargs = model_kwargs
+        self.limiter_classes = limiter_classes
+        self.generate_kwargs = generate_kwargs
 
-    def _next_token(self, inputs) -> int:
-        logit = self.model(**inputs).logits[0][-1]
-        token = torch.argmax(torch.softmax(logit, 0)).item()
-        return self.tokenizer.decode([token])
+    def prompt(self, prompt: str, prompt_is_part_of_result = False) -> str:
+        prefix_length = len(self.tokenizer.bos_token)
+        if not prompt_is_part_of_result:
+            prefix_length += len(prompt)
 
-    def prompt(self, prompt: str) -> str:
-        limiter = self.limiter_class()
-        result = ""
-        while True:
-            input = prompt + result
-            inputs = self.tokenizer(input, return_tensors="pt").to(self.device)
-            token = self._next_token(inputs)
-            if token == self.tokenizer.eos_token or token == "<|file_separator|>":
-                break
-            if limiter.is_too_long(result + token):
-                break
-            result += token
+        limiters = [limiter_class() for limiter_class in self.limiter_classes]
+        kwargs = {
+            **self.generate_kwargs,
+            "stopping_criteria": transformers.StoppingCriteriaList(
+                [OutputStoppingCriteria(limiter, self.tokenizer, prefix_length) for limiter in limiters] +
+                self.generate_kwargs.get("stopping_criteria", [])
+            ),
+        }
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+        output = self.model.generate(**inputs, **kwargs)[0]
+
+        def decode(ids):
+            return self.tokenizer.decode(ids)[prefix_length:]
+
+        result = decode(output)
+        if any((limiter.is_too_long(result) for limiter in limiters)):
+            result = decode(output[:-1])
         return result

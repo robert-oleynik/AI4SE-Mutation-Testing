@@ -54,7 +54,7 @@ class Generate:
         if device is None:
             device = "cuda:0"
         if not skip_ai:
-            mutator.ai.llm = LLM(device, model, FunctionLimiter)
+            mutator.ai.llm = LLM(device, model, [FunctionLimiter], max_new_tokens=2000)
 
         if generator is None:
             generator = ["simple"]
