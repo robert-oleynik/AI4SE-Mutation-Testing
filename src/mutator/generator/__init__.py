@@ -1,10 +1,12 @@
 from .generator import Mutation, MutationGenerator
 from .identity import Identity
 from .full_body_based import FullBodyBasedGenerator
+from .doc_string_based import DocStringBasedGenerator
 
 generators = {
         "identity": Identity(),
         "full_body_based": FullBodyBasedGenerator(),
+        "doc_string_based": DocStringBasedGenerator(),
 }
 
 
@@ -22,5 +24,6 @@ __all__ = [
         "Mutation",
         "Identity",
         "FullBodyBasedGenerator",
+        "DocStringBasedGenerator",
         "generators"
 ]
