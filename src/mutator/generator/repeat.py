@@ -1,6 +1,6 @@
 import mutator.ai.llm
 
-from ..source import MutationTarget, SourceFile
+from ..source import MutationTarget
 from .generator import Mutation, MutationGenerator
 
 
@@ -19,7 +19,7 @@ class RepeatGenerator(MutationGenerator):
         self.no_repeat_ngram_size = no_repeat_ngram_size
         self.do_smaple = do_sample
 
-    def generate(self, source: SourceFile, target: MutationTarget) -> list[Mutation]:
+    def generate(self, target: MutationTarget) -> list[Mutation]:
         name = target.node.child_by_field_name("name").text.decode()
         params = target.node.child_by_field_name("parameters").text.decode()
         full = target.node.text.decode()

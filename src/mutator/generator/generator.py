@@ -1,6 +1,6 @@
 import abc
 
-from ..source import MutationTarget, SourceFile
+from ..source import MutationTarget
 
 
 class Mutation:
@@ -9,5 +9,5 @@ class Mutation:
 
 class MutationGenerator(abc.ABC):
     @abc.abstractmethod
-    def generate(self, source: SourceFile, target: MutationTarget) -> list[Mutation]:
+    def generate(self, target: MutationTarget) -> list[Mutation]:
         raise NotImplementedError

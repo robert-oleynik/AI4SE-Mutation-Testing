@@ -3,7 +3,7 @@ import pathlib
 import typing
 
 from .generator import Mutation
-from .source import MutationTarget, SourceFile
+from .source import MutationTarget
 
 
 class MutationStore:
@@ -16,16 +16,16 @@ class MutationStore:
         self.base.mkdir(parents=True,exist_ok=True)
         self.counter = {}
 
-    def add(self, source: SourceFile, target: MutationTarget, mutation: Mutation):
+    def add(self, target: MutationTarget, mutation: Mutation):
         ident = target.fullname
-        path = self.base / f"{source.module}" / target.fullname
-        path.mkdir(parents=True,exist_ok=True)
+        path = self.base / f"{target.source.module}" / target.fullname
+        path.mkdir(parents=True, exist_ok=True)
         if path not in self.counter:
             self.counter[path] = 0
-        content = source.content[:target.begin] + \
+        content = target.source.content[:target.begin] + \
             mutation.content + \
-            source.content[target.end:]
-        (path / "file").write_bytes(f"{source.path}".encode())
+            target.source.content[target.end:]
+        (path / "file").write_bytes(f"{target.source.path}".encode())
         file = path / f"{self.counter[path]}.py"
         file.write_bytes(content)
 

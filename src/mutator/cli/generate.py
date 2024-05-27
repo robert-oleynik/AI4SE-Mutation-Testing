@@ -113,9 +113,9 @@ class Generate:
                         if gen not in mutator.generator.generators:
                             raise GeneratorNotFound(gen)
                         g = mutator.generator.generators[gen]
-                        for mutation in g.generate(sourceFile, target):
+                        for mutation in g.generate(target):
                             counter += 1
-                            store.add(sourceFile, target, mutation)
+                            store.add(target, mutation)
                             print(
                                 f" - {targetPath:<80} [mutations: {counter}]", end="\r"
                             )
