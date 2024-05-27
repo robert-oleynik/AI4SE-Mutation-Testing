@@ -103,6 +103,6 @@ class Generate:
                     for mutation in g.generate(sourceFile, target):
                         counter += 1
                         store.add(sourceFile, target, mutation)
-                        print(f" - {targetPath} [mutations: {counter}]", end="\r")
+                        print(f" - {targetPath:<100} [mutations: {counter}]", end="\r")
                     print()
         return 0
