@@ -20,9 +20,9 @@ class RepeatGenerator(MutationGenerator):
         self.do_smaple = do_sample
 
     def generate(self, source: SourceFile, target: MutationTarget) -> list[Mutation]:
-        name = target.node.child_by_field_name("name").text()
-        params = target.node.child_by_field_name("parameters").text()
-        full = target.node.text()
+        name = target.node.child_by_field_name("name").text.decode()
+        params = target.node.child_by_field_name("parameters").text.decode()
+        full = target.node.text.decode()
         query = f"""<|file_separator|>{name}.py
         {full}
         <|file_separator|>{name}.py
