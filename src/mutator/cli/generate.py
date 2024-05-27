@@ -34,6 +34,12 @@ class Generate:
             help="Comma-separated list of names of generators to use.",
         )
         parser.add_argument(
+            "--configs",
+            default="single_result",
+            type=str,
+            help="Comma-separated list of names of generator configs to use.",
+        )
+        parser.add_argument(
             "--num-mutations",
             default=1,
             type=int,
@@ -58,6 +64,7 @@ class Generate:
         self,
         out_dir: pathlib.Path | None,
         generators: str,
+        configs: str,
         chdir: pathlib.Path | None,
         device: str | None,
         model: str | None,
@@ -79,6 +86,7 @@ class Generate:
             )
 
         generator_names = generators.split(",")
+        config_names = configs.split(",")
         if chdir is None:
             chdir = pathlib.Path.cwd()
         if out_dir is None:
@@ -109,16 +117,20 @@ class Generate:
                 print(f" - {targetPath}", end="\r")
                 counter = 0
                 try:
-                    for gen in generator_names:
-                        if gen not in mutator.generator.generators:
-                            raise GeneratorNotFound(gen)
-                        g = mutator.generator.generators[gen]
-                        for mutation in g.generate(target):
-                            counter += 1
-                            store.add(target, mutation)
-                            print(
-                                f" - {targetPath:<80} [mutations: {counter}]", end="\r"
-                            )
+                    for generator_name in generator_names:
+                        generator = mutator.generator.generators.get(generator_name)
+                        if generator_name is None:
+                            raise GeneratorNotFound(generator_name)
+                        for config_name in config_names:
+                            config = mutator.generator.configs.get(config_name)
+                            if config_name is None:
+                                raise GeneratorConfigNotFound(config_name)
+                            for mutation in generator.generate(target, config):
+                                counter += 1
+                                store.add(target, mutation)
+                                print(
+                                    f" - {targetPath:<80} [mutations: {counter}]", end="\r"
+                                )
                 except Exception as e:
                     print()
                     raise e
