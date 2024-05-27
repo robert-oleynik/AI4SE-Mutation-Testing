@@ -1,5 +1,5 @@
-from .limiter import Limiter
 from ...treesitter.python import tsParser
+from .limiter import Limiter
 
 
 class FunctionLimiter(Limiter):
@@ -16,7 +16,11 @@ class FunctionLimiter(Limiter):
             new_end_byte=len(source),
             start_point=old_root.end_point,
             old_end_point=old_root.end_point,
-            new_end_point=(len(source_lines), len(source_lines[-1]))
+            new_end_point=(
+                len(source_lines),
+                # FIX: Handle empty source lines
+                len(source_lines[-1]) if len(source_lines) > 0 else 0,
+            ),
         )
         self.tree = tsParser.parse(source, self.tree)
         root = self.tree.root_node
@@ -25,4 +29,8 @@ class FunctionLimiter(Limiter):
             return False
         assert root.type == "module"
         count = len(root.children)
-        return count > 1 or count == 1 and root.children[0].type not in ["ERROR", "function_definition"]
+        return (
+            count > 1
+            or count == 1
+            and root.children[0].type not in ["ERROR", "function_definition"]
+        )

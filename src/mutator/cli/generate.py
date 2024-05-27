@@ -117,7 +117,7 @@ class Generate:
                             counter += 1
                             store.add(sourceFile, target, mutation)
                             print(
-                                f" - {targetPath:<100} [mutations: {counter}]", end="\r"
+                                f" - {targetPath:<80} [mutations: {counter}]", end="\r"
                             )
                 except Exception as e:
                     print()
