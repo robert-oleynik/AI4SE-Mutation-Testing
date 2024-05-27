@@ -14,9 +14,6 @@ class DocStringBasedGenerator(MutationGenerator):
         if len(matches) == 0:
             return []
         docstring = matches[0][1]["docstring"]
-        prompt = content[:docstring.end_byte].decode()
-        result = mutator.ai.llm.prompt(prompt, True)
-        print("====================================")
-        print(result)
-        print("====================================")
-        return [Mutation(result.encode())]
+        prompt = content[: docstring.end_byte].decode()
+        results = mutator.ai.llm.prompt(prompt, True)
+        return [Mutation(result.encode()) for result in results]

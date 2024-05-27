@@ -1,19 +1,22 @@
 import pathlib
 import re
 
-from .treesitter.python import tsLang, tsParser
 import tree_sitter as ts
-import tree_sitter_python as tsp
+
+from .treesitter.python import tsLang, tsParser
 
 _tsFunctionQuery = tsLang.query("""
 (function_definition) @target
 """)
 
+
 class InvalidNodeType(Exception):
     "Raised when an expected node type does not match received one"
 
+
 class MissingIdentifier(Exception):
     "Raised when a tree sitter expects an identifier but no one was found"
+
 
 def _map_tsnode_pos_to_byte_range(lines: list[bytes], node: ts.Node) -> tuple[int, int]:
     bl, bo = node.start_point
@@ -29,9 +32,9 @@ def _map_tsnode_pos_to_byte_range(lines: list[bytes], node: ts.Node) -> tuple[in
         else:
             length += len(line)
         if el == i:
-            length -= len(line[eo+1:])
+            length -= len(line[eo + 1 :])
             break
-    return offset, offset+length
+    return offset, offset + length
 
 
 class Symbol:
@@ -48,7 +51,7 @@ class Symbol:
                 ident = n.child_by_field_name("name")
                 if ident is not None and ident.type == "identifier":
                     begin, end = _map_tsnode_pos_to_byte_range(lines, ident)
-                    self.name = content[begin:end-1].decode() + "." + self.name
+                    self.name = content[begin : end - 1].decode() + "." + self.name
                 else:
                     raise MissingIdentifier()
             n = n.parent
@@ -59,12 +62,18 @@ class Filter:
     class Matcher:
         def __init__(self, f: str):
             module, symbol = f.split(":")
-            toRegex = lambda f: re.compile(f.replace(".", "\\.").replace("*", "[^\\.]*") + "$")
-            self.module = toRegex(module)
-            self.symbol = toRegex(symbol)
-        
+
+            def _toRegex(f):
+                return re.compile(f.replace(".", "\\.").replace("*", "[^\\.]*") + "$")
+
+            self.module = _toRegex(module)
+            self.symbol = _toRegex(symbol)
+
         def match(self, module: str, symbol: str) -> bool:
-            return self.module.fullmatch(module) is not None and self.symbol.fullmatch(symbol) is not None
+            return (
+                self.module.fullmatch(module) is not None
+                and self.symbol.fullmatch(symbol) is not None
+            )
 
     def __init__(self, filters: list[str]):
         self.include = []
@@ -76,8 +85,11 @@ class Filter:
                 self.include.append(self.Matcher(f))
 
     def match(self, module: str, symbol: str) -> bool:
-        match = lambda m: m.match(module, symbol)
-        return any(map(match, self.include)) and not any(map(match, self.exclude))
+        def _match(m):
+            return m.match(module, symbol)
+
+        return any(map(_match, self.include)) and not any(map(_match, self.exclude))
+
 
 class MutationTarget:
     """
@@ -90,7 +102,8 @@ class MutationTarget:
         self.begin, self.end = _map_tsnode_pos_to_byte_range(lines, self.node)
 
     def content(self, content: bytes) -> bytes:
-        return content[self.begin:self.end]
+        return content[self.begin : self.end]
+
 
 class SourceFile:
     """

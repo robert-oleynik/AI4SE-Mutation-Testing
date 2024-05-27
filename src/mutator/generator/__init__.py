@@ -4,9 +4,10 @@ from .full_body_based import FullBodyBasedGenerator
 from .doc_string_based import DocStringBasedGenerator
 
 generators = {
-        "identity": Identity(),
-        "full_body_based": FullBodyBasedGenerator(),
-        "doc_string_based": DocStringBasedGenerator(),
+    "identity": Identity(),
+    "full_body_based": FullBodyBasedGenerator(),
+    "doc_string_based": DocStringBasedGenerator(),
+    "repeat": RepeatGenerator(),
 }
 
 
@@ -19,11 +20,12 @@ class GeneratorNotFound(Exception):
     def message(self) -> str:
         return f"Generator '{self._name}' is not registered"
 
+
 __all__ = [
-        "MutationGenerator",
-        "Mutation",
-        "Identity",
-        "FullBodyBasedGenerator",
-        "DocStringBasedGenerator",
-        "generators"
+    "MutationGenerator",
+    "Mutation",
+    "Identity",
+    "FullBodyBasedGenerator",
+    "DocStringBasedGenerator",
+    "generators",
 ]

@@ -9,5 +9,5 @@ class FullBodyBasedGenerator(MutationGenerator):
         prompt = "# Original version\n"
         prompt += target.content(source.content).decode()
         prompt += "\n\n# Mutated version for mutation testing\n"
-        answer = mutator.ai.llm.prompt(prompt)
-        return [Mutation(answer.encode())]
+        results = mutator.ai.llm.prompt(prompt)
+        return [Mutation(result.encode()) for result in results]
