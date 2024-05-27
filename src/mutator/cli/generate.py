@@ -101,20 +101,20 @@ class Generate:
                 "error: found existing mutations. use flag `--clean` to generate new ones."
             )
             return 1
-        for gen in generator_names:
-            if gen not in mutator.generator.generators:
-                raise GeneratorNotFound(gen)
-            g = mutator.generator.generators[gen]
 
-            print(f"Generating with '{gen}'")
-            for sourceFile in sourceFiles:
-                for target in sourceFile.targets:
-                    targetPath = f"{sourceFile.module}:{target.fullname}"
-                    print(f" - {targetPath}", end="\r")
-                    counter = 0
+        print("Targets:")
+        for sourceFile in sourceFiles:
+            for target in sourceFile.targets:
+                targetPath = f"{sourceFile.module}:{target.fullname}"
+                print(f" - {targetPath}", end="\r")
+                counter = 0
+                for gen in generator_names:
+                    if gen not in mutator.generator.generators:
+                        raise GeneratorNotFound(gen)
+                    g = mutator.generator.generators[gen]
                     for mutation in g.generate(sourceFile, target):
                         counter += 1
                         store.add(sourceFile, target, mutation)
                         print(f" - {targetPath:<100} [mutations: {counter}]", end="\r")
-                    print()
+                print()
         return 0
