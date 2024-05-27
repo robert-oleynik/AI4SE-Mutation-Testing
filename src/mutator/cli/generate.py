@@ -1,16 +1,15 @@
 import argparse
 import pathlib
-import itertools
 import shutil
 
 import mutator.ai
 import mutator.generator
 
 from ..ai import LLM
-from ..generator import GeneratorNotFound, generators
-from ..source import SourceFile, Filter
-from ..store import MutationStore
 from ..ai.limiter.function import FunctionLimiter
+from ..generator import GeneratorNotFound
+from ..source import Filter, SourceFile
+from ..store import MutationStore
 
 
 class Generate:
@@ -33,6 +32,12 @@ class Generate:
             default="full_body_based",
             type=str,
             help="Comma-separated list of names of generators to use.",
+        )
+        parser.add_argument(
+            "--num_mutations",
+            default=1,
+            type=int,
+            help="Number of mutations per (LLM) based generator",
         )
         parser.add_argument(
             "-c",
@@ -59,12 +64,19 @@ class Generate:
         filters: list[str],
         skip_ai: bool,
         clean: bool,
+        num_mutations: int,
         **other,
     ) -> int:
         if device is None:
             device = "cuda:0"
         if not skip_ai:
-            mutator.ai.llm = LLM(device, model, [FunctionLimiter], max_new_tokens=2000)
+            mutator.ai.llm = LLM(
+                device,
+                model,
+                [FunctionLimiter],
+                max_new_tokens=2000,
+                num_return_sequences=num_mutations,
+            )
 
         generator_names = generators.split(",")
         if chdir is None:
