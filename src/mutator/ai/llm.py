@@ -38,7 +38,7 @@ class LLM:
             ),
         }
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
-        outputs = self.model.generate(**inputs, **kwargs)[0]
+        outputs = self.model.generate(**inputs, **kwargs)
 
         def decode(output):
             result = self.tokenizer.decode(output)[prefix_length:]
