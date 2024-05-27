@@ -1,6 +1,7 @@
 import mutator.ai
-from ..treesitter.python import tsLang, tsParser
+
 from ..source import MutationTarget, SourceFile
+from ..treesitter.python import tsLang, tsParser
 from .generator import Mutation, MutationGenerator
 
 _tsQuery = tsLang.query("(expression_statement (string) @docstring)")
@@ -15,5 +16,7 @@ class DocStringBasedGenerator(MutationGenerator):
             return []
         docstring = matches[0][1]["docstring"]
         prompt = content[: docstring.end_byte].decode()
-        results = mutator.ai.llm.prompt(prompt, True)
+        results = mutator.ai.llm.prompt(
+            prompt, True, num_return_sequences=1
+        )  # TODO: Use beam search
         return [Mutation(result.encode()) for result in results]

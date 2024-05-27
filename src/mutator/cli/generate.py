@@ -34,7 +34,7 @@ class Generate:
             help="Comma-separated list of names of generators to use.",
         )
         parser.add_argument(
-            "--num_mutations",
+            "--num-mutations",
             default=1,
             type=int,
             help="Number of mutations per (LLM) based generator",
