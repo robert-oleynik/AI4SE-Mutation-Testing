@@ -121,7 +121,6 @@ class Generate:
                             )
                 except Exception as e:
                     print()
-                    print(e)
-                    exit(1)
+                    raise e
                 print()
         return 0
