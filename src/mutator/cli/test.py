@@ -29,7 +29,7 @@ class Test:
 
     def run(self,
             out_dir: pathlib.Path,
-            generator: list[str],
+            generators: list[str],
             chdir: pathlib.Path,
             skip_generation: bool,
             filters: list[str],
@@ -39,7 +39,12 @@ class Test:
         if out_dir is None:
             out_dir = chdir.joinpath("out/mutations")
         if not skip_generation:
-            ec = self.generate.run(out_dir, generator, chdir, filters=filters, **other)
+            ec = self.generate.run(
+                      out_dir=out_dir,
+                      generators=generators,
+                      chdir=chdir,
+                      filters=filters,
+                      **other)
             if ec != 0:
                 return ec
 
