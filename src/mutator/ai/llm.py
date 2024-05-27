@@ -35,6 +35,7 @@ class LLM:
                     for limiter in limiters
                 ]
                 + self.generate_kwargs.get("stopping_criteria", [])
+                + extra_args.get("stopping_criteria", [])
             ),
         }
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
