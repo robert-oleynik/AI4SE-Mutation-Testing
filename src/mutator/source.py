@@ -91,21 +91,6 @@ class Filter:
         return any(map(_match, self.include)) and not any(map(_match, self.exclude))
 
 
-class MutationTarget:
-    """
-    Stores offset/positions of target identifier and content.
-    """
-
-    def __init__(self, source: SourceFile, lines: list[bytes], symbol: Symbol):
-        self.source = source
-        self.node = symbol.node
-        self.fullname = symbol.name
-        self.begin, self.end = _map_tsnode_pos_to_byte_range(lines, self.node)
-
-    def content(self) -> bytes:
-        return self.source.content[self.begin : self.end]
-
-
 class SourceFile:
     """
     Stores all information associated with a python source file.
@@ -130,3 +115,19 @@ class SourceFile:
             if filter.match(self.module, symbol.name):
                 self.symbols.append(symbol)
         self.targets = [MutationTarget(self, lines, symbol) for symbol in self.symbols]
+
+
+class MutationTarget:
+    """
+    Stores offset/positions of target identifier and content.
+    """
+
+    def __init__(self, source: SourceFile, lines: list[bytes], symbol: Symbol):
+        self.source = source
+        self.node = symbol.node
+        self.fullname = symbol.name
+        self.begin, self.end = _map_tsnode_pos_to_byte_range(lines, self.node)
+
+    def content(self) -> bytes:
+        return self.source.content[self.begin : self.end]
+
