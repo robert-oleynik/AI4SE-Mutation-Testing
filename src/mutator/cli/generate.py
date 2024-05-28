@@ -7,7 +7,7 @@ import mutator.generator
 
 from ..ai import LLM
 from ..ai.limiter.function import FunctionLimiter
-from ..generator import GeneratorNotFound, GeneratorConfigNotFound
+from ..generator import GeneratorConfigNotFound, GeneratorNotFound
 from ..source import Filter, SourceFile
 from ..store import MutationStore
 
@@ -49,7 +49,7 @@ class Generate:
         )
         parser.add_argument("-d", "--device", action="store")
         parser.add_argument(
-            "-m", "--model", action="store", default="google/codegemma-2b"
+            "-m", "--model", action="store", default="google/codegemma-1.1-2b"
         )
         parser.add_argument("--skip-ai", action="store_true")
         parser.add_argument("filters", nargs="*", type=str)
@@ -121,7 +121,8 @@ class Generate:
                                 counter += 1
                                 store.add(target, mutation)
                                 print(
-                                    f" - {targetPath:<80} [mutations: {counter}]", end="\r"
+                                    f" - {targetPath:<80} [mutations: {counter}]",
+                                    end="\r",
                                 )
                 except Exception as e:
                     print()
