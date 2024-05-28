@@ -24,9 +24,9 @@ class MutationStore:
         else:
             self.counter[path] += 1
         content = (
-            target.source.content[: target.begin]
+            target.source.content[: target.node.start_byte]
             + mutation.content
-            + target.source.content[target.end :]
+            + target.source.content[target.node.end_byte :]
         )
         (path / "file").write_bytes(f"{target.source.path}".encode())
         file = path / f"{self.counter[path]}.py"
@@ -43,6 +43,8 @@ class MutationStore:
     ) -> typing.Generator[tuple[str, str, pathlib.Path, pathlib.Path], None, None]:
         for module in os.listdir(self.base):
             module_path = self.base.joinpath(module)
+            if not module_path.is_dir():
+                continue
             for target in os.listdir(module_path):
                 target_path = module_path / target
                 source_file = (target_path / "file").read_bytes().decode()
