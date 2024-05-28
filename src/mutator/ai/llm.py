@@ -57,6 +57,6 @@ class LLM:
         num_tokens = inputs.input_ids.shape[1]
         prefix_len = len(self.tokenizer(prompt[:keep_prefix_len]).input_ids)
         index = random.randint(prefix_len + 1, num_tokens)
-        for key in input.keys():
+        for key in inputs.keys():
             inputs[key] = inputs[key][:,:index]
         return self.generate(inputs.to(self.device), strip_prefix_len=0, **extra_args)
