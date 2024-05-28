@@ -19,10 +19,9 @@ class MissingIdentifier(Exception):
 
 
 class Symbol:
-    def __init__(self, content: bytes, lines: list[bytes], node: ts.Node):
+    def __init__(self, content: bytes, node: ts.Node):
         if node.type != "function_definition":
             raise InvalidNodeType()
-        lines = content.splitlines(True)
         self.node = node
         self.name = ""
 
@@ -31,8 +30,7 @@ class Symbol:
             if n.type == "function_definition" or n.type == "class_definition":
                 ident = n.child_by_field_name("name")
                 if ident is not None and ident.type == "identifier":
-                    begin, end = _map_tsnode_pos_to_byte_range(lines, ident)
-                    self.name = content[begin : end - 1].decode() + "." + self.name
+                    self.name = ident.text.decode() + "." + self.name
                 else:
                     raise MissingIdentifier()
             n = n.parent
@@ -92,7 +90,7 @@ class SourceFile:
         self.symbols = []
         lines = self.content.splitlines(keepends=True)
         for _, captures in _tsFunctionQuery.matches(self.tree.root_node):
-            symbol = Symbol(self.content, lines, captures["target"])
+            symbol = Symbol(self.content, captures["target"])
             if filter.match(self.module, symbol.name):
                 self.symbols.append(symbol)
         self.targets = [MutationTarget(self, lines, symbol) for symbol in self.symbols]
@@ -109,11 +107,11 @@ class MutationTarget:
         self.fullname = symbol.name
 
     def content(self) -> bytes:
-        return self.source.content[self.node.start_byte:self.node.end_byte]
+        return self.source.content[self.node.start_byte : self.node.end_byte]
 
     def get_name(self) -> bytes:
         return self.node.child_by_field_name("name").text
 
     def get_signature(self) -> bytes:
         body = self.node.child_by_field_name("body")
-        return self.source.content[self.node.start_byte:body.start_byte]
+        return self.source.content[self.node.start_byte : body.start_byte]
