@@ -20,6 +20,7 @@ configs = {
         "do_sample": True,
         "num_beams": 4,
         "no_repeat_ngram_size": 32,
+        "num_return_sequences": 4,
     }),
 }
 

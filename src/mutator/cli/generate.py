@@ -40,12 +40,6 @@ class Generate:
             help="Comma-separated list of names of generator configs to use.",
         )
         parser.add_argument(
-            "--num-mutations",
-            default=1,
-            type=int,
-            help="Number of mutations per (LLM) based generator",
-        )
-        parser.add_argument(
             "-c",
             "--chdir",
             action="store",
@@ -71,7 +65,6 @@ class Generate:
         filters: list[str],
         skip_ai: bool,
         clean: bool,
-        num_mutations: int,
         **other,
     ) -> int:
         if device is None:
@@ -82,7 +75,6 @@ class Generate:
                 model,
                 [FunctionLimiter],
                 max_new_tokens=2000,
-                num_return_sequences=num_mutations,
             )
 
         generator_names = generators.split(",")
