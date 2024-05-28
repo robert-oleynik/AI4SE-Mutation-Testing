@@ -28,6 +28,13 @@ class Test:
             default=False,
             help="Reuse already generated mutations.",
         )
+        parser.add_argument(
+            "--test-timeout",
+            action="store",
+            default=60,
+            type=int,
+            help="Test suite timeout in seconds",
+        )
 
     def run(
         self,
@@ -36,6 +43,7 @@ class Test:
         chdir: pathlib.Path,
         skip_generation: bool,
         filters: list[str],
+        test_timeout: int,
         **other,
     ):
         if chdir is None:
@@ -66,12 +74,14 @@ class Test:
 
         result = Result()
 
+        test_timeout *= 10
         spinner = Spinner()
         for module_name, module in mutation.items():
             print("Testing Module:", module_name)
             for target_name, target in sorted(list(module.items()), key=lambda v: v[0]):
                 if not f.match(module_name, target_name):
                     continue
+                timeout_count = 0
                 caught = 0
                 count = len(target)
                 for i, (mutation, source) in enumerate(target):
@@ -88,12 +98,19 @@ class Test:
                     process = subprocess.Popen(
                         args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=chdir
                     )
-                    while process.poll() is None:
+                    counter = 0
+                    while process.poll() is None and counter < test_timeout:
                         time.sleep(0.1)
                         spinner.next()
                         print(f" {spinner} {target_name:<80} [{i}/{count}]", end="\r")
+                        counter += 1
+                    if counter < test_timeout:
+                        timeout_count += 1
+                    process.kill()
                     is_caught = process.poll() != 0
                     output = process.stdout.read().decode()
+                    output_err = process.stderr.read().decode()
+                    output = output if output != "" else output_err
                     result.insert(
                         module_name,
                         target_name,
@@ -109,6 +126,8 @@ class Test:
                     f" ✔ {target_name:<80} [{count}/{count}] caught:",
                     caught,
                     "missed:",
-                    len(target) - caught,
+                    len(target) - caught - timeout_count,
+                    "timeout:",
+                    timeout_count,
                 )
         result.write(out_dir / "test-result.json")
