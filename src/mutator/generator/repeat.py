@@ -11,17 +11,13 @@ class RepeatGenerator(MutationGenerator):
     """
 
     def generate(self, target: MutationTarget, config: GeneratorConfig) -> list[Mutation]:
-        name = target.node.child_by_field_name("name").text.decode()
-        params = target.node.child_by_field_name("parameters").text.decode()
-        full = target.node.text.decode()
-        query = f"""<|file_separator|>{name}.py
-        {full}
-        <|file_separator|>{name}.py
-        def {name}{params}:
-        """
+        full = target.content().decode()
+        name = target.get_name().decode()
+        signature = target.get_signature().decode()
+        query = f"<|file_separator|>{name}.py\n{full}\n<|file_separator|>{name}.py\n{signature}"
         outputs = mutator.ai.llm.prompt(query, **config.model_kwargs)
 
         def _encode(output):
-            return f"def {name}{params}:\n{output}".encode()
+            return f"{signature}{output}".encode()
 
         return [Mutation(_encode(o)) for o in outputs]

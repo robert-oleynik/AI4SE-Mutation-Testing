@@ -18,25 +18,6 @@ class MissingIdentifier(Exception):
     "Raised when a tree sitter expects an identifier but no one was found"
 
 
-def _map_tsnode_pos_to_byte_range(lines: list[bytes], node: ts.Node) -> tuple[int, int]:
-    bl, bo = node.start_point
-    el, eo = node.end_point
-    offset = 0
-    length = 0
-    for i, line in enumerate(lines):
-        if i < bl:
-            offset += len(line)
-        elif i == bl:
-            offset += bo
-            length += len(line[bo:])
-        else:
-            length += len(line)
-        if el == i:
-            length -= len(line[eo + 1 :])
-            break
-    return offset, offset + length
-
-
 class Symbol:
     def __init__(self, content: bytes, lines: list[bytes], node: ts.Node):
         if node.type != "function_definition":
@@ -126,8 +107,13 @@ class MutationTarget:
         self.source = source
         self.node = symbol.node
         self.fullname = symbol.name
-        self.begin, self.end = _map_tsnode_pos_to_byte_range(lines, self.node)
 
     def content(self) -> bytes:
-        return self.source.content[self.begin : self.end]
+        return self.source.content[self.node.start_byte:self.node.end_byte]
 
+    def get_name(self) -> bytes:
+        return self.node.child_by_field_name("name").text
+
+    def get_signature(self) -> bytes:
+        body = self.node.child_by_field_name("body")
+        return self.source.content[self.node.start_byte:body.start_byte]
