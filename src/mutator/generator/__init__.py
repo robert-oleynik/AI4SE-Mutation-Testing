@@ -18,7 +18,7 @@ configs = {
     }),
     "beam_search": GeneratorConfig({
         "do_sample": True,
-        "num_beams": 4,
+        "num_beams": 8,
         "no_repeat_ngram_size": 32,
         "num_return_sequences": 4,
     }),
