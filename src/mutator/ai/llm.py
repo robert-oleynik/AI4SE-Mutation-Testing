@@ -1,5 +1,6 @@
 import torch
 import transformers
+import random
 
 from .limiter.limiter import Limiter, OutputStoppingCriteria
 
@@ -20,10 +21,8 @@ class LLM:
         self.limiter_classes = limiter_classes
         self.generate_kwargs = generate_kwargs
 
-    def prompt(self, prompt: str, prompt_is_part_of_result=False, **extra_args) -> str:
-        prefix_length = len(self.tokenizer.bos_token)
-        if not prompt_is_part_of_result:
-            prefix_length += len(prompt)
+    def generate(self, inputs, strip_prefix_len: int, **extra_args) -> list[str]:
+        prefix_length = len(self.tokenizer.bos_token) + strip_prefix_len
 
         limiters = [limiter_class() for limiter_class in self.limiter_classes]
         kwargs = {
@@ -38,7 +37,6 @@ class LLM:
                 + extra_args.get("stopping_criteria", [])
             ),
         }
-        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         outputs = self.model.generate(**inputs, **kwargs)
 
         def decode(output):
@@ -48,3 +46,17 @@ class LLM:
             return result
 
         return [decode(output) for output in outputs]
+
+    def prompt(self, prompt: str, prompt_is_part_of_result=False, **extra_args) -> list[str]:
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+        strip_prefix_len = 0 if prompt_is_part_of_result else len(prompt)
+        return self.generate(inputs, strip_prefix_len, **extra_args)
+
+    def force_branch(self, prompt: str, keep_prefix_len: int, **extra_args) -> list[str]:
+        inputs = self.tokenizer(prompt, return_tensors="pt")
+        num_tokens = inputs.input_ids.shape[1]
+        prefix_len = len(self.tokenizer(prompt[:keep_prefix_len]).input_ids)
+        index = random.randint(prefix_len + 1, num_tokens)
+        for key in input.keys():
+            inputs[key] = inputs[key][:,:index]
+        return self.generate(inputs.to(self.device), strip_prefix_len=0, **extra_args)

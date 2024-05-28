@@ -1,6 +1,7 @@
 from .config import GeneratorConfig
 from .doc_string_based import DocStringBasedGenerator
 from .full_body_based import FullBodyBasedGenerator
+from .forced_branch import ForcedBranchGenerator
 from .generator import Mutation, MutationGenerator
 from .identity import Identity
 from .repeat import RepeatGenerator
@@ -10,6 +11,7 @@ generators = {
     "full_body_based": FullBodyBasedGenerator(),
     "doc_string_based": DocStringBasedGenerator(),
     "repeat": RepeatGenerator(),
+    "forced_branch": ForcedBranchGenerator(),
 }
 
 configs = {
