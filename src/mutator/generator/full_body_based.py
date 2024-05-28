@@ -6,7 +6,9 @@ from .generator import Mutation, MutationGenerator
 
 
 class FullBodyBasedGenerator(MutationGenerator):
-    def generate(self, target: MutationTarget, config: GeneratorConfig) -> list[Mutation]:
+    def generate(
+        self, target: MutationTarget, config: GeneratorConfig
+    ) -> list[Mutation]:
         prompt = "# Original version\n"
         prompt += target.content().decode()
         prompt += "\n\n# Mutated version for mutation testing\n"
