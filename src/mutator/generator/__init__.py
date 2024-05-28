@@ -34,6 +34,16 @@ class GeneratorNotFound(Exception):
         return f"Generator '{self._name}' is not registered"
 
 
+class GeneratorConfigNotFound(Exception):
+    "Raised when the specified generator config is not registered"
+
+    def __init__(self, name: str):
+        self._name = name
+
+    def message(self) -> str:
+        return f"Generator config '{self._name}' is not registered"
+
+
 __all__ = [
     "MutationGenerator",
     "Mutation",
@@ -42,4 +52,6 @@ __all__ = [
     "DocStringBasedGenerator",
     "generators",
     "configs",
+    "GeneratorNotFound",
+    "GeneratorConfigNotFound",
 ]

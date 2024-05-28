@@ -7,7 +7,7 @@ import mutator.generator
 
 from ..ai import LLM
 from ..ai.limiter.function import FunctionLimiter
-from ..generator import GeneratorNotFound
+from ..generator import GeneratorNotFound, GeneratorConfigNotFound
 from ..source import Filter, SourceFile
 from ..store import MutationStore
 
