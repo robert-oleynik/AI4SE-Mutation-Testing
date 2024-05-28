@@ -104,7 +104,7 @@ class Test:
                         spinner.next()
                         print(f" {spinner} {target_name:<80} [{i}/{count}]", end="\r")
                         counter += 1
-                    if counter < test_timeout:
+                    if counter >= test_timeout:
                         timeout_count += 1
                     process.kill()
                     is_caught = process.poll() != 0
@@ -118,9 +118,10 @@ class Test:
                         mutation.absolute().relative_to(out_dir.resolve("./mutations")),
                         source,
                         is_caught,
+                        counter >= test_timeout,
                         output,
                     )
-                    if is_caught:
+                    if is_caught and counter < test_timeout:
                         caught += 1
                 print(
                     f" ✔ {target_name:<80} [{count}/{count}] caught:",
