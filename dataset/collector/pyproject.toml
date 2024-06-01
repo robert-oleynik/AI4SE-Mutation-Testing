@@ -1,0 +1,26 @@
+[project]
+name = "Collector"
+version = "0.1.0"
+description = "Collects data for an mutation tester"
+dependencies = [
+	"GitPython>=3.1.43",
+	"tree-sitter>=0.22.0",
+	"tree-sitter-python>=0.21.0",
+]
+
+[project.scripts]
+collector = "collector:cli_main"
+
+[tool.pyright]
+pythonVersion = "3.12"
+include = ["src/collector", "tests"]
+typeCheckingMode = "basic"
+
+[tool.ruff]
+src = ["src"]
+fix = true
+show-fixes = true
+output-format = "full"
+
+[tool.ruff.lint]
+select = [ "B", "E", "F", "I", "UP", "W" ]

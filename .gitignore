@@ -2,4 +2,4 @@ venv*/
 __pycache__/
 build/
 out/
-src/Mutator.egg-info/
+*.egg-info
