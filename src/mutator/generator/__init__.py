@@ -6,30 +6,6 @@ from .generator import Mutation, MutationGenerator
 from .identity import Identity
 from .repeat import RepeatGenerator
 
-generators = {
-    "identity": Identity(),
-    "full_body_based": FullBodyBasedGenerator(),
-    "doc_string_based": DocStringBasedGenerator(),
-    "repeat": RepeatGenerator(),
-    "forced_branch": ForcedBranchGenerator(),
-}
-
-configs = {
-    "single_result": GeneratorConfig(
-        {
-            "num_return_sequences": 1,
-        }
-    ),
-    "beam_search": GeneratorConfig(
-        {
-            "do_sample": True,
-            "num_beams": 8,
-            "no_repeat_ngram_size": 32,
-            "num_return_sequences": 4,
-        }
-    ),
-}
-
 
 class GeneratorNotFound(Exception):
     "Raised when the specified generator is not registered"
@@ -56,9 +32,12 @@ __all__ = [
     "Mutation",
     "Identity",
     "FullBodyBasedGenerator",
+    "ForcedBranchGenerator",
     "DocStringBasedGenerator",
     "generators",
     "configs",
     "GeneratorNotFound",
+    "GeneratorConfig",
     "GeneratorConfigNotFound",
+    "RepeatGenerator",
 ]

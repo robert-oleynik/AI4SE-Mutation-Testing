@@ -3,11 +3,42 @@ import shutil
 
 import click
 
-import mutator.generator
-
-from ..generator import GeneratorConfigNotFound, GeneratorNotFound
+from ..generator import (
+    DocStringBasedGenerator,
+    ForcedBranchGenerator,
+    FullBodyBasedGenerator,
+    GeneratorConfig,
+    GeneratorConfigNotFound,
+    GeneratorNotFound,
+    Identity,
+    RepeatGenerator,
+)
 from ..source import Filter, SourceFile
 from ..store import MutationStore
+
+generators = {
+    "identity": Identity(),
+    "full_body_based": FullBodyBasedGenerator(),
+    "doc_string_based": DocStringBasedGenerator(),
+    "repeat": RepeatGenerator(),
+    "forced_branch": ForcedBranchGenerator(),
+}
+
+configs = {
+    "single_result": GeneratorConfig(
+        {
+            "num_return_sequences": 1,
+        }
+    ),
+    "beam_search": GeneratorConfig(
+        {
+            "do_sample": True,
+            "num_beams": 8,
+            "no_repeat_ngram_size": 32,
+            "num_return_sequences": 4,
+        }
+    ),
+}
 
 
 @click.command()
@@ -23,7 +54,7 @@ from ..store import MutationStore
     "-g",
     "--generator",
     multiple=True,
-    default=list(mutator.generator.generators.keys()),
+    default=list(generators.keys()),
     show_default=True,
     help="Specify generator used for generating mutations",
 )
@@ -31,7 +62,7 @@ from ..store import MutationStore
     "-c",
     "--config",
     multiple=True,
-    default=list(mutator.generator.configs.keys()),
+    default=list(configs.keys()),
     show_default=True,
     help="LLM configuration to use for generators",
 )
@@ -65,7 +96,7 @@ from ..store import MutationStore
 @click.option("--no-llm", is_flag=True, help="Do not load LLM. May brake generators")
 @click.option("--clean", is_flag=True, help="Regenerate all mutations")
 def generate(out_dir, generator, config, project, filter, model, device, no_llm, clean):
-    if no_llm:
+    if not no_llm:
         import mutator.ai.llm
 
         from ..ai import LLM
@@ -75,9 +106,11 @@ def generate(out_dir, generator, config, project, filter, model, device, no_llm,
     filters = Filter(filter)
     sourceRoot = pathlib.Path(project.joinpath("src")).resolve()
     source_files = [
-        SourceFile(sourceRoot, file, filters)
-        for file in sourceRoot.rglob("*.py")
-        if len(file.symbols) > 0
+        f
+        for f in [
+            SourceFile(sourceRoot, file, filters) for file in sourceRoot.rglob("*.py")
+        ]
+        if len(f.symbols) > 0
     ]
 
     if clean and out_dir.exists():
@@ -94,17 +127,20 @@ def generate(out_dir, generator, config, project, filter, model, device, no_llm,
             counter = 0
             try:
                 for gen in generator:
-                    if gen not in mutator.generator.generators:
+                    if gen not in generators:
                         raise GeneratorNotFound(gen)
-                    g = mutator.generator.generators[gen]
+                    g = generators[gen]
                     for conf in config:
-                        if conf not in mutator.generator.configs:
+                        if conf not in configs:
                             raise GeneratorConfigNotFound(conf)
-                        c = mutator.generator.configs[conf]
+                        c = configs[conf]
                         for mutation in g.generate(target, c):
                             counter += 1
                             store.add(target, mutation)
-                            print(f"\r - {target_path:<80} [mutations: {counter}] ")
+                            print(
+                                f"\r - {target_path:<80} [mutations: {counter}] ",
+                                end="",
+                            )
             except Exception as e:
                 print()
                 raise e
