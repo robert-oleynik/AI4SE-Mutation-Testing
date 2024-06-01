@@ -81,6 +81,18 @@ formatter = {"repeat": RepeatGenerator.format}
     show_default=True,
     help="Seed used for randomness during training",
 )
+@click.option("--block-size", default=128, type=int, show_default=True, help="TODO")
+@click.option("--alpha", default=16, type=int, show_default=True, help="TODO")
+@click.option("--dropout", default=0.05, type=float, show_default=True, help="TODO")
+@click.option("--r", default=8, type=int, show_default=True, help="TODO")
+@click.option(
+    "-w",
+    "--warmup",
+    default=0,
+    type=int,
+    show_default=True,
+    help="Number of warmup steps to perform",
+)
 def train(
     out_dir,
     model_id,
@@ -92,6 +104,11 @@ def train(
     batch_size,
     test_size,
     seed,
+    block_size,
+    alpha,
+    dropout,
+    r,
+    warmup,
 ):
     import datasets
 
@@ -135,7 +152,7 @@ def train(
         labels = input_ids.copy()
         return {"input_ids": input_ids, "labels": labels}
 
-    def _block(data, block_size=128):
+    def _block(data):
         tokenizer = mutator.ai.llm.tokenizer
         concatenated = sum(data["input_ids"], [])
         length = len(concatenated)
@@ -179,9 +196,9 @@ def train(
         task_type=TaskType.CAUSAL_LM,
         inference_mode=False,
         target_modules=["q_proj", "v_proj"],
-        r=8,
-        lora_alpha=16,
-        lora_dropout=0.05,
+        r=r,
+        lora_alpha=alpha,
+        lora_dropout=dropout,
         bias="all",
     )
     peft_model = get_peft_model(model, peft_config)
@@ -204,7 +221,7 @@ def train(
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
     learning_rate_scheduler = get_linear_schedule_with_warmup(
         optimizer=optimizer,
-        num_warmup_steps=0,
+        num_warmup_steps=warmup,
         num_training_steps=(len(train_dataloader) * num_epochs),
     )
 
