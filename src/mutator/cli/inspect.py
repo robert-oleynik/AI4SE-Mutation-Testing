@@ -1,7 +1,7 @@
-import argparse
 import difflib
 import pathlib
 
+import click
 import textual.app
 import textual.containers
 import textual.scroll_view
@@ -140,31 +140,24 @@ class Inspector(textual.app.App):
         yield textual.containers.Vertical(self.code, self.textLog, classes="side-diff")
 
 
-class Inspect:
-    """
-    Provide information about the generated mutations for the current project.
-    """
-
-    def add_arguments(self, parser: argparse.ArgumentParser):
-        parser.add_argument(
-            "-o",
-            "--out-dir",
-            action="store",
-            type=pathlib.Path,
-            help="Output directory.",
-        )
-        parser.add_argument(
-            "-c",
-            "--chdir",
-            action="store",
-            type=pathlib.Path,
-            default=pathlib.Path.cwd(),
-            help="Change working directory",
-        )
-
-    def run(self, out_dir: pathlib.Path | None, chdir: pathlib.Path, **other):
-        if out_dir is None:
-            out_dir = chdir / "out"
+@click.command()
+@click.option(
+    "-o",
+    "--out-dir",
+    type=pathlib.Path,
+    default=pathlib.Path("out", "mutations"),
+    show_default=True,
+)
+@click.option(
+    "-p",
+    "--project",
+    type=pathlib.Path,
+    default=pathlib.Path.cwd(),
+    help="Change project directory",
+)
+@click.option("--tui", is_flag=True, help="Open inspector as TUI")
+def inspect(out_dir, project, tui):
+    if tui:
         app = Inspector()
-        app.init(chdir, out_dir)
+        app.init(project, out_dir)
         app.run()

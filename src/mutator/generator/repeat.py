@@ -1,5 +1,3 @@
-import mutator.ai.llm
-
 from ..source import MutationTarget
 from .config import GeneratorConfig
 from .generator import Mutation, MutationGenerator
@@ -10,7 +8,11 @@ class RepeatGenerator(MutationGenerator):
     Generate Mutations by indicating repeated source code, but forcing changes.
     """
 
-    def generate(self, target: MutationTarget, config: GeneratorConfig) -> list[Mutation]:
+    def generate(
+        self, target: MutationTarget, config: GeneratorConfig
+    ) -> list[Mutation]:
+        import mutator.ai.llm
+
         full = target.content().decode()
         name = target.get_name().decode()
         signature = target.get_signature().decode()

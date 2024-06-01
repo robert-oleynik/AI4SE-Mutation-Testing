@@ -1,5 +1,3 @@
-import mutator.ai
-
 from ..source import MutationTarget
 from ..treesitter.python import tsLang, tsParser
 from .config import GeneratorConfig
@@ -9,7 +7,11 @@ _tsQuery = tsLang.query("(expression_statement (string) @docstring)")
 
 
 class DocStringBasedGenerator(MutationGenerator):
-    def generate(self, target: MutationTarget, config: GeneratorConfig) -> list[Mutation]:
+    def generate(
+        self, target: MutationTarget, config: GeneratorConfig
+    ) -> list[Mutation]:
+        import mutator.ai
+
         content = target.content()
         tree = tsParser.parse(content)
         matches = _tsQuery.matches(tree.root_node)

@@ -1,14 +1,21 @@
-from .generate import Generate
-from .inspect import Inspect
-from .test import Test
+import click
 
-commands = {
-        "test": Test(),
-        "generate": Generate(),
-        "inspect": Inspect(),
-}
+from .generate import generate
+from .inspect import inspect
+from .test import test
+
+
+@click.group(chain=True)
+def cli():
+    pass
+
+
+cli.add_command(generate)
+cli.add_command(test)
+cli.add_command(inspect)
 
 __all__ = [
-    "Generate",
+    "cli",
+    "generate",
     "Test",
 ]
