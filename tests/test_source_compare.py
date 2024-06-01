@@ -1,7 +1,7 @@
 import tree_sitter as ts
 import tree_sitter_python as tsp
 
-from collector.source import compare_tree
+from mutator.source import compare_tree
 
 lang = ts.Language(tsp.language())
 parser = ts.Parser(lang)

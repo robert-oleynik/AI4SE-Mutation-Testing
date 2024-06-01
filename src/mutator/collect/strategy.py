@@ -3,7 +3,7 @@ import typing
 
 import git
 
-from ..sample import Sample
+from .sample import Sample
 
 
 class Strategy(abc.ABC):

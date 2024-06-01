@@ -1,11 +1,8 @@
 import pathlib
-import re
 import typing
 
 import git
 import tree_sitter as ts
-
-pull_requests = re.compile(r"!\d+")
 
 
 class Sample:

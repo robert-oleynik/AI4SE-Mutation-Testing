@@ -5,8 +5,8 @@ import git
 import tree_sitter as ts
 import tree_sitter_python as tsp
 
-from ..sample import Sample
 from ..source import compare_tree, find_py_fn_by_name
+from .sample import Sample
 from .strategy import Strategy
 
 _tsLang = ts.Language(tsp.language())
