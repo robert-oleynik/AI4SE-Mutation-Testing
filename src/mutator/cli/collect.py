@@ -37,7 +37,10 @@ def collect(out_dir, bare, git, strategy):
     def _run(path: pathlib.Path, repo: Repo):
         print("repository", path.stem)
         f = out_dir / f"{path.stem}.json"
-        report = {"git": {"origin": repo.remote("origin").url}, "samples": {}}
+        report = {
+            "git": {"origin": repo.remote("origin").url, "path": path.__str__()},
+            "samples": {},
+        }
         for s in strategy:
             report["samples"][s] = []
             if s not in strategies:
@@ -46,7 +49,8 @@ def collect(out_dir, bare, git, strategy):
             c = 0
             for sample in strategies[s].apply(repo):
                 c += 1
-                print(f"\r{f"- applying strategy '{s}'":<60}[samples: {c}] ", end="")
+                msg = f"- applying strategy '{s}'"
+                print(f"\r{msg:<60}[samples: {c}] ", end="")
                 report["samples"][s].append(sample.build())
             print()
         json.dump(report, f.open("w+"))

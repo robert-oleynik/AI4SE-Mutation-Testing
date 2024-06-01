@@ -60,6 +60,13 @@ class TestMods(Strategy):
                             if not compare_tree(b_node, a_node):
                                 any_a_node = a_node
                         if any_a_node is not None:
+                            start = b_node.start_byte
+                            end = b_node.end_byte
                             yield Sample(
-                                commit, b_node, o.b_path, b_node.text, a_node.text
+                                commit.hexsha,
+                                o.b_path,
+                                start,
+                                end,
+                                b_node.text.decode("utf-8"),
+                                a_node.text.decode("utf-8"),
                             )
