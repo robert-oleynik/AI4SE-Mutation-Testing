@@ -16,6 +16,7 @@ dependencies = [
 	"textual>=0.59.0",
 	"GitPython>=3.1.43",
 	"click>=8.1.7",
+	"autopep8>=2.2.0",
 ]
 
 [project.scripts]

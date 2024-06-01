@@ -1,6 +1,7 @@
 import pathlib
 import typing
 
+import autopep8
 import git
 import tree_sitter as ts
 
@@ -28,6 +29,6 @@ class Sample:
             "file": self.path,
             "start": start,
             "end": end,
-            "source": self.source.decode(),
-            "mutation": self.mutation.decode(),
+            "source": autopep8.fix_code(self.source.decode("utf-8")),
+            "mutation": autopep8.fix_code(self.mutation.decode("utf-8")),
         }
