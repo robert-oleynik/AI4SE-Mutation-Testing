@@ -16,13 +16,18 @@ class RepeatGenerator(MutationGenerator):
 
         full = target.content().decode()
         signature = target.get_signature().decode()
-        query = f"<|file_separator|>\n{full}\n<|file_separator|>\n{signature}"
-        outputs = mutator.ai.llm.prompt(query, **config.model_kwargs)
+        prompt = f"<|file_separator|>\n{full}\n<|file_separator|>\n{signature}"
 
-        def _encode(output):
-            return f"{signature}{output}".encode()
+        def transform(result: str) -> str:
+            return signature + result[len(prompt):]
 
-        return [Mutation(_encode(o)) for o in outputs]
+        results = mutator.ai.llm.prompt(
+            prompt,
+            transform_result=transform,
+            **config.model_kwargs,
+        )
+
+        return [Mutation(result.encode()) for result in results]
 
     def format(sample: Sample) -> str:
         source = sample.source

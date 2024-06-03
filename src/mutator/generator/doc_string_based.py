@@ -21,7 +21,7 @@ class DocStringBasedGenerator(MutationGenerator):
         prompt = content[: docstring.end_byte].decode()
         results = mutator.ai.llm.prompt(
             prompt,
-            prompt_is_part_of_result=True,
+            transform_result=identity,
             **config.model_kwargs,
         )
         return [Mutation(result.encode()) for result in results]

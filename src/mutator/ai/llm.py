@@ -4,6 +4,7 @@ import torch
 import transformers
 
 from .limiter.limiter import Limiter, OutputStoppingCriteria
+from typing import Callable
 
 
 class LLM:
@@ -22,8 +23,11 @@ class LLM:
         self.limiter_classes = limiter_classes
         self.generate_kwargs = generate_kwargs
 
-    def generate(self, inputs, strip_prefix_len: int, **extra_args) -> list[str]:
-        prefix_length = len(self.tokenizer.bos_token) + strip_prefix_len
+    def generate(self, inputs, transform_result: Callable[[str], str], **extra_args) -> list[str]:
+        bos_len = len(self.tokenizer.bos_token)
+
+        def transform(result: str) -> str:
+            return transform_result(result[bos_len:])
 
         limiters = [limiter_class() for limiter_class in self.limiter_classes]
         kwargs = {
@@ -31,7 +35,7 @@ class LLM:
             **extra_args,
             "stopping_criteria": transformers.StoppingCriteriaList(
                 [
-                    OutputStoppingCriteria(limiter, self.tokenizer, prefix_length)
+                    OutputStoppingCriteria(limiter, self.tokenizer, transform)
                     for limiter in limiters
                 ]
                 + self.generate_kwargs.get("stopping_criteria", [])
@@ -41,19 +45,18 @@ class LLM:
         outputs = self.model.generate(**inputs, **kwargs)
 
         def decode(output):
-            result = self.tokenizer.decode(output)[prefix_length:]
+            result = transform(self.tokenizer.decode(output))
             if any(limiter.is_too_long(result) for limiter in limiters):
-                result = decode(output[:-1])
+                result = transform(self.tokenizer.decode(output[:-1]))
             return result
 
         return [decode(output) for output in outputs]
 
     def prompt(
-        self, prompt: str, prompt_is_part_of_result=False, **extra_args
+        self, prompt: str, transform_result: Callable[[str], str], **extra_args
     ) -> list[str]:
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
-        strip_prefix_len = 0 if prompt_is_part_of_result else len(prompt)
-        return self.generate(inputs, strip_prefix_len, **extra_args)
+        return self.generate(inputs, transform_result, **extra_args)
 
     def force_branch(
         self, prompt: str, keep_prefix_len: int, **extra_args
@@ -65,3 +68,16 @@ class LLM:
         for key in inputs.keys():
             inputs[key] = inputs[key][:, :index]
         return self.generate(inputs.to(self.device), strip_prefix_len=0, **extra_args)
+
+
+def identity(result: str) -> str:
+    return result
+
+
+def trim_prompt(prompt: str) -> Callable[[str], str]:
+    prompt_len = len(prompt)
+
+    def transform(result: str) -> str:
+        return result[prompt_len:]
+
+    return transform
