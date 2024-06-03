@@ -45,9 +45,12 @@ class LLM:
         outputs = self.model.generate(**inputs, **kwargs)
 
         def decode(output):
-            result = transform(self.tokenizer.decode(output))
+            decoded = self.tokenizer.decode(output)
+            if decoded.endswith(self.tokenizer.eos_token):
+                return transform(decoded[:-len(self.tokenizer.eos_token)])
+            result = transform(decoded)
             if any(limiter.is_too_long(result) for limiter in limiters):
-                result = transform(self.tokenizer.decode(output[:-1]))
+                return transform(self.tokenizer.decode(output[:-1]))
             return result
 
         return [decode(output) for output in outputs]
