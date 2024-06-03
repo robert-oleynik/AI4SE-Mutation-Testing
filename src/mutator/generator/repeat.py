@@ -26,8 +26,7 @@ class RepeatGenerator(MutationGenerator):
             transform_result=transform,
             **config.model_kwargs,
         )
-
-        return [Mutation(result.encode()) for result in results]
+        return Mutation.map(results)
 
     def format(sample: Sample) -> str:
         source = sample.source

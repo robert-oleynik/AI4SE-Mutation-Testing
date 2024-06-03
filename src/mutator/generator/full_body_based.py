@@ -17,4 +17,4 @@ class FullBodyBasedGenerator(MutationGenerator):
             transform_result=trim_prompt(prompt),
             **config.model_kwargs,
         )
-        return [Mutation(result.encode()) for result in results]
+        return Mutation.map(results)

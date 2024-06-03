@@ -24,4 +24,4 @@ class DocStringBasedGenerator(MutationGenerator):
             transform_result=identity,
             **config.model_kwargs,
         )
-        return [Mutation(result.encode()) for result in results]
+        return Mutation.map(results)
