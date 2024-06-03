@@ -46,7 +46,7 @@ class Inspector(textual.app.App):
         self.selected_node = None
         self.focus = 0
 
-        self.result = Result(path=out_dir / "mutations" / "test-result.json")
+        self.result = Result(path=out_dir / "test-result.json")
         self.modules_tree = textual.widgets.Tree("Modules")
         self.modules_tree.show_root = False
         for name, module in self.result.modules.items():
@@ -80,7 +80,7 @@ class Inspector(textual.app.App):
         index = self.selected_mutations
         keys = [k for k in self.selected_node.data.keys()]
         key = keys[index]
-        file = self.out_dir / "mutations" / self.selected_node.data[key]["file"]
+        file = self.out_dir / self.selected_node.data[key]["file"]
         file_lines = list(
             map(lambda line: line.decode(), file.read_bytes().splitlines(True))
         )
