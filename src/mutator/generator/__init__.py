@@ -4,6 +4,7 @@ from .forced_branch import ForcedBranchGenerator
 from .full_body_based import FullBodyBasedGenerator
 from .generator import Mutation, MutationGenerator
 from .identity import Identity
+from .infilling import InfillingGenerator
 from .repeat import RepeatGenerator
 
 
@@ -28,16 +29,17 @@ class GeneratorConfigNotFound(Exception):
 
 
 __all__ = [
-    "MutationGenerator",
-    "Mutation",
-    "Identity",
-    "FullBodyBasedGenerator",
-    "ForcedBranchGenerator",
     "DocStringBasedGenerator",
-    "generators",
-    "configs",
-    "GeneratorNotFound",
+    "ForcedBranchGenerator",
+    "FullBodyBasedGenerator",
     "GeneratorConfig",
     "GeneratorConfigNotFound",
+    "GeneratorNotFound",
+    "Identity",
+    "InfillingGenerator",
+    "Mutation",
+    "MutationGenerator",
     "RepeatGenerator",
+    "configs",
+    "generators",
 ]
