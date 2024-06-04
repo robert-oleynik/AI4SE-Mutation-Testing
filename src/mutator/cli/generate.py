@@ -11,17 +11,19 @@ from ..generator import (
     GeneratorConfigNotFound,
     GeneratorNotFound,
     Identity,
+    InfillingGenerator,
     RepeatGenerator,
 )
 from ..source import Filter, SourceFile
 from ..store import MutationStore
 
 generators = {
-    "identity": Identity(),
-    "full_body_based": FullBodyBasedGenerator(),
     "doc_string_based": DocStringBasedGenerator(),
-    "repeat": RepeatGenerator(),
     "forced_branch": ForcedBranchGenerator(),
+    "full_body_based": FullBodyBasedGenerator(),
+    "identity": Identity(),
+    "infilling": InfillingGenerator(),
+    "repeat": RepeatGenerator(),
 }
 
 configs = {

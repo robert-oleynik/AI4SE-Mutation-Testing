@@ -14,4 +14,4 @@ class ForcedBranchGenerator(MutationGenerator):
         results = mutator.ai.llm.force_branch(
             prompt, keep_prefix_len=len(signature), **config.model_kwargs
         )
-        return [Mutation(result.encode()) for result in results]
+        return Mutation.map(results)
