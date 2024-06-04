@@ -1,12 +1,36 @@
-import json
 import pathlib
+import shutil
+import typing
 
 import click
+import datasets
 from git import Repo
 
 from ..collect import TestMods
 
 strategies = {"test_mods": TestMods()}
+
+
+def generate_samples(
+    bare_repos: list[pathlib.Path],
+    git: list[pathlib.Path],
+    strategy: list[str],
+) -> typing.Generator[dict, None, None]:
+    def _gen():
+        repos = list(map(lambda g: (True, g), bare_repos)) + list(
+            map(lambda g: (False, g), git)
+        )
+        for bare, path in repos:
+            repo = Repo.init(path, bare=bare)
+            counter = 0
+            for s in strategy:
+                if s not in strategies:
+                    continue
+                for sample in strategies[s].apply(repo):
+                    counter += 1
+                    yield sample
+
+    return _gen
 
 
 @click.command(help="Extract mutation samples from repository")
@@ -34,31 +58,10 @@ strategies = {"test_mods": TestMods()}
 )
 @click.option("-s", "--strategy", multiple=True, default=list(strategies.keys()))
 def collect(out_dir, bare, git, strategy):
-    def _run(path: pathlib.Path, repo: Repo):
-        print("repository", path.stem)
-        f = out_dir / f"{path.stem}.json"
-        report = {
-            "git": {"origin": repo.remote("origin").url, "path": path.__str__()},
-            "samples": {},
-        }
-        for s in strategy:
-            report["samples"][s] = []
-            if s not in strategies:
-                raise Exception("no such strategy '" + s + "'")
-            print(f"- applying strategy '{s}' ", end="")
-            c = 0
-            for sample in strategies[s].apply(repo):
-                c += 1
-                msg = f"- applying strategy '{s}'"
-                print(f"\r{msg:<60}[samples: {c}] ", end="")
-                report["samples"][s].append(sample.build())
-            print()
-        json.dump(report, f.open("w+"))
-
-    out_dir.mkdir(parents=True, exist_ok=True)
-    for path in git:
-        repo = Repo.init(path)
-        _run(path, repo)
-    for path in bare:
-        repo = Repo.init(path, bare=True)
-        _run(path, repo)
+    cache_dir = out_dir / "cache"
+    if cache_dir.exists():
+        shutil.rmtree(cache_dir)
+    data = datasets.Dataset.from_generator(
+        generate_samples(bare, git, strategy), keep_in_memory=True, cache_dir=cache_dir
+    )
+    data.save_to_disk((out_dir / "data").__str__())

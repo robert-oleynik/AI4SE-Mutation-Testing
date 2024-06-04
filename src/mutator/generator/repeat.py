@@ -1,4 +1,3 @@
-from ..collect.sample import Sample
 from ..source import MutationTarget
 from .config import GeneratorConfig
 from .generator import Mutation, MutationGenerator
@@ -19,7 +18,7 @@ class RepeatGenerator(MutationGenerator):
         prompt = f"<|file_separator|>\n{full}\n<|file_separator|>\n{signature}"
 
         def transform(result: str) -> str:
-            return signature + result[len(prompt):]
+            return signature + result[len(prompt) :]
 
         results = mutator.ai.llm.prompt(
             prompt,
@@ -28,7 +27,5 @@ class RepeatGenerator(MutationGenerator):
         )
         return Mutation.map(results)
 
-    def format(sample: Sample) -> str:
-        source = sample.source
-        mutation = sample.mutation
+    def format(source: str, mutation: str) -> str:
         return f"<|file_separator|>\n{source}\n<|file_separator|>\n{mutation}"

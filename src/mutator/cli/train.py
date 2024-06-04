@@ -4,7 +4,6 @@ import pathlib
 
 import click
 
-from ..collect.sample import Sample
 from ..generator.repeat import RepeatGenerator
 
 formatter = {"repeat": RepeatGenerator.format}
@@ -122,15 +121,7 @@ def train(
         for name, samples in result["samples"].items():
             for i, s in enumerate(samples):
                 print(f"\rfile: {p:<16}  {name}  [{i+1}/{len(samples)}] ", end="")
-                sample = Sample(
-                    s["commit"],
-                    s["file"],
-                    s["start"],
-                    s["end"],
-                    s["source"],
-                    s["mutation"],
-                )
-                prompts.append(formatter[generator](sample))
+                prompts.append(formatter[generator](s["source"], s["mutation"]))
             print()
     data = datasets.Dataset.from_dict({"prompt": prompts})
 
