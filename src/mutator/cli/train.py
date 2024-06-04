@@ -34,7 +34,7 @@ formatter = {"repeat": RepeatGenerator.format}
 @click.option(
     "-d",
     "--dataset",
-    default=pathlib.Path("out", "dataset"),
+    default=pathlib.Path("out", "dataset", "data"),
     type=pathlib.Path,
     show_default=True,
     help="Dir to read datasets from",
@@ -111,19 +111,13 @@ def train(
 ):
     import datasets
 
-    prompts = []
-    for p in os.listdir(path=dataset):
-        if not p.endswith("json"):
-            continue
-        result = json.load((dataset / p).open("r"))
-        if "samples" not in result:
-            raise Exception("corrupted dataset")
-        for name, samples in result["samples"].items():
-            for i, s in enumerate(samples):
-                print(f"\rfile: {p:<16}  {name}  [{i+1}/{len(samples)}] ", end="")
-                prompts.append(formatter[generator](s["source"], s["mutation"]))
-            print()
-    data = datasets.Dataset.from_dict({"prompt": prompts})
+    data = datasets.load_from_disk(dataset_path=dataset.absolute().__str__())
+
+    def _update_sample(row):
+        row["prompt"] = formatter[generator](row["source"], row["mutation"])
+        return row
+
+    data = data.map(_update_sample, remove_columns=["source", "mutation"])
 
     import torch
 
