@@ -3,7 +3,6 @@ import shutil
 import typing
 
 import click
-import datasets
 from git import Repo
 
 from ..collect import TestMods
@@ -58,6 +57,8 @@ def generate_samples(
 )
 @click.option("-s", "--strategy", multiple=True, default=list(strategies.keys()))
 def collect(out_dir, bare, git, strategy):
+    import datasets
+
     cache_dir = out_dir / "cache"
     if cache_dir.exists():
         shutil.rmtree(cache_dir)

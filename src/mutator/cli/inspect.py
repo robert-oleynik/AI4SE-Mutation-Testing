@@ -2,9 +2,6 @@ import difflib
 import pathlib
 
 import click
-import datasets
-import matplotlib.pyplot as plt
-import pandas
 import textual.app
 import textual.containers
 import textual.scroll_view
@@ -177,6 +174,10 @@ def strloc(content: str) -> int:
     help="Metric used to inspect dataset (Ignored if not used with `--dataset`)",
 )
 def inspect(out_dir, project, tui, dataset, metric):
+    import datasets
+    import matplotlib.pyplot as plt
+    import pandas
+
     if int(tui) + int(dataset is not None) > 1:
         print("error: only one option out of `--dataset` and `--tui` is allowed")
         exit(1)
