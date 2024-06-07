@@ -4,6 +4,7 @@ import shutil
 import click
 
 from ..generator import (
+    CommentRewriteGenerator,
     DocStringBasedGenerator,
     ForcedBranchGenerator,
     FullBodyBasedGenerator,
@@ -24,6 +25,7 @@ generators = {
     "identity": Identity(),
     "infilling": InfillingGenerator(),
     "repeat": RepeatGenerator(),
+    "comment_rewrite": CommentRewriteGenerator(),
 }
 
 configs = {
