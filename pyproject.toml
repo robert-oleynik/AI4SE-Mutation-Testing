@@ -19,6 +19,8 @@ dependencies = [
 	"autopep8>=2.2.0",
 	"datasets>=2.19.1",
 	"peft>=0.11.1",
+	"pandas>=2.2.2",
+	"matplotlib>=3.9.0",
 ]
 
 [project.scripts]
