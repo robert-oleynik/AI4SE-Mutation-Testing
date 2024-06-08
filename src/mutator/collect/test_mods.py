@@ -7,7 +7,7 @@ import tree_sitter_python as tsp
 
 from ..source import compare_tree
 from ..treesitter.node import upgrade_to_ty
-from .strategy import Strategy
+from .strategy import Sample, Strategy
 
 _tsLang = ts.Language(tsp.language())
 _tsQuery = _tsLang.query("(function_definition) @target")
@@ -25,10 +25,12 @@ def _source_nodes(
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
         if tag == "equal":
             continue
-        a_node = a_tree.root_node.named_descendant_for_byte_range(i1, i2)
-        b_node = b_tree.root_node.named_descendant_for_byte_range(j1, j2)
+        a_node = a_tree.root_node.descendant_for_byte_range(i1, i2)
+        b_node = b_tree.root_node.descendant_for_byte_range(j1, j2)
         a_node = upgrade_to_ty(a_node, "function_definition")
         b_node = upgrade_to_ty(b_node, "function_definition")
+        if a_node.type != "function_definition" or b_node.type != "function_definition":
+            continue
         if (a_node, b_node) in matches:
             continue
         matches.add((a_node, b_node))
@@ -58,13 +60,6 @@ class TestMods(Strategy):
                     matcher = difflib.SequenceMatcher(None, a_blob, b_blob)
                     for a_node, b_node in _source_nodes(matcher, a_tree, b_tree):
                         if not compare_tree(a_node, b_node):
-                            pass
+                            continue
                         # TODO: Generate Prompt
-                        yield {
-                            "commit": commit.hexsha,
-                            "file": o.b_path,
-                            "start": b_node.start_byte,
-                            "end": b_node.end_byte,
-                            "source": a_node.text.decode("utf-8"),
-                            "mutation": b_node.text.decode("utf-8"),
-                        }
+                        yield Sample(commit, o, a_node, b_node)

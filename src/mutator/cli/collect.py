@@ -6,6 +6,12 @@ import click
 from git import Repo
 
 from ..collect import TestMods
+from ..generator import CommentRewriteGenerator, RepeatGenerator
+
+formatter = {
+    "repeat": RepeatGenerator(),
+    "rewrite": CommentRewriteGenerator(),
+}
 
 strategies = {"test_mods": TestMods()}
 
@@ -14,6 +20,7 @@ def generate_samples(
     bare_repos: list[pathlib.Path],
     git: list[pathlib.Path],
     strategy: list[str],
+    formatter_names: list[str],
 ) -> typing.Generator[dict, None, None]:
     def _gen():
         repos = list(map(lambda g: (True, g), bare_repos)) + list(
@@ -27,7 +34,10 @@ def generate_samples(
                     continue
                 for sample in strategies[s].apply(repo):
                     counter += 1
-                    yield sample
+                    for name in formatter_names:
+                        s = sample.to_dict(formatter[name])
+                        s["formatter"] = name
+                        yield s
 
     return _gen
 
@@ -63,6 +73,8 @@ def collect(out_dir, bare, git, strategy):
     if cache_dir.exists():
         shutil.rmtree(cache_dir)
     data = datasets.Dataset.from_generator(
-        generate_samples(bare, git, strategy), keep_in_memory=True, cache_dir=cache_dir
+        generate_samples(bare, git, strategy, ["rewrite"]),
+        keep_in_memory=True,
+        cache_dir=cache_dir,
     )
     data.save_to_disk((out_dir / "data").__str__())

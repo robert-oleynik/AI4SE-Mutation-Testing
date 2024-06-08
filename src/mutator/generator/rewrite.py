@@ -2,6 +2,7 @@ import tree_sitter as ts
 
 from ..source import MutationTarget
 from ..treesitter.context import Context
+from .config import GeneratorConfig
 from .generator import Mutation, MutationGenerator
 
 
@@ -45,5 +46,19 @@ class CommentRewriteGenerator(MutationGenerator):
         prompt += "\n\n" + indent + context.fn_signature() + "\n"
         return prompt
 
-    def generate(self, target: MutationTarget) -> list[Mutation]:
-        raise NotImplementedError
+    def generate(
+        self, target: MutationTarget, config: GeneratorConfig
+    ) -> list[Mutation]:
+        import mutator.ai.llm
+
+        prompt = self.generate_prompt(target.node)
+
+        def transform(result: str) -> str:
+            return result[len(prompt) :]
+
+        results = mutator.ai.llm.prompt(
+            prompt,
+            transform_result=transform,
+            **config.model_kwargs,
+        )
+        return Mutation.map(results)

@@ -32,7 +32,7 @@ class Context:
             last = node
         return last
 
-    def fn_signature(self) -> ts.Node:
+    def fn_signature(self) -> str:
         assert self.node.type == "function_definition"
         return_type = self.node.child_by_field_name("return_type")
         return (
