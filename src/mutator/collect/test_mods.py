@@ -63,3 +63,4 @@ class TestMods(Strategy):
                             continue
                         # TODO: Generate Prompt
                         yield Sample(commit, o, a_node, b_node)
+                        yield Sample(commit, o, b_node, a_node)
