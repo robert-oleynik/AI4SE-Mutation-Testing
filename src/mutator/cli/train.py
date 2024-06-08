@@ -106,6 +106,7 @@ def train(
     import datasets
 
     data = datasets.load_from_disk(dataset_path=dataset.absolute().__str__())
+    data = datasets.Dataset.from_dict({"prompt": data["prompt"]})
 
     import torch
 
