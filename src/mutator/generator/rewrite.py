@@ -28,22 +28,45 @@ class CommentRewriteGenerator(MutationGenerator):
 
     def generate_prompt(self, node: ts.Node) -> str:
         context = Context(node)
-        decorated_node = context.with_decorater()
         parent_class_node = context.get_parent_class()
         prompt = ""
         if parent_class_node is not None:
             class_with_decorator = Context(parent_class_node).with_decorater()
             prompt += write_class_header(class_with_decorator)
-        indent = prompt.split(":")[-1][1:]
-        prompt = prompt[: -len(indent)]
-        if decorated_node.type == "decorated_definition":
-            for child in decorated_node.children:
-                if child.type == "decorator":
-                    prompt += "#" + indent + child.text.decode() + "\n"
+
+            indent = prompt.split(":")[-1][1:]
+            prompt = prompt[: -len(indent)]
+
+            body = parent_class_node.child_by_field_name("body")
+            for child_node in body.children:
+                if child_node.type == "decorated_definition":
+                    child_node = child_node.child_by_field_name("definition")
+                if child_node.type != "function_definition":
+                    continue
+                ctx = Context(child_node)
+                if ctx.name() == context.name():
+                    continue
+                for decorator_node in ctx.decorators():
+                    prompt += indent + decorator_node.text.decode() + "\n"
+                prompt += indent + ctx.fn_signature() + "\n"
+                n = child_node.child_by_field_name("body").child(0)
+                if n.type == "expression_statement":
+                    n = n.child(0)
+                if n.type == "string":
+                    prompt += indent + "    " + n.text.decode() + "\n"
+                prompt += indent + "    ...\n\n"
+        else:
+            indent = ""
+
+        for decorator_node in context.decorators():
+            prompt += "#" + indent + decorator_node.text.decode() + "\n"
         fn_body = indent + node.text.decode()
         for line in fn_body.splitlines(True):
             prompt += "#" + line
-        prompt += "\n\n" + indent + context.fn_signature() + "\n"
+        prompt += "\n\n"
+        for decorator_node in context.decorators():
+            prompt += indent + decorator_node.text.decode() + "\n"
+        prompt += indent + context.fn_signature() + "\n"
         return prompt
 
     def generate(

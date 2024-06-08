@@ -24,10 +24,14 @@ class Sample:
     def to_dict(self, generator: MutationGenerator) -> dict:
         prompt = generator.generate_prompt(self.source_node)
         indent = "    "
-        for c in prompt.splitlines(True)[-2]:
+        for c in prompt.splitlines(False)[-1]:
             if c.isspace():
                 indent += c
-        prompt += indent + self.mutation_node.text.decode("utf-8")
+            else:
+                break
+        prompt += indent + self.mutation_node.child_by_field_name("body").text.decode(
+            "utf-8"
+        )
         return {
             "commit": self.commit.hexsha,
             "file": self.diff.b_path,

@@ -1,3 +1,5 @@
+import typing
+
 import tree_sitter as ts
 
 from ..treesitter.node import ts_node_parents
@@ -21,6 +23,11 @@ class Context:
                 return node
         return None
 
+    def name(self) -> str:
+        name_node = self.node.child_by_field_name("name")
+        assert name_node.type == "identifier"
+        return name_node.text.decode("utf-8")
+
     def with_decorater(self) -> ts.Node:
         """
         Returns the largest decorated directly adjacent to this node.
@@ -32,9 +39,18 @@ class Context:
             last = node
         return last
 
+    def decorators(self) -> typing.Generator[ts.Node, None, None]:
+        decorated_node = self.with_decorater()
+        if self.node == decorated_node:
+            return
+        for child in decorated_node.children:
+            if child.type == "decorator":
+                yield child
+
     def fn_signature(self) -> str:
         assert self.node.type == "function_definition"
         return_type = self.node.child_by_field_name("return_type")
+
         return (
             "def "
             + self.node.child_by_field_name("name").text.decode()

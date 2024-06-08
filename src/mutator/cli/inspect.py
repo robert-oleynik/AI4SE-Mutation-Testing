@@ -170,7 +170,6 @@ def strloc(content: str) -> int:
 @click.option(
     "--metric",
     type=click.Choice(["dloc", "source_loc", "mutation_loc"], case_sensitive=False),
-    default="dloc",
     help="Metric used to inspect dataset (Ignored if not used with `--dataset`)",
 )
 def inspect(out_dir, project, tui, dataset, metric):
@@ -198,18 +197,23 @@ def inspect(out_dir, project, tui, dataset, metric):
             dloc = dloc.value_counts().sort_index()
             dloc.plot(ax=ax, kind="line")
             ax.set_yscale("log")
-        if metric == "source_loc":
+        elif metric == "source_loc":
             data = [strloc(entry["source"]) for entry in dataset]
             loc = pandas.Series(name="source loc", data=data)
             print(loc.quantile([0.5, 0.75, 0.9, 0.95, 0.995]))
             loc = loc.value_counts().sort_index()
             loc.plot(ax=ax, kind="line")
             ax.set_yscale("log")
-        if metric == "mutation_loc":
+        elif metric == "mutation_loc":
             data = [strloc(entry["mutation"]) for entry in dataset]
             loc = pandas.Series(name="mutation loc", data=data)
             print(loc.quantile([0.5, 0.75, 0.9, 0.95, 0.995]))
             loc = loc.value_counts().sort_index()
             loc.plot(ax=ax, kind="line")
             ax.set_yscale("log")
+        else:
+            for row in dataset:
+                print(row["prompt"])
+                print("=" * 80)
+            exit()
         plt.show()
