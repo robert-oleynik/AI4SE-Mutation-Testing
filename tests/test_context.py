@@ -15,9 +15,11 @@ source1 = b"""
 @Decorator2
 class Foo:
     def __init__(self):
+        "Hello, World"
         pass
 
     def another(self, a, b):
+        "Hello, WOrld"
         return a + b
 
     @Decorator3
@@ -46,11 +48,21 @@ def test_generate_prompt():
     expected = """@Decorator1
 @Decorator2
 class Foo:
+    def __init__(self):
+        "Hello, World"
+        ...
+
+    def another(self, a, b):
+        "Hello, WOrld"
+        ...
+
 #    @Decorator3
 #    @Decorator4
 #    def bar(self) -> str:
 #        return "foobar"
 
+    @Decorator3
+    @Decorator4
     def bar(self) -> str:
 """
     prompt = CommentRewriteGenerator().generate_prompt(node)
