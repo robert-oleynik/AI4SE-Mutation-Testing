@@ -145,7 +145,5 @@ def generate(out_dir, generator, config, project, filter, model, device, no_llm,
                                 f"\r - {target_path:<80} [mutations: {counter}] ",
                                 end="",
                             )
-            except Exception as e:
+            finally:
                 print()
-                raise e
-            print()
