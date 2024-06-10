@@ -1,8 +1,8 @@
 # Ideas for Mutation Generators
 
-- [ ] Replace e.g. a condition, call parameter or similars with the `<infilling>` tag and query the AI for the missing bits.
+- [x] Replace e.g. a condition, call parameter or similars with the `<infilling>` tag and query the AI for the missing bits.
 - [x] Strip everything except function signature and doc comments. Use the LLM to generate the misisng bits.
-- [.] Select a token of the input function and force the AI to generate a different approach starting from this token. Further points of exploration:
+- [x] Select a token of the input function and force the AI to generate a different approach starting from this token. Further points of exploration:
 - [x] Beam Search
 - [ ] Comment out old code and prompt for new code
 
