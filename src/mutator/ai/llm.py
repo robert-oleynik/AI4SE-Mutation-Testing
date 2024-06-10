@@ -4,6 +4,7 @@ import torch
 import transformers
 
 from .limiter.limiter import Limiter, OutputStoppingCriteria
+from .limiter.special_tokens import SpecialTokensLimiter
 from typing import Callable
 
 
@@ -30,6 +31,8 @@ class LLM:
             return transform_result(result[bos_len:])
 
         limiters = [limiter_class() for limiter_class in self.limiter_classes]
+        stop_tokens = [self.tokenizer.eos_token, "<|file_separator|>"]
+        limiters.append(SpecialTokensLimiter(stop_tokens))
         kwargs = {
             **self.generate_kwargs,
             **extra_args,
@@ -45,15 +48,16 @@ class LLM:
         outputs = self.model.generate(**inputs, **kwargs)
 
         def decode(output):
-            decoded = self.tokenizer.decode(output)
-            if decoded.endswith(self.tokenizer.eos_token):
-                return transform(decoded[:-len(self.tokenizer.eos_token)])
-            result = transform(decoded)
-            if any(limiter.is_too_long(result) for limiter in limiters):
-                return transform(self.tokenizer.decode(output[:-1]))
+            return transform(self.tokenizer.decode(output))
+
+        def decode_and_trim(output):
+            result = decode(output)
+            while any(limiter.is_too_long(result) for limiter in limiters):
+                output = output[:-1]
+                result = decode(output)
             return result
 
-        return [decode(output) for output in outputs]
+        return [decode_and_trim(output) for output in outputs]
 
     def prompt(
         self, prompt: str, transform_result: Callable[[str], str], **extra_args
