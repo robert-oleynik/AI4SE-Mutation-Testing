@@ -13,8 +13,7 @@ class FullBodyBasedGenerator(MutationGenerator):
         self, target: MutationTarget, config: GeneratorConfig
     ) -> list[Mutation]:
         import mutator.ai
-
-        # FIX: trim prompt
+        from mutator.ai.llm import trim_prompt
 
         prompt = "# Original version\n"
         prompt += target.content().decode()

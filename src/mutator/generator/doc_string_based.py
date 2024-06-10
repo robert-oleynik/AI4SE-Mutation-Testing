@@ -16,6 +16,7 @@ class DocStringBasedGenerator(MutationGenerator):
         self, target: MutationTarget, config: GeneratorConfig
     ) -> list[Mutation]:
         import mutator.ai
+        from mutator.ai.llm import identity
 
         content = target.content()
         tree = tsParser.parse(content)
@@ -26,7 +27,7 @@ class DocStringBasedGenerator(MutationGenerator):
         prompt = content[: docstring.end_byte].decode()
         results = mutator.ai.llm.prompt(
             prompt,
-            transform_result=identity,  # FIX: missing transform
+            transform_result=identity,
             **config.model_kwargs,
         )
         return Mutation.map(results)
