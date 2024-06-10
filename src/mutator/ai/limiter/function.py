@@ -3,27 +3,11 @@ from .limiter import Limiter
 
 
 class FunctionLimiter(Limiter):
-    def __init__(self):
-        self.tree = tsParser.parse(b"")
-
     def is_too_long(self, result: str) -> bool:
         source = result.encode()
         source_lines = source.splitlines()
-        old_root = self.tree.root_node
-        self.tree.edit(
-            start_byte=old_root.end_byte,
-            old_end_byte=old_root.end_byte,
-            new_end_byte=len(source),
-            start_point=old_root.end_point,
-            old_end_point=old_root.end_point,
-            new_end_point=(
-                len(source_lines),
-                # FIX: Handle empty source lines
-                len(source_lines[-1]) if len(source_lines) > 0 else 0,
-            ),
-        )
-        self.tree = tsParser.parse(source, self.tree)
-        root = self.tree.root_node
+        tree = tsParser.parse(source)
+        root = tree.root_node
         if root.type == "ERROR":
             # let the LLM generate more code until its at least partially valid
             return False
