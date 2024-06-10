@@ -60,8 +60,13 @@ def test(out_dir, project, filter, timeout):
             timeout_count = 0
             caught = 0
             count = len(target)
+
+            def status_update(icon: str, index: int, **kwargs):
+                missed = index - caught - timeout_count
+                print(f" {icon} {target_name:<80} [{index}/{count}] caught: {caught} missed: {missed} timeout: {timeout_count}", **kwargs)
+
             for i, (mutation, source) in enumerate(target):
-                print(f" {spinner} {target_name:<80} [{i}/{count}]", end="\r")
+                status_update(spinner, i, end="\r")
                 args = [
                     "python3",
                     "-m",
@@ -78,7 +83,7 @@ def test(out_dir, project, filter, timeout):
                 while process.poll() is None and counter < timeout:
                     time.sleep(0.1)
                     spinner.next()
-                    print(f" {spinner} {target_name:<80} [{i}/{count}]", end="\r")
+                    status_update(spinner, i, end="\r")
                     counter += 1
                 if counter >= timeout:
                     timeout_count += 1
@@ -99,12 +104,5 @@ def test(out_dir, project, filter, timeout):
                 )
                 if is_caught and counter < timeout:
                     caught += 1
-            print(
-                f" ✔ {target_name:<80} [{count}/{count}] caught:",
-                caught,
-                "missed:",
-                len(target) - caught - timeout_count,
-                "timeout:",
-                timeout_count,
-            )
+            status_update("✔", count)
     result.write(out_dir / "test-result.json")
