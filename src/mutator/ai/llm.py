@@ -74,7 +74,11 @@ class LLM:
         index = random.randint(prefix_len + 1, num_tokens)
         for key in inputs.keys():
             inputs[key] = inputs[key][:, :index]
-        return self.generate(inputs.to(self.device), strip_prefix_len=0, **extra_args)
+        return self.generate(
+             inputs.to(self.device),
+             transform_result=identity,
+             **extra_args,
+         )
 
 
 def identity(result: str) -> str:
