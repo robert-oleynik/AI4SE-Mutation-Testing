@@ -1,5 +1,6 @@
 import tree_sitter as ts
 
+from ..ai.transform import identity
 from ..source import MutationTarget
 from ..treesitter.python import tsLang, tsParser
 from .config import GeneratorConfig
@@ -16,7 +17,6 @@ class DocStringBasedGenerator(MutationGenerator):
         self, target: MutationTarget, config: GeneratorConfig
     ) -> list[Mutation]:
         import mutator.ai
-        from mutator.ai.llm import identity
 
         content = target.content()
         tree = tsParser.parse(content)
