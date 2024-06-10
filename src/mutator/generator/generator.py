@@ -1,5 +1,7 @@
 import abc
 
+import tree_sitter as ts
+
 from ..source import MutationTarget
 
 
@@ -16,4 +18,8 @@ class Mutation:
 class MutationGenerator(abc.ABC):
     @abc.abstractmethod
     def generate(self, target: MutationTarget) -> list[Mutation]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def generate_prompt(self, node: ts.Node) -> str:
         raise NotImplementedError

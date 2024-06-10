@@ -5,9 +5,9 @@ import git
 import tree_sitter as ts
 import tree_sitter_python as tsp
 
-from ..source import compare_tree, find_py_fn_by_name
-from .sample import Sample
-from .strategy import Strategy
+from ..source import compare_tree
+from ..treesitter.node import upgrade_to_ty
+from .strategy import Sample, Strategy
 
 _tsLang = ts.Language(tsp.language())
 _tsQuery = _tsLang.query("(function_definition) @target")
@@ -18,12 +18,31 @@ def detect_targets(tree: ts.Tree) -> typing.Generator[ts.Node, None, None]:
         yield captures["target"]
 
 
+def _source_nodes(
+    matcher: difflib.SequenceMatcher, a_tree: ts.Tree, b_tree: ts.Tree
+) -> typing.Generator[tuple[ts.Node, ts.Node], None, None]:
+    matches = set()
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == "equal":
+            continue
+        a_node = a_tree.root_node.descendant_for_byte_range(i1, i2)
+        b_node = b_tree.root_node.descendant_for_byte_range(j1, j2)
+        a_node = upgrade_to_ty(a_node, "function_definition")
+        b_node = upgrade_to_ty(b_node, "function_definition")
+        if a_node.type != "function_definition" or b_node.type != "function_definition":
+            continue
+        if (a_node, b_node) in matches:
+            continue
+        matches.add((a_node, b_node))
+        yield a_node, b_node
+
+
 class TestMods(Strategy):
     """
     Filters all commits, which do not modify the tests. Without related issue.
     """
 
-    def apply(self, repo: git.Repo) -> typing.Generator[Sample, None, None]:
+    def apply(self, repo: git.Repo) -> typing.Generator[dict, None, None]:
         parser = ts.Parser(_tsLang)
         for commit in repo.iter_commits(paths="tests"):
             if len(commit.parents) > 1 or len(commit.parents) == 0:
@@ -36,37 +55,12 @@ class TestMods(Strategy):
                     a_blob = o.a_blob.data_stream.read()
                     b_blob = o.b_blob.data_stream.read()
 
-                    changes = []
-                    matcher = difflib.SequenceMatcher(None, a_blob, b_blob)
-                    for tag, _, _, j1, j2 in matcher.get_opcodes():
-                        if tag == "equal":
-                            continue
-                        changes.append((j1, j2))
-
                     a_tree = parser.parse(a_blob)
                     b_tree = parser.parse(b_blob)
-                    for b_node in detect_targets(b_tree):
-                        for b, e in changes:
-                            if b_node.start_byte <= b and b <= b_node.end_byte:
-                                break
-                            if b_node.start_byte <= e and e <= b_node.end_byte:
-                                break
-                        else:
+                    matcher = difflib.SequenceMatcher(None, a_blob, b_blob)
+                    for a_node, b_node in _source_nodes(matcher, a_tree, b_tree):
+                        if not compare_tree(a_node, b_node):
                             continue
-                        name = b_node.child_by_field_name("name").text.decode()
-                        # TODO: Check scope
-                        any_a_node = None
-                        for a_node in find_py_fn_by_name(a_tree.root_node, name):
-                            if not compare_tree(b_node, a_node):
-                                any_a_node = a_node
-                        if any_a_node is not None:
-                            start = b_node.start_byte
-                            end = b_node.end_byte
-                            yield Sample(
-                                commit.hexsha,
-                                o.b_path,
-                                start,
-                                end,
-                                b_node.text.decode("utf-8"),
-                                a_node.text.decode("utf-8"),
-                            )
+                        # TODO: Generate Prompt
+                        yield Sample(commit, o, a_node, b_node)
+                        yield Sample(commit, o, b_node, a_node)

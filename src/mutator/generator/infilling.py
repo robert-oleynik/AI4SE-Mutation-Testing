@@ -1,4 +1,7 @@
 import random
+
+import tree_sitter as ts
+
 from ..source import MutationTarget
 from ..treesitter.python import tsLang
 from .config import GeneratorConfig
@@ -11,6 +14,9 @@ _tsQuery = tsLang.query("""
 """)
 
 class InfillingGenerator(MutationGenerator):
+    def generate_prompt(self, node: ts.Node) -> str:
+        raise NotImplementedError
+
     def generate(
         self, target: MutationTarget, config: GeneratorConfig
     ) -> list[Mutation]:
@@ -33,7 +39,7 @@ class InfillingGenerator(MutationGenerator):
         prompt = f"<|fim_prefix|>{prefix}<|fim_suffix|>{suffix}<|fim_middle|>"
 
         def transform(result: str) -> str:
-            return prefix + result[len(prompt):] + suffix
+            return prefix + result[len(prompt) :] + suffix
 
         results = mutator.ai.llm.prompt(
             prompt,

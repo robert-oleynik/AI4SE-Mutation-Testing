@@ -1,3 +1,5 @@
+import tree_sitter as ts
+
 from ..source import MutationTarget
 from ..treesitter.python import tsLang, tsParser
 from .config import GeneratorConfig
@@ -7,6 +9,9 @@ _tsQuery = tsLang.query("(expression_statement (string) @docstring)")
 
 
 class DocStringBasedGenerator(MutationGenerator):
+    def generate_prompt(self, node: ts.Node) -> str:
+        raise NotImplementedError
+
     def generate(
         self, target: MutationTarget, config: GeneratorConfig
     ) -> list[Mutation]:
@@ -21,7 +26,7 @@ class DocStringBasedGenerator(MutationGenerator):
         prompt = content[: docstring.end_byte].decode()
         results = mutator.ai.llm.prompt(
             prompt,
-            transform_result=identity,
+            transform_result=identity,  # FIX: missing transform
             **config.model_kwargs,
         )
         return Mutation.map(results)

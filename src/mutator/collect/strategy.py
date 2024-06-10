@@ -1,9 +1,46 @@
 import abc
 import typing
 
+import autopep8
 import git
+import tree_sitter as ts
 
-from .sample import Sample
+from ..generator.generator import MutationGenerator
+
+
+class Sample:
+    def __init__(
+        self,
+        commit: git.Commit,
+        diff: git.Diff,
+        source_node: ts.Node,
+        mutation_node: ts.Node,
+    ):
+        self.commit = commit
+        self.diff = diff
+        self.source_node = source_node
+        self.mutation_node = mutation_node
+
+    def to_dict(self, generator: MutationGenerator) -> dict:
+        prompt = generator.generate_prompt(self.source_node)
+        indent = "    "
+        for c in prompt.splitlines(False)[-1]:
+            if c.isspace():
+                indent += c
+            else:
+                break
+        prompt += indent + self.mutation_node.child_by_field_name("body").text.decode(
+            "utf-8"
+        )
+        return {
+            "commit": self.commit.hexsha,
+            "file": self.diff.b_path,
+            "start": self.mutation_node.start_byte,
+            "end": self.mutation_node.end_byte,
+            "source": autopep8.fix_code(self.source_node.text.decode("utf-8")),
+            "mutation": autopep8.fix_code(self.mutation_node.text.decode("utf-8")),
+            "prompt": autopep8.fix_code(prompt),
+        }
 
 
 class Strategy(abc.ABC):

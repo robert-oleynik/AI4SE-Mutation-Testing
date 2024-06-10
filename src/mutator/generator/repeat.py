@@ -1,5 +1,7 @@
-from ..collect.sample import Sample
+import tree_sitter as ts
+
 from ..source import MutationTarget
+from ..treesitter.context import Context
 from .config import GeneratorConfig
 from .generator import Mutation, MutationGenerator
 
@@ -9,17 +11,28 @@ class RepeatGenerator(MutationGenerator):
     Generate Mutations by indicating repeated source code, but forcing changes.
     """
 
+    def generate_prompt(self, node: ts.Node) -> str:
+        context = Context(node)
+        n = context.get_parent_class()
+        signature = context.fn_signature()
+        return (
+            "<|file_separator|>\n"
+            + n.text
+            + "\n<|file_separator|>\n"
+            + signature
+            + "\n"
+        )
+
     def generate(
         self, target: MutationTarget, config: GeneratorConfig
     ) -> list[Mutation]:
         import mutator.ai.llm
 
-        full = target.content().decode()
-        signature = target.get_signature().decode()
-        prompt = f"<|file_separator|>\n{full}\n<|file_separator|>\n{signature}"
+        prompt = self.generate_prompt()
 
         def transform(result: str) -> str:
-            return signature + result[len(prompt):]
+            offset = len(prompt.splitlines(True)[:-2].join())
+            return result[offset:]
 
         results = mutator.ai.llm.prompt(
             prompt,
@@ -27,8 +40,3 @@ class RepeatGenerator(MutationGenerator):
             **config.model_kwargs,
         )
         return Mutation.map(results)
-
-    def format(sample: Sample) -> str:
-        source = sample.source
-        mutation = sample.mutation
-        return f"<|file_separator|>\n{source}\n<|file_separator|>\n{mutation}"
