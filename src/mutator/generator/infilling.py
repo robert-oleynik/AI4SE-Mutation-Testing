@@ -7,8 +7,10 @@ from ..treesitter.python import tsLang
 from .config import GeneratorConfig
 from .generator import Mutation, MutationGenerator
 
-_tsQuery = tsLang.query("""
+_docstring_query = tsLang.query("""
 (function_definition body: (block . (expression_statement (string) @docstring)))
+""")
+_targets_query = tsLang.query("""
 (expression) @expr
 (block (_) @statement)
 """)
@@ -22,17 +24,17 @@ class InfillingGenerator(MutationGenerator):
     ) -> list[Mutation]:
         import mutator.ai
 
-        matches = _tsQuery.matches(target.node)
+        body = target.node.child_by_field_name("body")
+        docstring_matches = _docstring_query.matches(target.node)
+        target_matches = _targets_query.matches(body)
         exclude = set()
-        ranges = set()
-        for _, match in matches:
-            for name, node in match.items():
-                if name == "docstring":
-                    exclude.add(node.byte_range)
-                else:
+        targets = set()
+        for matches, ranges in [(docstring_matches, exclude), (target_matches, targets)]:
+            for _, match in matches:
+                for name, node in match.items():
                     ranges.add(node.byte_range)
-        ranges.difference_update(exclude)
-        start, end = random.choice(list(ranges))
+        targets.difference_update(exclude)
+        start, end = random.choice(list(targets))
         content = target.source.content
         prefix = content[target.node.start_byte : start].decode()
         suffix = content[end : target.node.end_byte].decode()
