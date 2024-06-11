@@ -128,9 +128,16 @@ def generate(out_dir, generator, config, project, filter, model, device, no_llm,
     for source_file in source_files:
         for target in source_file.targets:
             target_path = f"{source_file.module}:{target.fullname}"
-            print(f" - {target_path}", end="")
             counter = 0
             dropped = 0
+
+            def status_update():
+                print(
+                    f"\r - {target_path:<80} [mutations: {counter} dropped: {dropped}] ",
+                    end="",
+                )
+
+            status_update()
             original_tree = tsParser.parse(target.content()).root_node
             trees = [original_tree]
             try:
@@ -150,9 +157,6 @@ def generate(out_dir, generator, config, project, filter, model, device, no_llm,
                                 counter += 1
                                 store.add(target, mutation)
                                 trees.append(new_tree)
-                            print(
-                                f"\r - {target_path:<80} [mutations: {counter} dropped: {dropped}] ",
-                                end="",
-                            )
+                            status_update()
             finally:
                 print()
