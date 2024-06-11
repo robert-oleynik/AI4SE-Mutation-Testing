@@ -1,10 +1,10 @@
 import random
+from collections.abc import Callable
 
 import torch
 import transformers
 
 from .limiter.limiter import Limiter, OutputStoppingCriteria
-from typing import Callable
 
 
 class LLM:
@@ -23,7 +23,9 @@ class LLM:
         self.limiter_classes = limiter_classes
         self.generate_kwargs = generate_kwargs
 
-    def generate(self, inputs, transform_result: Callable[[str], str], **extra_args) -> list[str]:
+    def generate(
+        self, inputs, transform_result: Callable[[str], str], **extra_args
+    ) -> list[str]:
         bos_len = len(self.tokenizer.bos_token)
 
         def transform(result: str) -> str:
@@ -47,7 +49,7 @@ class LLM:
         def decode(output):
             decoded = self.tokenizer.decode(output)
             if decoded.endswith(self.tokenizer.eos_token):
-                return transform(decoded[:-len(self.tokenizer.eos_token)])
+                return transform(decoded[: -len(self.tokenizer.eos_token)])
             result = transform(decoded)
             if any(limiter.is_too_long(result) for limiter in limiters):
                 return transform(self.tokenizer.decode(output[:-1]))
