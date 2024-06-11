@@ -1,5 +1,6 @@
 import tree_sitter as ts
 
+from ..ai.transform import trim_prompt
 from ..source import MutationTarget
 from .config import GeneratorConfig
 from .generator import Mutation, MutationGenerator
@@ -13,8 +14,6 @@ class FullBodyBasedGenerator(MutationGenerator):
         self, target: MutationTarget, config: GeneratorConfig
     ) -> list[Mutation]:
         import mutator.ai
-
-        # FIX: trim prompt
 
         prompt = "# Original version\n"
         prompt += target.content().decode()

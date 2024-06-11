@@ -5,6 +5,12 @@ import torch
 import transformers
 
 from .limiter.limiter import Limiter, OutputStoppingCriteria
+from .limiter.special_tokens import SpecialTokensLimiter
+from .transform import identity
+from typing import Callable
+
+
+MAX_TOKEN_COUNT = 2048
 
 
 class LLM:
@@ -23,15 +29,20 @@ class LLM:
         self.limiter_classes = limiter_classes
         self.generate_kwargs = generate_kwargs
 
-    def generate(
-        self, inputs, transform_result: Callable[[str], str], **extra_args
-    ) -> list[str]:
+    def generate(self, inputs, transform_result: Callable[[str], str], **extra_args) -> list[str]:
+        token_count = inputs["input_ids"].shape[1]
+        if token_count >= MAX_TOKEN_COUNT:
+            print(f"\nwarning: prompt too long ({token_count}), skip")
+            return []
+
         bos_len = len(self.tokenizer.bos_token)
 
         def transform(result: str) -> str:
             return transform_result(result[bos_len:])
 
         limiters = [limiter_class() for limiter_class in self.limiter_classes]
+        stop_tokens = [self.tokenizer.eos_token, "<|file_separator|>"]
+        limiters.append(SpecialTokensLimiter(stop_tokens))
         kwargs = {
             **self.generate_kwargs,
             **extra_args,
@@ -47,15 +58,16 @@ class LLM:
         outputs = self.model.generate(**inputs, **kwargs)
 
         def decode(output):
-            decoded = self.tokenizer.decode(output)
-            if decoded.endswith(self.tokenizer.eos_token):
-                return transform(decoded[: -len(self.tokenizer.eos_token)])
-            result = transform(decoded)
-            if any(limiter.is_too_long(result) for limiter in limiters):
-                return transform(self.tokenizer.decode(output[:-1]))
+            return transform(self.tokenizer.decode(output))
+
+        def decode_and_trim(output):
+            result = decode(output)
+            while any(limiter.is_too_long(result) for limiter in limiters):
+                output = output[:-1]
+                result = decode(output)
             return result
 
-        return [decode(output) for output in outputs]
+        return [decode_and_trim(output) for output in outputs]
 
     def prompt(
         self, prompt: str, transform_result: Callable[[str], str], **extra_args
@@ -72,17 +84,8 @@ class LLM:
         index = random.randint(prefix_len + 1, num_tokens)
         for key in inputs.keys():
             inputs[key] = inputs[key][:, :index]
-        return self.generate(inputs.to(self.device), strip_prefix_len=0, **extra_args)
-
-
-def identity(result: str) -> str:
-    return result
-
-
-def trim_prompt(prompt: str) -> Callable[[str], str]:
-    prompt_len = len(prompt)
-
-    def transform(result: str) -> str:
-        return result[prompt_len:]
-
-    return transform
+        return self.generate(
+             inputs.to(self.device),
+             transform_result=identity,
+             **extra_args,
+         )

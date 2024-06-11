@@ -1,5 +1,6 @@
 import tree_sitter as ts
 
+from ..ai.transform import identity
 from ..source import MutationTarget
 from ..treesitter.python import tsLang, tsParser
 from .config import GeneratorConfig
@@ -26,7 +27,7 @@ class DocStringBasedGenerator(MutationGenerator):
         prompt = content[: docstring.end_byte].decode()
         results = mutator.ai.llm.prompt(
             prompt,
-            transform_result=identity,  # FIX: missing transform
+            transform_result=identity,
             **config.model_kwargs,
         )
         return Mutation.map(results)

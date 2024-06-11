@@ -17,7 +17,7 @@ class RepeatGenerator(MutationGenerator):
         signature = context.fn_signature()
         return (
             "<|file_separator|>\n"
-            + n.text
+            + n.text.decode()
             + "\n<|file_separator|>\n"
             + signature
             + "\n"
@@ -28,7 +28,7 @@ class RepeatGenerator(MutationGenerator):
     ) -> list[Mutation]:
         import mutator.ai.llm
 
-        prompt = self.generate_prompt()
+        prompt = self.generate_prompt(target.node)
 
         def transform(result: str) -> str:
             offset = len(prompt.splitlines(True)[:-2].join())

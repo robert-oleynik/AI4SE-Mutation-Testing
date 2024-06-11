@@ -3,10 +3,17 @@ import random
 import tree_sitter as ts
 
 from ..source import MutationTarget
-from ..treesitter.python import token_nodes
+from ..treesitter.python import tsLang
 from .config import GeneratorConfig
 from .generator import Mutation, MutationGenerator
 
+_docstring_query = tsLang.query("""
+(function_definition body: (block . (expression_statement (string) @docstring)))
+""")
+_targets_query = tsLang.query("""
+(expression) @expr
+(block (_) @statement)
+""")
 
 class InfillingGenerator(MutationGenerator):
     def generate_prompt(self, node: ts.Node) -> str:
@@ -18,16 +25,19 @@ class InfillingGenerator(MutationGenerator):
         import mutator.ai
 
         body = target.node.child_by_field_name("body")
-        tokens = list(token_nodes(body))
-        if tokens[0].type == "string":
-            # skip docstring
-            tokens = tokens[1:]
-        start, end = sorted(
-            random.sample(tokens, 2), key=lambda token: token.start_byte
-        )
+        docstring_matches = _docstring_query.matches(target.node)
+        target_matches = _targets_query.matches(body)
+        exclude = set()
+        targets = set()
+        for matches, ranges in [(docstring_matches, exclude), (target_matches, targets)]:
+            for _, match in matches:
+                for name, node in match.items():
+                    ranges.add(node.byte_range)
+        targets.difference_update(exclude)
+        start, end = random.choice(list(targets))
         content = target.source.content
-        prefix = content[target.node.start_byte : start.start_byte].decode()
-        suffix = content[end.start_byte : target.node.end_byte].decode()
+        prefix = content[target.node.start_byte : start].decode()
+        suffix = content[end : target.node.end_byte].decode()
         prompt = f"<|fim_prefix|>{prefix}<|fim_suffix|>{suffix}<|fim_middle|>"
 
         def transform(result: str) -> str:

@@ -15,8 +15,9 @@ from ..generator import (
     InfillingGenerator,
     RepeatGenerator,
 )
-from ..source import Filter, SourceFile
+from ..source import Filter, SourceFile, compare_tree
 from ..store import MutationStore
+from ..treesitter.python import tsParser
 
 generators = {
     "doc_string_based": DocStringBasedGenerator(),
@@ -127,8 +128,18 @@ def generate(out_dir, generator, config, project, filter, model, device, no_llm,
     for source_file in source_files:
         for target in source_file.targets:
             target_path = f"{source_file.module}:{target.fullname}"
-            print(f" - {target_path}", end="")
             counter = 0
+            dropped = 0
+
+            def status_update():
+                print(
+                    f"\r - {target_path:<80} [mutations: {counter} dropped: {dropped}] ",
+                    end="",
+                )
+
+            status_update()
+            original_tree = tsParser.parse(target.content()).root_node
+            trees = [original_tree]
             try:
                 for gen in generator:
                     if gen not in generators:
@@ -139,13 +150,13 @@ def generate(out_dir, generator, config, project, filter, model, device, no_llm,
                             raise GeneratorConfigNotFound(conf)
                         c = configs[conf]
                         for mutation in g.generate(target, c):
-                            counter += 1
-                            store.add(target, mutation)
-                            print(
-                                f"\r - {target_path:<80} [mutations: {counter}] ",
-                                end="",
-                            )
-            except Exception as e:
+                            new_tree = tsParser.parse(mutation.content).root_node
+                            if any((compare_tree(tree, new_tree) for tree in trees)):
+                                dropped += 1
+                            else:
+                                counter += 1
+                                store.add(target, mutation)
+                                trees.append(new_tree)
+                            status_update()
+            finally:
                 print()
-                raise e
-            print()
