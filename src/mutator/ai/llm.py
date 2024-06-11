@@ -9,6 +9,9 @@ from .transform import identity
 from typing import Callable
 
 
+MAX_TOKEN_COUNT = 2048
+
+
 class LLM:
     def __init__(
         self,
@@ -26,6 +29,11 @@ class LLM:
         self.generate_kwargs = generate_kwargs
 
     def generate(self, inputs, transform_result: Callable[[str], str], **extra_args) -> list[str]:
+        token_count = inputs["input_ids"].shape[1]
+        if token_count >= MAX_TOKEN_COUNT:
+            print(f"\nwarning: prompt too long ({token_count}), skip")
+            return []
+
         bos_len = len(self.tokenizer.bos_token)
 
         def transform(result: str) -> str:
