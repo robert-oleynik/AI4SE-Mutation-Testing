@@ -4,7 +4,7 @@
 - [x] Strip everything except function signature and doc comments. Use the LLM to generate the misisng bits.
 - [x] Select a token of the input function and force the AI to generate a different approach starting from this token. Further points of exploration:
 - [x] Beam Search
-- [ ] Comment out old code and prompt for new code
+- [x] Comment out old code and prompt for new code
 
 # Technical Features
 
