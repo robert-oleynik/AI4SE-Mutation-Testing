@@ -21,9 +21,7 @@ dependencies = [
 	"peft>=0.11.1",
 	"pandas>=2.2.2",
 	"matplotlib>=3.9.0",
-	"evaluate>=0.4.2",
 	"setuptools>=70.0.0",
-	"scikit-learn>=1.5.0"
 ]
 
 [project.scripts]
