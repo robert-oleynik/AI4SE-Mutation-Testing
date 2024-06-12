@@ -29,7 +29,9 @@ class LLM:
         self.limiter_classes = limiter_classes
         self.generate_kwargs = generate_kwargs
 
-    def generate(self, inputs, transform_result: Callable[[str], str], **extra_args) -> list[str]:
+    def generate(
+        self, inputs, transform_result: Callable[[str], str], **extra_args
+    ) -> list[str]:
         token_count = inputs["input_ids"].shape[1]
         if token_count >= MAX_TOKEN_COUNT:
             print(f"\nwarning: prompt too long ({token_count}), skip")
@@ -85,7 +87,7 @@ class LLM:
         for key in inputs.keys():
             inputs[key] = inputs[key][:, :index]
         return self.generate(
-             inputs.to(self.device),
-             transform_result=identity,
-             **extra_args,
-         )
+            inputs.to(self.device),
+            transform_result=identity,
+            **extra_args,
+        )

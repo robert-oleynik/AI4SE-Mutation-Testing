@@ -1,3 +1,4 @@
+import os
 import pathlib
 import shutil
 import typing
@@ -7,6 +8,7 @@ from git import Repo
 
 from ..collect import TestMods
 from ..generator import CommentRewriteGenerator, RepeatGenerator
+from ..helper.metrics import dstrloc, locfrac, strloc
 
 formatter = {
     "repeat": RepeatGenerator(),
@@ -65,16 +67,51 @@ def generate_samples(
     type=pathlib.Path,
     help="Git repositories to extract mutations from",
 )
+@click.option(
+    "--max-dloc",
+    default=20,
+    type=int,
+    help="Drop all entries with more change in loc than this value",
+)
+@click.option(
+    "--max-loc-ratio",
+    default=10.0,
+    type=float,
+    help="Max ration between mutation LOC and source LOC",
+)
+@click.option(
+    "--update",
+    is_flag=True,
+    help="Update Dataset in place without regenerating (Will ignore git repositories)",
+)
+@click.option("--max-prompt-loc", default=1024, type=int, help="Max LOC for prompt")
 @click.option("-s", "--strategy", multiple=True, default=list(strategies.keys()))
-def collect(out_dir, bare, git, strategy):
+def collect(
+    out_dir, bare, git, strategy, max_dloc, max_loc_ratio, max_prompt_loc, update
+):
     import datasets
+
+    def _loc_ratio(row):
+        f = locfrac(row["source"], row["mutation"])
+        return 1 / max_loc_ratio <= f and f <= max_loc_ratio
 
     cache_dir = out_dir / "cache"
     if cache_dir.exists():
         shutil.rmtree(cache_dir)
-    data = datasets.Dataset.from_generator(
-        generate_samples(bare, git, strategy, ["rewrite"]),
-        keep_in_memory=True,
-        cache_dir=cache_dir,
+    if update:
+        data = datasets.load_from_disk(dataset_path=(out_dir / "data").__str__())
+    else:
+        data = datasets.Dataset.from_generator(
+            generate_samples(bare, git, strategy, ["rewrite"]),
+            keep_in_memory=True,
+            cache_dir=cache_dir,
+        )
+    data = data.filter(
+        lambda row: abs(dstrloc(row["source"], row["mutation"])) < max_dloc
     )
-    data.save_to_disk((out_dir / "data").__str__())
+    data = data.filter(_loc_ratio)
+    data = data.filter(lambda row: strloc(row["prompt"]) < max_prompt_loc)
+    if update:
+        data.save_to_disk((out_dir / "data-updated").__str__())
+    else:
+        data.save_to_disk((out_dir / "data").__str__())

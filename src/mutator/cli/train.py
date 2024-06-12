@@ -94,26 +94,22 @@ def train(
     generator,
     learning_rate,
     num_epochs,
-    batch_size,
+    batch_size,  # TODO
     test_size,
     seed,
-    block_size,
+    block_size,  # TODO
     alpha,
     dropout,
     r,
-    warmup,
+    warmup,  # TODO
 ):
     import datasets
 
     data = datasets.load_from_disk(dataset_path=dataset.absolute().__str__())
     data = datasets.Dataset.from_dict({"prompt": data["prompt"]})
 
-    import torch
-
     import mutator.ai.llm
     from mutator.ai.llm import LLM
-
-    gpu = torch.device(device)
 
     mutator.ai.llm = LLM(device, model_id)
 
@@ -164,9 +160,9 @@ def train(
 
     model = mutator.ai.llm.model
     peft_config = LoraConfig(
-        lora_alpha=16,
-        lora_dropout=0.1,
-        r=64,
+        lora_alpha=alpha,
+        lora_dropout=dropout,
+        r=r,
         bias="none",
         task_type="CASUAL_LM",
     )
@@ -179,7 +175,12 @@ def train(
         predictions = numpy.argmax(logits, axis=-1)
         return metric.compute(predictions=predictions, references=labels)
 
-    args = TrainingArguments(output_dir=out_dir / "train", eval_strategy="epoch")
+    args = TrainingArguments(
+        output_dir=out_dir / "train",
+        eval_strategy="epoch",
+        learning_rate=learning_rate,
+        seed=seed,
+    )
 
     trainer = Trainer(
         model=model,
