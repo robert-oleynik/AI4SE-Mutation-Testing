@@ -1,6 +1,8 @@
 import tree_sitter as ts
 
+from ..ai.transform import trim_prompt
 from ..source import MutationTarget
+from ..treesitter.context import Context
 from .config import GeneratorConfig
 from .generator import Mutation, MutationGenerator
 
@@ -14,9 +16,13 @@ class ForcedBranchGenerator(MutationGenerator):
     ) -> list[Mutation]:
         import mutator.ai
 
-        prompt = target.content().decode()
+        definition, indent = Context(target.node).relevant_class_definition()
         signature = target.get_signature().decode()
+        prompt = definition + indent + target.content().decode()
         results = mutator.ai.llm.force_branch(
-            prompt, keep_prefix_len=len(signature), **config.model_kwargs
+            prompt,
+            transform_result=trim_prompt(definition + indent),
+            keep_prefix_len=len(definition) + len(indent) + len(signature),
+            **config.model_kwargs,
         )
         return Mutation.map(results)
