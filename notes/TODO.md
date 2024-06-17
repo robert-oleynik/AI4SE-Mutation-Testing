@@ -11,7 +11,8 @@
 - [ ] Pass decorators into MutationTargets
 - [ ] Provide function context (e. g. class around method)
 - [ ] Provide more context to avoid loops
-- [x] Use version 1.1 of model
+- [x] Use version 1.1 2b of model
+- [ ] Use 7b model
 
 # Against which baseline to evaluate?
 
