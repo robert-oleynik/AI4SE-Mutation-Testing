@@ -1,6 +1,7 @@
 import random
 from collections.abc import Callable
 
+import gc
 import torch
 import transformers
 
@@ -76,7 +77,9 @@ class LLM:
         self, prompt: str, transform_result: Callable[[str], str], **extra_args
     ) -> list[str]:
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
-        return self.generate(inputs, transform_result, **extra_args)
+        results = self.generate(inputs, transform_result, **extra_args)
+        gc.collect()
+        return results
 
     def force_branch(
         self, prompt: str, keep_prefix_len: int, **extra_args
@@ -87,8 +90,10 @@ class LLM:
         index = random.randint(prefix_len + 1, num_tokens)
         for key in inputs.keys():
             inputs[key] = inputs[key][:, :index]
-        return self.generate(
+        results = self.generate(
             inputs.to(self.device),
             transform_result=identity,
             **extra_args,
         )
+        gc.collect()
+        return results
