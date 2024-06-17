@@ -1,12 +1,11 @@
 import tree_sitter as ts
 
-from ..ai.transform import identity
+from ..ai.transform import trim_prompt
 from ..source import MutationTarget
+from ..treesitter.context import Context
 from ..treesitter.python import tsLang, tsParser
 from .config import GeneratorConfig
 from .generator import Mutation, MutationGenerator
-
-_tsQuery = tsLang.query("(expression_statement (string) @docstring)")
 
 
 class DocStringBasedGenerator(MutationGenerator):
@@ -18,16 +17,16 @@ class DocStringBasedGenerator(MutationGenerator):
     ) -> list[Mutation]:
         import mutator.ai
 
-        content = target.content()
-        tree = tsParser.parse(content)
-        matches = _tsQuery.matches(tree.root_node)
-        if len(matches) == 0:
+        context = Context(target.node)
+        docstring = context.docstring()
+        if not docstring:
             return []
-        docstring = matches[0][1]["docstring"]
-        prompt = content[: docstring.end_byte].decode()
+        definition, indent = context.relevant_class_definition()
+        content = target.content()
+        prompt = definition + indent + content[: docstring.end_byte].decode()
         results = mutator.ai.llm.prompt(
             prompt,
-            transform_result=identity,
+            transform_result=trim_prompt(definition + indent),
             **config.model_kwargs,
         )
         return Mutation.map(results)
