@@ -82,7 +82,11 @@ class LLM:
         return results
 
     def force_branch(
-        self, prompt: str, keep_prefix_len: int, **extra_args
+        self,
+        prompt: str,
+        transform_result: Callable[[str], str],
+        keep_prefix_len: int,
+        **extra_args,
     ) -> list[str]:
         inputs = self.tokenizer(prompt, return_tensors="pt")
         num_tokens = inputs.input_ids.shape[1]
@@ -92,7 +96,7 @@ class LLM:
             inputs[key] = inputs[key][:, :index]
         results = self.generate(
             inputs.to(self.device),
-            transform_result=identity,
+            transform_result=transform_result,
             **extra_args,
         )
         gc.collect()
