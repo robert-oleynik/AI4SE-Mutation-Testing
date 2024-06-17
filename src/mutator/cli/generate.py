@@ -92,6 +92,9 @@ configs = {
     help="LLM model used to generate mutations",
 )
 @click.option(
+    "--checkpoint", type=pathlib.Path, help="Load checkpoints instead of model"
+)
+@click.option(
     "-d",
     "--device",
     default="cuda:0",
@@ -100,7 +103,18 @@ configs = {
 )
 @click.option("--no-llm", is_flag=True, help="Do not load LLM. May brake generators")
 @click.option("--clean", is_flag=True, help="Regenerate all mutations")
-def generate(out_dir, generator, config, project, filter, model, device, no_llm, clean):
+def generate(
+    out_dir,
+    generator,
+    config,
+    project,
+    filter,
+    model,
+    device,
+    no_llm,
+    clean,
+    checkpoint,
+):
     if not no_llm:
         import mutator.ai.llm
 
@@ -151,7 +165,7 @@ def generate(out_dir, generator, config, project, filter, model, device, no_llm,
                         c = configs[conf]
                         for mutation in g.generate(target, c):
                             new_tree = tsParser.parse(mutation.content).root_node
-                            if any((compare_tree(tree, new_tree) for tree in trees)):
+                            if any(compare_tree(tree, new_tree) for tree in trees):
                                 dropped += 1
                             else:
                                 counter += 1

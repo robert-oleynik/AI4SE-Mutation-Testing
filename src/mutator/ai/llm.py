@@ -1,3 +1,4 @@
+import pathlib
 import random
 from collections.abc import Callable
 
@@ -7,8 +8,6 @@ import transformers
 from .limiter.limiter import Limiter, OutputStoppingCriteria
 from .limiter.special_tokens import SpecialTokensLimiter
 from .transform import identity
-from typing import Callable
-
 
 MAX_TOKEN_COUNT = 2048
 
@@ -19,13 +18,21 @@ class LLM:
         device: str,
         model_id: str,
         limiter_classes: list[type[Limiter]] = [],
+        checkpoint: pathlib.Path | None = None,
         **generate_kwargs,
     ):
         self.device = torch.device(device)
         self.tokenizer = transformers.GemmaTokenizer.from_pretrained(model_id)
-        self.model = transformers.AutoModelForCausalLM.from_pretrained(
-            model_id, device_map=self.device, torch_dtype=torch.float16
-        )
+        if checkpoint is not None:
+            import peft
+
+            self.model = peft.AutoPeftModelForCausalLM.from_pretrained(
+                checkpoint, device_map=self.device, torch_dtype=torch.float16
+            )
+        else:
+            self.model = transformers.AutoModelForCausalLM.from_pretrained(
+                model_id, device_map=self.device, torch_dtype=torch.float16
+            )
         self.limiter_classes = limiter_classes
         self.generate_kwargs = generate_kwargs
 
