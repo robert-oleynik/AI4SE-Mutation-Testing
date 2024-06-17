@@ -3,6 +3,7 @@ import random
 import tree_sitter as ts
 
 from ..source import MutationTarget
+from ..treesitter.context import Context
 from ..treesitter.python import tsLang
 from .config import GeneratorConfig
 from .generator import Mutation, MutationGenerator
@@ -38,7 +39,8 @@ class InfillingGenerator(MutationGenerator):
         content = target.source.content
         prefix = content[target.node.start_byte : start].decode()
         suffix = content[end : target.node.end_byte].decode()
-        prompt = f"<|fim_prefix|>{prefix}<|fim_suffix|>{suffix}<|fim_middle|>"
+        definition, indent = Context(target.node).relevant_class_definition()
+        prompt = f"{definition}<|fim_prefix|>{indent}{prefix}<|fim_suffix|>{suffix}<|fim_middle|>"
 
         def transform(result: str) -> str:
             return prefix + result[len(prompt) :] + suffix
