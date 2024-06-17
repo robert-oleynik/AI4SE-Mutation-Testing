@@ -57,7 +57,8 @@ class LLM:
                 + extra_args.get("stopping_criteria", [])
             ),
         }
-        outputs = self.model.generate(**inputs, **kwargs)
+        with torch.no_grad():
+            outputs = self.model.generate(**inputs, **kwargs)
 
         def decode(output):
             return transform(self.tokenizer.decode(output))
