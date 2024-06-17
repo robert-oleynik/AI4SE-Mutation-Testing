@@ -33,7 +33,6 @@ import click
     show_default=True,
     help="Dir to read datasets from",
 )
-@click.option("-g", "--generator", help="Generator format used for the dataset")
 @click.option(
     "-l",
     "--learning-rate",
@@ -56,7 +55,7 @@ import click
     default=4,
     type=int,
     show_default=True,
-    help="Number of batches for LoRa training",
+    help="Number of batches for LoRa training [Bugged]",
 )
 @click.option(
     "-t",
@@ -76,21 +75,12 @@ import click
 )
 @click.option("--alpha", default=16, type=int, show_default=True, help="TODO")
 @click.option("--dropout", default=0.05, type=float, show_default=True, help="TODO")
-@click.option("--r", default=8, type=int, show_default=True, help="TODO")
-@click.option(
-    "-w",
-    "--warmup",
-    default=0,
-    type=int,
-    show_default=True,
-    help="Number of warmup steps to perform",
-)
+@click.option("--rank", default=8, type=int, show_default=True, help="TODO")
 def train(
     out_dir,
     model_id,
     device,
     dataset,
-    generator,
     learning_rate,
     num_epochs,
     batch_size,
@@ -98,101 +88,71 @@ def train(
     seed,
     alpha,
     dropout,
-    r,
-    warmup,  # TODO
+    rank,
 ):
     import datasets
+    import torch
+    import transformers
 
     data = datasets.load_from_disk(dataset_path=dataset.absolute().__str__())
     data = datasets.Dataset.from_dict({"prompt": data["prompt"]})
 
-    import mutator.ai.llm
-    from mutator.ai.llm import LLM
+    device = torch.device(device)
+    tokenizer = transformers.GemmaTokenizer.from_pretrained(model_id)
+    model = transformers.AutoModelForCausalLM.from_pretrained(
+        model_id, device_map=device, torch_dtype=torch.float16
+    )
 
-    mutator.ai.llm = LLM(device, model_id)
-
-    # From provided JuypterLab
     def _tokenize(row):
-        tokenizer = mutator.ai.llm.tokenizer
-        source = row["prompt"]
+        tokens = tokenizer(row["prompt"])
+        labels = tokens.input_ids.copy()
+        return {**tokens, "labels": labels}
 
-        input_ids = tokenizer.encode(source) + [tokenizer.eos_token_id]
-        labels = input_ids.copy()
-        return {"input_ids": input_ids, "labels": labels}
+    tokenized_data = data.map(_tokenize)
+    print(tokenized_data)
 
-    tokenized_data = data.map(_tokenize, remove_columns=["prompt"])
+    data_collator = transformers.DataCollatorWithPadding(tokenizer)
 
     split_dataset = tokenized_data.train_test_split(
-        test_size=0.1, shuffle=True, seed=seed
+        test_size=test_size, shuffle=True, seed=seed
     )
     test_data = split_dataset["test"]
     train_data = split_dataset["train"]
 
-    import torch
-    from peft import LoraConfig, TaskType, get_peft_model
-    from torch.utils.data import DataLoader
-    from transformers import (
-        DataCollatorForLanguageModeling,
-        get_linear_schedule_with_warmup,
-    )
+    from peft import LoraConfig, TaskType
+    from transformers import Trainer, TrainingArguments
 
-    model = mutator.ai.llm.model
     peft_config = LoraConfig(
         lora_alpha=alpha,
         lora_dropout=dropout,
         inference_mode=False,
         target_modules=["q_proj", "v_proj"],
-        r=r,
+        r=rank,
         bias="all",
         task_type=TaskType.CAUSAL_LM,
     )
-    peft_model = get_peft_model(model, peft_config)
-    peft_model.print_trainable_parameters()
+    model.add_adapter(peft_config)
 
-    tokenizer = mutator.ai.llm.tokenizer
-    if tokenizer.pad_token_id is None:
-        tokenizer.pad_token_id = tokenizer.eos_token_id
-        tokenizer.pad_token = tokenizer.eos_token
-    collator = DataCollatorForLanguageModeling(
-        tokenizer, mlm=False, pad_to_multiple_of=8
-    )
-    train_dataloader = DataLoader(
-        train_data, collate_fn=collator, batch_size=batch_size
-    )
-    eval_dataloader = DataLoader(test_data, collate_fn=collator, batch_size=batch_size)
-
-    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
-    learning_rate_scheduler = get_linear_schedule_with_warmup(
-        optimizer=optimizer,
-        num_warmup_steps=0,
-        num_training_steps=(len(train_data) * num_epochs),
+    args = TrainingArguments(
+        output_dir=out_dir.__str__(),
+        learning_rate=learning_rate,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size,
+        num_train_epochs=num_epochs,
+        weight_decay=0.01,
+        eval_strategy="epoch",
+        save_strategy="epoch",
+        load_best_model_at_end=True,
+        push_to_hub=False,
     )
 
-    from tqdm import tqdm
+    trainer = Trainer(
+        model=model,
+        args=args,
+        train_dataset=train_data,
+        eval_dataset=test_data,
+        tokenizer=tokenizer,
+        data_collator=data_collator,
+    )
 
-    gpu = torch.device(device)
-    for epoch in range(num_epochs):
-        model.train()
-        total_loss = 0
-
-        for _, batch in enumerate(tqdm(train_dataloader)):
-            outputs = model(**batch.to(gpu))
-            loss = outputs.loss
-            total_loss += loss.detach().cpu().float()
-            loss.backward()
-            optimizer.step()
-            learning_rate_scheduler.step()
-            optimizer.zero_grad()
-
-        model.eval()
-        eval_loss = 0
-        for _, batch in enumerate(tqdm(eval_dataloader)):
-            with torch.no_grad():
-                outputs = model(**batch.to(gpu))
-            loss = outputs.loss
-            eval_loss += loss.detach().cpu().float()
-
-        eval_epoch_loss = eval_loss / len(eval_dataloader)
-        train_epoch_loss = total_loss / len(train_dataloader)
-        print(f"{epoch=}: {train_epoch_loss=} {eval_epoch_loss=}")
-        model.save_pretrained(out_dir / f"checkpoint-{epoch}")
+    trainer.train()
