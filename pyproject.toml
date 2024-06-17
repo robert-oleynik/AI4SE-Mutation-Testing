@@ -21,6 +21,7 @@ dependencies = [
 	"peft>=0.11.1",
 	"pandas>=2.2.2",
 	"matplotlib>=3.9.0",
+	"setuptools>=70.0.0",
 ]
 
 [project.scripts]
