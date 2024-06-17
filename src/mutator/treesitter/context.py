@@ -104,7 +104,7 @@ class Context:
         method_body = self.node.child_by_field_name("body").text.decode()
         method_name = self.name()
 
-        function_calls = [self.node.text.decode() for _, match in _calls_query.matches(self.node) for _, self.node in match.items()]
+        function_calls = [node.text.decode() for _, match in _calls_query.matches(self.node) for _, node in match.items()]
         class_body = parent_class_node.child_by_field_name("body")
         for sibling in class_body.children:
             sibling_context = Context(sibling)
