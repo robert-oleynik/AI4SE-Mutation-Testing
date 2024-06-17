@@ -2,6 +2,7 @@ import tree_sitter as ts
 
 from ..ai.transform import trim_prompt
 from ..source import MutationTarget
+from ..treesitter.context import Context
 from .config import GeneratorConfig
 from .generator import Mutation, MutationGenerator
 
@@ -15,9 +16,10 @@ class FullBodyBasedGenerator(MutationGenerator):
     ) -> list[Mutation]:
         import mutator.ai
 
-        prompt = "# Original version\n"
-        prompt += target.content().decode()
-        prompt += "\n\n# Mutated version for mutation testing\n"
+        definition, indent = Context(target.node).relevant_class_definition()
+        prompt = definition + indent + "# Original version\n"
+        prompt += indent + target.content().decode()
+        prompt += f"\n\n{indent}# Mutated version for mutation testing\n{indent}"
         results = mutator.ai.llm.prompt(
             prompt,
             transform_result=trim_prompt(prompt),
