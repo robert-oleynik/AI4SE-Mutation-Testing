@@ -1,4 +1,5 @@
 import difflib
+import json
 import pathlib
 
 import click
@@ -24,7 +25,7 @@ class Inspector(textual.app.App):
         width: 3fr;
     }
     .side-mutations {
-        width: 2fr;
+        width: 5fr;
     }
     .side-diff {
         width: 10fr;
@@ -74,6 +75,9 @@ class Inspector(textual.app.App):
         self.textLog = textual.widgets.TextArea.code_editor(
             "", read_only=True, classes="diff-log"
         )
+        self.metadata = textual.widgets.TextArea.code_editor(
+            "", language="json", read_only=True
+        )
 
     def update_diff(self):
         if self.selected_node is None:
@@ -96,6 +100,9 @@ class Inspector(textual.app.App):
         diff = [line for line in lines]
         self.code.load_text("".join(diff))
         self.textLog.load_text(self.selected_node.data[key]["output"])
+        metadata = json.load(open(file.with_suffix(".json"), "r"))
+        del metadata["mutation"]
+        self.metadata.load_text(json.dumps(metadata, indent=4))
 
     def on_tree_node_highlighted(self, msg: textual.widgets.Tree.NodeSelected):
         if msg.node.data is None:
@@ -135,8 +142,10 @@ class Inspector(textual.app.App):
         yield textual.scroll_view.ScrollView(
             self.modules_tree, classes="box side-modules"
         )
-        yield textual.scroll_view.ScrollView(
-            self.mutations, classes="box side-mutations"
+        yield textual.containers.Vertical(
+            textual.scroll_view.ScrollView(self.mutations),
+            self.metadata,
+            classes="box side-mutations",
         )
         yield textual.containers.Vertical(self.code, self.textLog, classes="side-diff")
 
