@@ -1,5 +1,6 @@
 import tree_sitter as ts
 
+from ..helper.debug import debug_print
 from ..source import MutationTarget
 from ..treesitter.context import Context
 from .config import GeneratorConfig
@@ -32,13 +33,16 @@ class CommentRewriteGenerator(MutationGenerator):
         import mutator.ai.llm
 
         prompt = self.generate_prompt(target.node)
+        strip_len = len(prompt) - (len(Context(target.node).fn_signature()) + 1)
 
         def transform(result: str) -> str:
-            return result[len(prompt) :]
+            return result[strip_len :]
 
         results = mutator.ai.llm.prompt(
             prompt,
             transform_result=transform,
             **config.model_kwargs,
         )
+        for result in results:
+            debug_print(result)
         return Mutation.map(results)
