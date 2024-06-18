@@ -57,10 +57,10 @@ class Inspector(textual.app.App):
                 for name, target in module.items()
             ]
             color = "green"
-            if any(map(lambda x: x[1], targets)):
+            if any(map(lambda target: target[1], targets)):
                 color = "red"
             node = self.modules_tree.root.add(f"[{color}]{name}[/{color}]", expand=True)
-            targets.sort(key=lambda x: 1 - int(x[1]))
+            targets.sort(key=lambda target: (not target[1], target[0]))
             for name, failed in targets:
                 color = "green"
                 if failed:
@@ -110,7 +110,9 @@ class Inspector(textual.app.App):
         self.selected_node = msg.node
         self.selected_mutations = 0
         self.mutations.clear()
-        for name, info in msg.node.data.items():
+        mutations = list(msg.node.data.items())
+        mutations.sort(key=lambda mutation: (mutation[1]["caught"], int(mutation[0])))
+        for name, info in mutations:
             label = textual.widgets.Static(f"[green]{name}[/green]")
             if not info["caught"]:
                 label = textual.widgets.Static(f"[red]{name}[/red]")
