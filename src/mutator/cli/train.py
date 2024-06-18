@@ -1,3 +1,4 @@
+import math
 import pathlib
 
 import click
@@ -36,7 +37,7 @@ import click
 @click.option(
     "-l",
     "--learning-rate",
-    default=3e-4,
+    default=1e-4,
     type=float,
     show_default=True,
     help="Learning rate used for LoRa training",
@@ -92,6 +93,8 @@ def train(
 ):
     import datasets
     import torch
+    import torch.utils.data
+    import tqdm
     import transformers
 
     data = datasets.load_from_disk(dataset_path=dataset.absolute().__str__())
@@ -104,14 +107,17 @@ def train(
     )
 
     def _tokenize(row):
-        tokens = tokenizer(row["prompt"])
+        tokens = tokenizer(row["prompt"] + "<eos>")
         labels = tokens.input_ids.copy()
         return {**tokens, "labels": labels}
 
     tokenized_data = data.map(_tokenize)
+    tokenized_data = tokenized_data.remove_columns(["prompt"])
     print(tokenized_data)
 
-    data_collator = transformers.DataCollatorWithPadding(tokenizer)
+    data_collator = transformers.DataCollatorForLanguageModeling(
+        tokenizer, mlm=False, pad_to_multiple_of=8, return_tensors="pt"
+    )
 
     split_dataset = tokenized_data.train_test_split(
         test_size=test_size, shuffle=True, seed=seed
@@ -119,8 +125,23 @@ def train(
     test_data = split_dataset["test"]
     train_data = split_dataset["train"]
 
+    import torch.utils.data
+
+    train_dataloader = torch.utils.data.DataLoader(
+        train_data, collate_fn=data_collator, batch_size=batch_size
+    )
+    test_dataloader = torch.utils.data.DataLoader(
+        test_data, collate_fn=data_collator, batch_size=batch_size
+    )
+
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+    lr_scheduler = transformers.get_linear_schedule_with_warmup(
+        optimizer=optimizer,
+        num_warmup_steps=0,
+        num_training_steps=len(train_dataloader) * num_epochs,
+    )
+
     from peft import LoraConfig, TaskType
-    from transformers import Trainer, TrainingArguments
 
     peft_config = LoraConfig(
         lora_alpha=alpha,
@@ -133,26 +154,59 @@ def train(
     )
     model.add_adapter(peft_config)
 
-    args = TrainingArguments(
-        output_dir=out_dir.__str__(),
-        learning_rate=learning_rate,
-        per_device_train_batch_size=batch_size,
-        per_device_eval_batch_size=batch_size,
-        num_train_epochs=num_epochs,
-        weight_decay=0.01,
-        eval_strategy="epoch",
-        save_strategy="epoch",
-        load_best_model_at_end=True,
-        push_to_hub=False,
-    )
+    for epoch in range(num_epochs):
+        model.train()
+        total_loss = 0
+        for step, batch in enumerate(tqdm.tqdm(train_dataloader)):
+            outputs = model(**batch.to(device))
+            loss = outputs.loss
+            total_loss += loss.detach().cpu().float()
+            if math.isnan(total_loss):
+                print(tokenizer.decode(batch))
+                print(loss.detach().cpu().float())
+                raise ValueError("training reach NaN")
+            loss.backward()
+            optimizer.step()
+            lr_scheduler.step()
+            optimizer.zero_grad()
 
-    trainer = Trainer(
-        model=model,
-        args=args,
-        train_dataset=train_data,
-        eval_dataset=test_data,
-        tokenizer=tokenizer,
-        data_collator=data_collator,
-    )
+        model.eval()
+        test_loss = 0
+        for step, batch in enumerate(tqdm.tqdm(test_dataloader)):
+            with torch.no_grad():
+                outputs = model(**batch.to(device))
+            loss = outputs.loss
+            test_loss += loss.detach().cpu().float()
 
-    trainer.train()
+        test_epoch_loss = test_loss / len(test_dataloader)
+        train_epoch_loss = test_loss / len(test_dataloader)
+        print(f"{epoch=}: {train_epoch_loss=} {test_epoch_loss=}")
+
+        model.save_pretrained(str(out_dir / "checkpoints" / str(epoch)))
+
+    #    from transformers import Trainer, TrainingArguments
+    #    args = TrainingArguments(
+    #        output_dir=out_dir.__str__(),
+    #        learning_rate=learning_rate,
+    #        per_device_train_batch_size=batch_size,
+    #        per_device_eval_batch_size=batch_size,
+    #        num_train_epochs=num_epochs,
+    #        weight_decay=0.01,
+    #        eval_strategy="epoch",
+    #        save_strategy="epoch",
+    #        load_best_model_at_end=True,
+    #        push_to_hub=False,
+    #    )
+    #
+    #    trainer = Trainer(
+    #        model=model,
+    #        args=args,
+    #        train_dataset=train_data,
+    #        eval_dataset=test_data,
+    #        tokenizer=tokenizer,
+    #        data_collator=data_collator,
+    #    )
+    #
+    #    trainer.train()
+
+    model.save_pretrained((out_dir / "final").__str__())
