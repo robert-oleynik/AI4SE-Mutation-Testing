@@ -35,10 +35,11 @@ class InfillingGenerator(MutationGenerator):
                 for name, node in match.items():
                     ranges.add(node.byte_range)
         targets.difference_update(exclude)
+        targets = list(targets)
         content = target.source.content
         definition, indent = Context(target.node).relevant_class_definition()
         results = []
-        for start, end in random.sample(list(targets), config.tries_per_target):
+        for start, end in random.sample(targets, min(config.tries_per_target, len(targets))):
             prefix = content[target.node.start_byte : start].decode()
             suffix = content[end : target.node.end_byte].decode()
             prompt = f"{definition}<|fim_prefix|>{indent}{prefix}<|fim_suffix|>{suffix}<|fim_middle|>"
