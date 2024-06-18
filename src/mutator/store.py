@@ -29,8 +29,8 @@ class MutationStore:
             + target.source.content[target.node.end_byte :]
         )
         (path / "file").write_bytes(f"{target.source.path}".encode())
-        file = path / f"{self.counter[path]}.py"
-        file.write_bytes(content)
+        (path / f"{self.counter[path]}.py").write_bytes(content)
+        (path / f"{self.counter[path]}.sample").write_bytes(mutation.content)
 
     def isclean(self) -> bool:
         try:
