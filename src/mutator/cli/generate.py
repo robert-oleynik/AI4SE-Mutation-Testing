@@ -61,6 +61,7 @@ configs = {
     "-g",
     "--generator",
     multiple=True,
+    type=click.Choice(generators.keys(), case_sensitive=False),
     default=list(generators.keys()),
     show_default=True,
     help="Specify generator used for generating mutations",
