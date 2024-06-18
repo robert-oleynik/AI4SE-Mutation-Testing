@@ -65,8 +65,12 @@ class LLM:
                 + extra_args.get("stopping_criteria", [])
             ),
         }
-        with torch.no_grad():
-            outputs = self.model.generate(**inputs, **kwargs)
+        try:
+            with torch.no_grad():
+                outputs = self.model.generate(**inputs, **kwargs)
+        except torch.cuda.OutOfMemoryError:
+            print("\nwarning: caught out of memory error, skip")
+            return []
 
         def decode(output):
             return transform(self.tokenizer.decode(output))
