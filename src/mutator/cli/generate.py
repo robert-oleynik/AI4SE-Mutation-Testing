@@ -1,5 +1,6 @@
 import pathlib
 import shutil
+import traceback
 
 import click
 
@@ -166,7 +167,13 @@ def generate(
                         if conf not in configs:
                             raise GeneratorConfigNotFound(conf)
                         c = configs[conf]
-                        for mutation in g.generate(target, c):
+                        try:
+                            mutations = g.generate(target, c)
+                        except e:
+                            print("\nwarning: caught exception, skip")
+                            traceback.print_exception(e)
+                            continue
+                        for mutation in mutations:
                             new_tree = tsParser.parse(mutation.content).root_node
                             if any(compare_tree(tree, new_tree) for tree in trees):
                                 dropped += 1
