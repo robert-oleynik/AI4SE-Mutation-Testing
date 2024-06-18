@@ -1,4 +1,5 @@
 import math
+import os
 import pathlib
 
 import click
@@ -156,12 +157,12 @@ def train(
 
     for epoch in range(num_epochs):
         model.train()
-        total_loss = 0
+        train_loss = 0
         for step, batch in enumerate(tqdm.tqdm(train_dataloader)):
             outputs = model(**batch.to(device))
             loss = outputs.loss
-            total_loss += loss.detach().cpu().float()
-            if math.isnan(total_loss):
+            train_loss += loss.detach().cpu().float()
+            if math.isnan(train_loss):
                 print(tokenizer.decode(batch))
                 print(loss.detach().cpu().float())
                 raise ValueError("training reach NaN")
@@ -169,6 +170,11 @@ def train(
             optimizer.step()
             lr_scheduler.step()
             optimizer.zero_grad()
+            if step % 200 == 199:
+                inter_train_loss = train_loss / step
+                msg = f"{step=} loss={inter_train_loss.item()}"
+                columns = os.get_terminal_size().columns
+                print(f"\r{{:<{columns}}}".format(msg))
 
         model.eval()
         test_loss = 0
@@ -179,7 +185,7 @@ def train(
             test_loss += loss.detach().cpu().float()
 
         test_epoch_loss = test_loss / len(test_dataloader)
-        train_epoch_loss = test_loss / len(test_dataloader)
+        train_epoch_loss = train_loss / len(train_dataloader)
         print(f"{epoch=}: {train_epoch_loss=} {test_epoch_loss=}")
 
         model.save_pretrained(str(out_dir / "checkpoints" / str(epoch)))
