@@ -33,7 +33,8 @@ configs = {
     "single_result": GeneratorConfig(
         {
             "num_return_sequences": 1,
-        }
+        },
+        tries_per_target=1,
     ),
     "beam_search": GeneratorConfig(
         {
@@ -41,7 +42,8 @@ configs = {
             "num_beams": 8,
             "no_repeat_ngram_size": 32,
             "num_return_sequences": 4,
-        }
+        },
+        tries_per_target=4,
     ),
 }
 
