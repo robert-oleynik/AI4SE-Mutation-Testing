@@ -35,19 +35,21 @@ class InfillingGenerator(MutationGenerator):
                 for name, node in match.items():
                     ranges.add(node.byte_range)
         targets.difference_update(exclude)
-        start, end = random.choice(list(targets))
+        targets = list(targets)
         content = target.source.content
-        prefix = content[target.node.start_byte : start].decode()
-        suffix = content[end : target.node.end_byte].decode()
         definition, indent = Context(target.node).relevant_class_definition()
-        prompt = f"{definition}<|fim_prefix|>{indent}{prefix}<|fim_suffix|>{suffix}<|fim_middle|>"
+        results = []
+        for start, end in random.sample(targets, min(config.tries_per_target, len(targets))):
+            prefix = content[target.node.start_byte : start].decode()
+            suffix = content[end : target.node.end_byte].decode()
+            prompt = f"{definition}<|fim_prefix|>{indent}{prefix}<|fim_suffix|>{suffix}<|fim_middle|>"
 
-        def transform(result: str) -> str:
-            return prefix + result[len(prompt) :] + suffix
+            def transform(result: str) -> str:
+                return prefix + result[len(prompt) :] + suffix
 
-        results = mutator.ai.llm.prompt(
-            prompt,
-            transform_result=transform,
-            **config.model_kwargs,
-        )
+            results += mutator.ai.llm.prompt(
+                prompt,
+                transform_result=transform,
+                **config.model_kwargs,
+            )
         return Mutation.map(results)

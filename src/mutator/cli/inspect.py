@@ -1,4 +1,5 @@
 import difflib
+import json
 import pathlib
 
 import click
@@ -24,7 +25,7 @@ class Inspector(textual.app.App):
         width: 3fr;
     }
     .side-mutations {
-        width: 2fr;
+        width: 5fr;
     }
     .side-diff {
         width: 10fr;
@@ -56,10 +57,10 @@ class Inspector(textual.app.App):
                 for name, target in module.items()
             ]
             color = "green"
-            if any(map(lambda x: x[1], targets)):
+            if any(map(lambda target: target[1], targets)):
                 color = "red"
             node = self.modules_tree.root.add(f"[{color}]{name}[/{color}]", expand=True)
-            targets.sort(key=lambda x: 1 - int(x[1]))
+            targets.sort(key=lambda target: (not target[1], target[0]))
             for name, failed in targets:
                 color = "green"
                 if failed:
@@ -73,6 +74,9 @@ class Inspector(textual.app.App):
         )
         self.textLog = textual.widgets.TextArea.code_editor(
             "", read_only=True, classes="diff-log"
+        )
+        self.metadata = textual.widgets.TextArea.code_editor(
+            "", language="json", read_only=True
         )
 
     def update_diff(self):
@@ -96,6 +100,9 @@ class Inspector(textual.app.App):
         diff = [line for line in lines]
         self.code.load_text("".join(diff))
         self.textLog.load_text(self.selected_node.data[key]["output"])
+        metadata = json.load(open(file.with_suffix(".json"), "r"))
+        del metadata["mutation"]
+        self.metadata.load_text(json.dumps(metadata, indent=4))
 
     def on_tree_node_highlighted(self, msg: textual.widgets.Tree.NodeSelected):
         if msg.node.data is None:
@@ -103,7 +110,9 @@ class Inspector(textual.app.App):
         self.selected_node = msg.node
         self.selected_mutations = 0
         self.mutations.clear()
-        for name, info in msg.node.data.items():
+        mutations = list(msg.node.data.items())
+        mutations.sort(key=lambda mutation: (mutation[1]["caught"], int(mutation[0])))
+        for name, info in mutations:
             label = textual.widgets.Static(f"[green]{name}[/green]")
             if not info["caught"]:
                 label = textual.widgets.Static(f"[red]{name}[/red]")
@@ -135,8 +144,10 @@ class Inspector(textual.app.App):
         yield textual.scroll_view.ScrollView(
             self.modules_tree, classes="box side-modules"
         )
-        yield textual.scroll_view.ScrollView(
-            self.mutations, classes="box side-mutations"
+        yield textual.containers.Vertical(
+            textual.scroll_view.ScrollView(self.mutations),
+            self.metadata,
+            classes="box side-mutations",
         )
         yield textual.containers.Vertical(self.code, self.textLog, classes="side-diff")
 

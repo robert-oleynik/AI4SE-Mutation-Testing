@@ -1,5 +1,6 @@
 import pathlib
 import shutil
+import traceback
 
 import click
 
@@ -33,7 +34,8 @@ configs = {
     "single_result": GeneratorConfig(
         {
             "num_return_sequences": 1,
-        }
+        },
+        tries_per_target=1,
     ),
     "beam_search": GeneratorConfig(
         {
@@ -41,7 +43,8 @@ configs = {
             "num_beams": 8,
             "no_repeat_ngram_size": 32,
             "num_return_sequences": 4,
-        }
+        },
+        tries_per_target=4,
     ),
 }
 
@@ -164,13 +167,19 @@ def generate(
                         if conf not in configs:
                             raise GeneratorConfigNotFound(conf)
                         c = configs[conf]
-                        for mutation in g.generate(target, c):
+                        try:
+                            mutations = g.generate(target, c)
+                        except e:
+                            print("\nwarning: caught exception, skip")
+                            traceback.print_exception(e)
+                            continue
+                        for mutation in mutations:
                             new_tree = tsParser.parse(mutation.content).root_node
                             if any(compare_tree(tree, new_tree) for tree in trees):
                                 dropped += 1
                             else:
                                 counter += 1
-                                store.add(target, mutation)
+                                store.add(target, mutation, gen, c)
                                 trees.append(new_tree)
                             status_update()
             finally:

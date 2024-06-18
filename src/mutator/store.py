@@ -1,8 +1,10 @@
+import json
 import os
 import pathlib
 import typing
 
-from .generator import Mutation
+from dataclasses import asdict
+from .generator import Mutation, GeneratorConfig
 from .source import MutationTarget
 
 
@@ -16,7 +18,7 @@ class MutationStore:
         self.base.mkdir(parents=True, exist_ok=True)
         self.counter = {}
 
-    def add(self, target: MutationTarget, mutation: Mutation):
+    def add(self, target: MutationTarget, mutation: Mutation, generator: str, config: GeneratorConfig):
         path = self.base / f"{target.source.module}" / target.fullname
         path.mkdir(parents=True, exist_ok=True)
         if path not in self.counter:
@@ -28,9 +30,15 @@ class MutationStore:
             + mutation.content
             + target.source.content[target.node.end_byte :]
         )
-        (path / "file").write_bytes(f"{target.source.path}".encode())
+        json.dump({
+            "file": str(target.source.path),
+            "mutation": mutation.content.decode(),
+            "start": target.node.start_point,
+            "end": target.node.end_point,
+            "generator": generator,
+            "config": asdict(config),
+        }, open(path / f"{self.counter[path]}.json", "w"))
         (path / f"{self.counter[path]}.py").write_bytes(content)
-        (path / f"{self.counter[path]}.sample").write_bytes(mutation.content)
 
     def isclean(self) -> bool:
         try:
@@ -47,8 +55,9 @@ class MutationStore:
                 continue
             for target in os.listdir(module_path):
                 target_path = module_path / target
-                source_file = (target_path / "file").read_bytes().decode()
                 for file in os.listdir(target_path):
                     if file.endswith(".py"):
+                        metadata = json.load(open((target_path / file).with_suffix(".json"), "r"))
+                        source_file = metadata["file"]
                         file_path = target_path.joinpath(file)
                         yield module, target, file_path, source_file
