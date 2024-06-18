@@ -1,6 +1,5 @@
 import tree_sitter as ts
 
-from ..helper.debug import debug_print
 from ..source import MutationTarget
 from ..treesitter.context import Context
 from .config import GeneratorConfig
@@ -43,6 +42,4 @@ class CommentRewriteGenerator(MutationGenerator):
             transform_result=transform,
             **config.model_kwargs,
         )
-        for result in results:
-            debug_print(result)
         return Mutation.map(results)

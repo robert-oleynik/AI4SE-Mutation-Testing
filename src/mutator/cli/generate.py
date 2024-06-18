@@ -169,7 +169,7 @@ def generate(
                                 dropped += 1
                             else:
                                 counter += 1
-                                store.add(target, mutation)
+                                store.add(target, mutation, gen, c)
                                 trees.append(new_tree)
                             status_update()
             finally:
