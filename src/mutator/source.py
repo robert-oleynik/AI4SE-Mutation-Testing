@@ -166,6 +166,7 @@ class PairTreeWalker:
 
 
 def _compare_tree_rec(walker: PairTreeWalker) -> bool:
+    ty = walker.a_walk.node.type
     a, b = walker.goto_first_child()
     if a != b:
         return False
@@ -174,7 +175,9 @@ def _compare_tree_rec(walker: PairTreeWalker) -> bool:
     while True:
         if not walker.update():
             return False
-        if not _compare_tree_rec(walker):
+        is_doc = ty == "expression_statement" and walker.a_walk.node.type != "string"
+        is_comment = walker.a_walk.node.type == "comment"
+        if not (is_doc or is_comment) and not _compare_tree_rec(walker):
             return False
 
         a, b = walker.goto_next_sibling()

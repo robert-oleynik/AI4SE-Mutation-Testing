@@ -1,8 +1,8 @@
+import gc
 import pathlib
 import random
 from collections.abc import Callable
 
-import gc
 import torch
 import transformers
 

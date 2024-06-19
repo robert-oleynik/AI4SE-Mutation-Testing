@@ -17,6 +17,38 @@ def foo(a: int, b: int) -> int:
     assert compare_tree(a_node, b_node)
 
 
+def test_modified_comment():
+    source_a = b"""
+def foo(a: int, b: int) -> int:
+    # foo
+    return a * b + a
+"""
+    source_b = b"""
+def foo(a: int, b: int) -> int:
+    # bar
+    return a * b + a
+"""
+    a_node = parser.parse(source_a).root_node
+    b_node = parser.parse(source_b).root_node
+    assert compare_tree(a_node, b_node)
+
+
+def test_modified_doc_comment():
+    source_a = b"""
+def foo(a: int, b: int) -> int:
+    "foo"
+    return a * b + a
+"""
+    source_b = b"""
+def foo(a: int, b: int) -> int:
+    "bar"
+    return a * b + a
+"""
+    a_node = parser.parse(source_a).root_node
+    b_node = parser.parse(source_b).root_node
+    assert compare_tree(a_node, b_node)
+
+
 def test_rename():
     source_a = b"""
 def foo(a: int, b: int) -> int:
