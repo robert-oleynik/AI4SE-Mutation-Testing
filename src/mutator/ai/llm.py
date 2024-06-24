@@ -118,3 +118,6 @@ class LLM:
         )
         gc.collect()
         return results
+
+
+llm: LLM

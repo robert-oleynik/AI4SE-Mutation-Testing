@@ -2,6 +2,7 @@ import tree_sitter as ts
 import tree_sitter_python as tsp
 
 from mutator.source import compare_tree
+from mutator.treesitter.python import first_capture_named
 
 lang = ts.Language(tsp.language())
 parser = ts.Parser(lang)
@@ -14,7 +15,7 @@ def foo(a: int, b: int) -> int:
 """
     a_node = parser.parse(source).root_node
     b_node = parser.parse(source).root_node
-    assert compare_tree(a_node, b_node)
+    assert compare_tree(a_node, b_node) == (True, None, None)
 
 
 def test_modified_comment():
@@ -107,7 +108,7 @@ def fooa(a: int, b: int) -> int:
 """
     a_node = parser.parse(source_a).root_node
     b_node = parser.parse(source_b).root_node
-    assert compare_tree(a_node, b_node)
+    assert compare_tree(a_node, b_node) == (True, None, None)
 
 
 def test_diff():
@@ -121,7 +122,9 @@ def foo(a: int, b: int) -> int:
 """
     a_node = parser.parse(source_a).root_node
     b_node = parser.parse(source_b).root_node
-    assert not compare_tree(a_node, b_node)
+    a_diff = first_capture_named("node", a_node, '"*" @node')
+    b_diff = first_capture_named("node", b_node, '(binary_operator left: (identifier) @left (#eq? @left "a") "+" @node)')
+    assert compare_tree(a_node, b_node) == (False, a_diff, b_diff)
 
 
 if __name__ == "__main__":

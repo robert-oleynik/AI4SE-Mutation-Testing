@@ -2,10 +2,10 @@ import tree_sitter as ts
 
 from ..source import MutationTarget
 from .config import GeneratorConfig
-from .generator import Mutation, MutationGenerator
+from .generator import Mutation, SimpleMutationGenerator
 
 
-class Identity(MutationGenerator):
+class Identity(SimpleMutationGenerator):
     def generate_prompt(self, node: ts.Node) -> str:
         raise NotImplementedError
 

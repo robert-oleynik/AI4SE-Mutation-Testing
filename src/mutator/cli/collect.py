@@ -36,9 +36,12 @@ def generate_samples(
                 for sample in strategies[s].apply(repo):
                     counter += 1
                     for name in formatter_names:
-                        s = sample.to_dict(formatter[name])
-                        s["formatter"] = name
-                        yield s
+                        try:
+                            s = sample.to_dict(formatter[name])
+                            s["formatter"] = name
+                            yield s
+                        except NoMutationPossible:
+                            pass
 
     return _gen
 

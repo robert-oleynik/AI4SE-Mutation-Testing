@@ -3,10 +3,10 @@ import tree_sitter as ts
 from ..source import MutationTarget
 from ..treesitter.context import Context
 from .config import GeneratorConfig
-from .generator import Mutation, MutationGenerator
+from .generator import Mutation, SimpleMutationGenerator
 
 
-class CommentRewriteGenerator(MutationGenerator):
+class CommentRewriteGenerator(SimpleMutationGenerator):
     """
     Tries to regenerate new mutation by comment the old function and prompt the AI to
     regenerate this function.
@@ -56,7 +56,7 @@ class CommentRewriteGenerator(MutationGenerator):
             "bad_words_ids": forbidden_tokens,
         }
 
-        results = mutator.ai.llm.prompt(
+        results = mutator.ai.llm.llm.prompt(
             prompt,
             transform_result=transform,
             **model_kwargs,

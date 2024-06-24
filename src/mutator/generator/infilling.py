@@ -2,11 +2,11 @@ import random
 
 import tree_sitter as ts
 
-from ..source import MutationTarget
+from ..source import MutationTarget, compare_tree
 from ..treesitter.context import Context
 from ..treesitter.python import tsLang
 from .config import GeneratorConfig
-from .generator import Mutation, MutationGenerator
+from .generator import Mutation, MutationGenerator, NoMutationPossible
 
 _docstring_query = tsLang.query("""
 (function_definition body: (block . (expression_statement (string) @docstring)))
@@ -16,14 +16,22 @@ _targets_query = tsLang.query("""
 (block (_) @statement)
 """)
 
+
 class InfillingGenerator(MutationGenerator):
-    def generate_prompt(self, node: ts.Node) -> str:
-        raise NotImplementedError
+    def generate_sample_prompt(self, source_node: ts.Node, mutation_node: ts.Node) -> str:
+        definition, indent = Context(source_node).relevant_class_definition()
+        equal, source_diff, mutation_diff = compare_tree(source_node, mutation_node)
+        if equal:
+            raise NoMutationPossible()
+        prefix = source_node.text[: source_diff.start_byte - source_node.start_byte].decode()
+        suffix = source_node.text[source_diff.end_byte - source_node.start_byte :].decode()
+        middle = mutation_diff.text.decode()
+        return f"{definition}<|fim_prefix|>{indent}{prefix}<|fim_suffix|>{suffix}<|fim_middle|>{middle}"
 
     def generate(
         self, target: MutationTarget, config: GeneratorConfig
     ) -> list[Mutation]:
-        import mutator.ai
+        import mutator.ai.llm
 
         body = target.node.child_by_field_name("body")
         docstring_matches = _docstring_query.matches(target.node)
@@ -47,7 +55,7 @@ class InfillingGenerator(MutationGenerator):
             def transform(result: str) -> str:
                 return prefix + result[len(prompt) :] + suffix
 
-            results += mutator.ai.llm.prompt(
+            results += mutator.ai.llm.llm.prompt(
                 prompt,
                 transform_result=transform,
                 **config.model_kwargs,

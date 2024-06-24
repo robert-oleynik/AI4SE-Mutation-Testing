@@ -139,9 +139,21 @@ class PairTreeWalker:
                 return False
         return True
 
-    def update(self) -> bool:
+    def result(
+        self, equal: bool, a_exists: bool, b_exists: bool
+    ) -> tuple[bool, ts.Node | None, ts.Node | None]:
+        def walk_result(walk: ts.TreeCursor, exists: bool):
+            return walk.node if not equal and exists else None
+
+        return (
+            equal,
+            walk_result(self.a_walk, a_exists),
+            walk_result(self.b_walk, b_exists),
+        )
+
+    def check(self) -> tuple[bool, tuple[bool, ts.Node | None, ts.Node | None]]:
         if self.a_walk.node.type != self.b_walk.node.type:
-            return False
+            return True, self.result(False, True, True)
         if self.a_walk.node.type == "identifier":
             a_node = self.a_walk.node
             p1_node = a_node.parent
@@ -164,60 +176,63 @@ class PairTreeWalker:
             except ValueError:
                 b_i = len(self.b_idents)
                 self.b_idents.append(b_ident)
-            return a_i == b_i
-        return True
+            if a_i != b_i:
+                return True, self.result(False, True, True)
+        return False, self.result(True, True, True)
 
     def done(self) -> bool:
         return self.a_walk.node == self.a and self.b_walk.node == self.b
 
-    def goto_first_child(self) -> tuple[bool, bool]:
+    def walk_result(
+        self, a: bool, b: bool
+    ) -> tuple[bool, tuple[bool, ts.Node | None, ts.Node | None]]:
+        stop = not a or not b
+        return stop, self.result(a == b, a, b)
+
+    def goto_first_child(
+        self,
+    ) -> tuple[bool, tuple[bool, ts.Node | None, ts.Node | None]]:
         a = self.a_walk.goto_first_child()
-        if a:
-            a = self.__walker_skip_comments(self.a_walk)
+        a = self.__walker_skip_comments(self.a_walk) if a else False
         b = self.b_walk.goto_first_child()
-        if b:
-            b = self.__walker_skip_comments(self.b_walk)
-        return a, b
+        b = self.__walker_skip_comments(self.b_walk) if b else False
+        return self.walk_result(a, b)
 
-    def goto_next_sibling(self) -> tuple[bool, bool]:
+    def goto_next_sibling(
+        self,
+    ) -> tuple[bool, tuple[bool, ts.Node | None, ts.Node | None]]:
         a = self.a_walk.goto_next_sibling()
-        if a:
-            a = self.__walker_skip_comments(self.a_walk)
+        a = self.__walker_skip_comments(self.a_walk) if a else False
         b = self.b_walk.goto_next_sibling()
-        if b:
-            b = self.__walker_skip_comments(self.b_walk)
-        return a, b
+        b = self.__walker_skip_comments(self.b_walk) if b else False
+        return self.walk_result(a, b)
 
-    def goto_parent(self) -> tuple[bool, bool]:
-        a = self.a_walk.goto_parent()
-        b = self.b_walk.goto_parent()
-        return a, b
+    def goto_parent(self):
+        self.a_walk.goto_parent()
+        self.b_walk.goto_parent()
 
 
 def _compare_tree_rec(walker: PairTreeWalker, depth: int = 0) -> bool:
-    a, b = walker.goto_first_child()
-    # print(" " * depth + walker.a_walk.node.type, walker.b_walk.node.type)
-    if a != b:
-        return False
-    elif not a:
-        return True
-    while True:
-        if not walker.update():
-            return False
-        if not _compare_tree_rec(walker, depth=depth + 1):
-            return False
-
-        a, b = walker.goto_next_sibling()
-        if a != b:
-            return False
-        if not a:
-            break
-
-    a, b = walker.goto_parent()
-    return a == b
+    stop, result = walker.goto_first_child()
+    if stop:
+        return result
+    try:
+        while True:
+            stop, result = walker.check()
+            if stop:
+                return result
+            if not _compare_tree_rec(walker, depth + 1):
+                return False
+            stop, result = walker.goto_next_sibling()
+            if stop:
+                return result
+    finally:
+        walker.goto_parent()
 
 
-def compare_tree(a_node: ts.Node, b_node: ts.Node) -> bool:
+def compare_tree(
+    a_node: ts.Node, b_node: ts.Node
+) -> tuple[bool, ts.Node | None, ts.Node | None]:
     """
     Compares two tree nodes by walking/comparing their syntax tree.
     """

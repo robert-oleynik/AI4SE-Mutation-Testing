@@ -5,26 +5,29 @@ from ..source import MutationTarget
 from ..treesitter.context import Context
 from ..treesitter.python import tsLang, tsParser
 from .config import GeneratorConfig
-from .generator import Mutation, MutationGenerator
+from .generator import Mutation, SimpleMutationGenerator, NoMutationPossible
 
 
-class DocStringBasedGenerator(MutationGenerator):
+class DocStringBasedGenerator(SimpleMutationGenerator):
     def generate_prompt(self, node: ts.Node) -> str:
-        raise NotImplementedError
+        context = Context(node)
+        docstring = context.docstring()
+        if not docstring:
+            raise NoMutationPossible()
+        definition, indent = context.relevant_class_definition()
+        prompt = definition + indent + node.text[: docstring.end_byte - node.start_byte].decode()
+        return prompt
 
     def generate(
         self, target: MutationTarget, config: GeneratorConfig
     ) -> list[Mutation]:
-        import mutator.ai
+        import mutator.ai.llm
 
-        context = Context(target.node)
-        docstring = context.docstring()
-        if not docstring:
+        try:
+            prompt = self.generate_prompt(target.node)
+        except NoMutationPossible:
             return []
-        definition, indent = context.relevant_class_definition()
-        content = target.content()
-        prompt = definition + indent + content[: docstring.end_byte].decode()
-        results = mutator.ai.llm.prompt(
+        results = mutator.ai.llm.llm.prompt(
             prompt,
             transform_result=trim_prompt(definition + indent),
             **config.model_kwargs,
