@@ -15,7 +15,7 @@ class DocStringBasedGenerator(MutationGenerator):
     def generate(
         self, target: MutationTarget, config: GeneratorConfig
     ) -> list[Mutation]:
-        import mutator.ai
+        import mutator.ai.llm
 
         context = Context(target.node)
         docstring = context.docstring()
@@ -24,7 +24,7 @@ class DocStringBasedGenerator(MutationGenerator):
         definition, indent = context.relevant_class_definition()
         content = target.content()
         prompt = definition + indent + content[: docstring.end_byte].decode()
-        results = mutator.ai.llm.prompt(
+        results = mutator.ai.llm.llm.prompt(
             prompt,
             transform_result=trim_prompt(definition + indent),
             **config.model_kwargs,

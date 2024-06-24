@@ -23,7 +23,7 @@ class InfillingGenerator(MutationGenerator):
     def generate(
         self, target: MutationTarget, config: GeneratorConfig
     ) -> list[Mutation]:
-        import mutator.ai
+        import mutator.ai.llm
 
         body = target.node.child_by_field_name("body")
         docstring_matches = _docstring_query.matches(target.node)
@@ -47,7 +47,7 @@ class InfillingGenerator(MutationGenerator):
             def transform(result: str) -> str:
                 return prefix + result[len(prompt) :] + suffix
 
-            results += mutator.ai.llm.prompt(
+            results += mutator.ai.llm.llm.prompt(
                 prompt,
                 transform_result=transform,
                 **config.model_kwargs,

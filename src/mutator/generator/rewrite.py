@@ -37,7 +37,7 @@ class CommentRewriteGenerator(MutationGenerator):
         def transform(result: str) -> str:
             return result[strip_len :]
 
-        results = mutator.ai.llm.prompt(
+        results = mutator.ai.llm.llm.prompt(
             prompt,
             transform_result=transform,
             **config.model_kwargs,

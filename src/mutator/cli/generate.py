@@ -122,10 +122,10 @@ def generate(
     if not no_llm:
         import mutator.ai.llm
 
-        from ..ai import LLM
+        from ..ai.llm import LLM
         from ..ai.limiter.function import FunctionLimiter
 
-        mutator.ai.llm = LLM(device, model, [FunctionLimiter], max_new_tokens=2000)
+        mutator.ai.llm.llm = LLM(device, model, [FunctionLimiter], max_new_tokens=2000)
     filters = Filter(filter)
     sourceRoot = pathlib.Path(project.joinpath("src")).resolve()
     source_files = [

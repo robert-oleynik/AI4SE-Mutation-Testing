@@ -34,7 +34,7 @@ class RepeatGenerator(MutationGenerator):
             offset = len(prompt.splitlines(True)[:-2].join())
             return result[offset:]
 
-        results = mutator.ai.llm.prompt(
+        results = mutator.ai.llm.llm.prompt(
             prompt,
             transform_result=transform,
             **config.model_kwargs,
