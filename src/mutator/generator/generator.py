@@ -42,3 +42,7 @@ class SimpleMutationGenerator(MutationGenerator):
             "utf-8"
         )
         return prompt
+
+
+class NoMutationPossible(Exception):
+    pass
