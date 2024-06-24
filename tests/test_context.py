@@ -1,13 +1,16 @@
 import tree_sitter as ts
 import tree_sitter_python as tsp
 
-from mutator.generator.rewrite import CommentRewriteGenerator, write_class_header
+from mutator.generator.rewrite import CommentRewriteGenerator
+from mutator.treesitter.context import Context
+from mutator.treesitter.python import first_capture_named
 
 
 def setup(source: str) -> ts.Node:
     lang = ts.Language(tsp.language())
     parser = ts.Parser(lang)
-    return parser.parse(source).root_node
+    module = parser.parse(source).root_node
+    return first_capture_named("bar", module, '(function_definition name: (identifier) @name (#eq? @name "bar")) @bar')
 
 
 source1 = b"""
@@ -16,49 +19,47 @@ source1 = b"""
 class Foo:
     def __init__(self):
         "Hello, World"
-        pass
+        self.x = 42
 
     def another(self, a, b):
         "Hello, WOrld"
         return a + b
 
+    def called(self):
+        "Some info"
+        return 42
+
     @Decorator3
     @Decorator4
     def bar(self) -> str:
+        self.called()
         return "foobar"
 """
 
 
-def test_write_class_header():
+def test_class_header():
     node = setup(source1)
     expected_class_header = "@Decorator1\n@Decorator2\nclass Foo:\n    "
-    node = node.child(0)
-    assert write_class_header(node) == expected_class_header
+    assert Context(node).class_header() == expected_class_header
 
 
 def test_generate_prompt():
-    node = (
-        setup(source1)
-        .child(0)
-        .child_by_field_name("definition")
-        .child_by_field_name("body")
-        .child(2)
-        .child_by_field_name("definition")
-    )
+    node = setup(source1)
     expected = """@Decorator1
 @Decorator2
 class Foo:
     def __init__(self):
         "Hello, World"
-        ...
+        self.x = 42
 
-    def another(self, a, b):
-        "Hello, WOrld"
+    def called(self):
+        "Some info"
         ...
 
 #    @Decorator3
 #    @Decorator4
 #    def bar(self) -> str:
+#        self.called()
 #        return "foobar"
 
     @Decorator3
