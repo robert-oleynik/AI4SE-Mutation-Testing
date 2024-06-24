@@ -1,6 +1,7 @@
 import math
 import os
 import pathlib
+import shutil
 
 import click
 
@@ -155,6 +156,8 @@ def train(
     )
     model.add_adapter(peft_config)
 
+    epoch_train_loss = []
+    epoch_test_loss = []
     for epoch in range(num_epochs):
         model.train()
         train_loss = 0
@@ -188,7 +191,21 @@ def train(
         train_epoch_loss = train_loss / len(train_dataloader)
         print(f"{epoch=}: {train_epoch_loss=} {test_epoch_loss=}")
 
+        epoch_train_loss.append(train_epoch_loss)
+        epoch_test_loss.append((test_epoch_loss, epoch))
+
         model.save_pretrained(str(out_dir / "checkpoints" / str(epoch)))
+
+    sorted_epochs = epoch_test_loss.copy()
+    sorted_epochs.sort()
+    _, best_epoch = sorted_epochs[0]
+
+    print("Results:")
+    for j in range(num_epochs):
+        print(f"{j}: train_loss={sorted_epochs[j]} test_loss={sorted_epochs[j]}")
+    print(f"best epoch: {best_epoch}")
+    shutil.rmtree(out_dir / "final")
+    shutil.copy(out_dir / "checkpoints" / str(best_epoch), out_dir / "final")
 
     #    from transformers import Trainer, TrainingArguments
     #    args = TrainingArguments(
@@ -214,5 +231,3 @@ def train(
     #    )
     #
     #    trainer.train()
-
-    model.save_pretrained((out_dir / "final").__str__())
