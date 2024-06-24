@@ -76,8 +76,9 @@ class Context:
             candidate = candidate.child(0)
         return candidate if candidate.type == "string" else None
 
-    @staticmethod
-    def write_class_header(node: ts.Node) -> str:
+    def class_header(self) -> str | None:
+        parent_class_node = self.get_parent_class()
+        node = Context(parent_class_node).with_decorater()
         output = ""
         if node.type == "decorated_definition":
             for child in node.children:
@@ -95,8 +96,7 @@ class Context:
         if parent_class_node is None:
             return "", ""
 
-        class_with_decorator = Context(parent_class_node).with_decorater()
-        prompt = self.write_class_header(class_with_decorator)
+        prompt = self.class_header()
 
         indent = prompt.split(":")[-1][1:]
         prompt = prompt[: -len(indent)]
