@@ -127,10 +127,31 @@ class PairTreeWalker:
         self.a_walk = self.a.walk()
         self.b_walk = self.b.walk()
 
+    def __walker_skip_comments(self, walker) -> bool:
+        while True:
+            if walker.node.type != "comment":
+                if (
+                    walker.node.type != "expression_statement"
+                    or walker.node.child(0).type != "string"
+                ):
+                    break
+            if not walker.goto_next_sibling():
+                return False
+        return True
+
     def update(self) -> bool:
         if self.a_walk.node.type != self.b_walk.node.type:
             return False
         if self.a_walk.node.type == "identifier":
+            a_node = self.a_walk.node
+            p1_node = a_node.parent
+            p2_node = p1_node.parent
+            if (
+                p1_node.type == "attribute"
+                and p1_node.child_by_field_name("attribute").id == a_node.id
+                and p2_node.type == "call"
+            ):
+                return self.a_walk.node.text == self.b_walk.node.text
             a_ident = self.a_walk.node.text
             try:
                 a_i = self.a_idents.index(a_ident)
@@ -151,12 +172,20 @@ class PairTreeWalker:
 
     def goto_first_child(self) -> tuple[bool, bool]:
         a = self.a_walk.goto_first_child()
+        if a:
+            a = self.__walker_skip_comments(self.a_walk)
         b = self.b_walk.goto_first_child()
+        if b:
+            b = self.__walker_skip_comments(self.b_walk)
         return a, b
 
     def goto_next_sibling(self) -> tuple[bool, bool]:
         a = self.a_walk.goto_next_sibling()
+        if a:
+            a = self.__walker_skip_comments(self.a_walk)
         b = self.b_walk.goto_next_sibling()
+        if b:
+            b = self.__walker_skip_comments(self.b_walk)
         return a, b
 
     def goto_parent(self) -> tuple[bool, bool]:
@@ -165,9 +194,9 @@ class PairTreeWalker:
         return a, b
 
 
-def _compare_tree_rec(walker: PairTreeWalker) -> bool:
-    ty = walker.a_walk.node.type
+def _compare_tree_rec(walker: PairTreeWalker, depth: int = 0) -> bool:
     a, b = walker.goto_first_child()
+    # print(" " * depth + walker.a_walk.node.type, walker.b_walk.node.type)
     if a != b:
         return False
     elif not a:
@@ -175,9 +204,7 @@ def _compare_tree_rec(walker: PairTreeWalker) -> bool:
     while True:
         if not walker.update():
             return False
-        is_doc = ty == "expression_statement" and walker.a_walk.node.type != "string"
-        is_comment = walker.a_walk.node.type == "comment"
-        if not (is_doc or is_comment) and not _compare_tree_rec(walker):
+        if not _compare_tree_rec(walker, depth=depth + 1):
             return False
 
         a, b = walker.goto_next_sibling()
@@ -185,6 +212,7 @@ def _compare_tree_rec(walker: PairTreeWalker) -> bool:
             return False
         if not a:
             break
+
     a, b = walker.goto_parent()
     return a == b
 

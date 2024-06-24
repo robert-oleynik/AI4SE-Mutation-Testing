@@ -49,6 +49,53 @@ def foo(a: int, b: int) -> int:
     assert compare_tree(a_node, b_node)
 
 
+def test_removed_doc_comment():
+    source_a = b"""
+def foo(a: int, b: int) -> int:
+    "foo"
+    return a * b + a
+"""
+    source_b = b"""
+def foo(a: int, b: int) -> int:
+    return a * b + a
+"""
+    a_node = parser.parse(source_a).root_node
+    b_node = parser.parse(source_b).root_node
+    assert compare_tree(a_node, b_node)
+
+
+def test_modified_str():
+    source_a = b"""
+def foo(a: int, b: int) -> int:
+    s = "foo"
+    return a * b + a
+"""
+    source_b = b"""
+def foo(a: int, b: int) -> int:
+    s = "bar"
+    return a * b + a
+"""
+    a_node = parser.parse(source_a).root_node
+    b_node = parser.parse(source_b).root_node
+    assert compare_tree(a_node, b_node)
+
+
+def test_change_function_call_rename():
+    source_a = b"""
+def foo(self, l):
+    item = l.pop()
+    return self.foo(item)
+    """
+    source_b = b"""
+def foo(self, l):
+    item = l.popitem()
+    return self.foo(item)
+    """
+    a_node = parser.parse(source_a).root_node
+    b_node = parser.parse(source_b).root_node
+    assert not compare_tree(a_node, b_node)
+
+
 def test_rename():
     source_a = b"""
 def foo(a: int, b: int) -> int:
