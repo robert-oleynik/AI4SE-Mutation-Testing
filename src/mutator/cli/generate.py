@@ -119,6 +119,7 @@ def generate(
     clean,
     checkpoint,
 ):
+    # foo
     if not no_llm:
         import mutator.ai.llm
 
@@ -169,7 +170,7 @@ def generate(
                         c = configs[conf]
                         try:
                             mutations = g.generate(target, c)
-                        except e:
+                        except Exception as e:
                             print("\nwarning: caught exception, skip")
                             traceback.print_exception(e)
                             continue

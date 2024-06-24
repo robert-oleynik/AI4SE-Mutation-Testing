@@ -197,6 +197,7 @@ def inspect(out_dir, project, tui, dataset, metric):
         app.run()
     if dataset is not None:
         dataset = datasets.load_from_disk(dataset.__str__(), keep_in_memory=True)
+        print(dataset)
 
         fig, ax = plt.subplots()
         if metric == "dloc":

@@ -90,6 +90,8 @@ def collect(
 ):
     import datasets
 
+    datasets.disable_caching()
+
     def _loc_ratio(row):
         f = locfrac(row["source"], row["mutation"])
         return 1 / max_loc_ratio <= f and f <= max_loc_ratio
@@ -105,11 +107,21 @@ def collect(
             keep_in_memory=True,
             cache_dir=cache_dir,
         )
+
+    print(data)
+
     data = data.filter(
-        lambda row: abs(dstrloc(row["source"], row["mutation"])) < max_dloc
+        lambda row: abs(dstrloc(row["source"], row["mutation"])) < max_dloc,
+        load_from_cache_file=False,
     )
-    data = data.filter(_loc_ratio)
-    data = data.filter(lambda row: strloc(row["prompt"]) < max_prompt_loc)
+    data = data.filter(
+        _loc_ratio,
+        load_from_cache_file=False,
+    )
+    data = data.filter(
+        lambda row: strloc(row["prompt"]) < max_prompt_loc,
+        load_from_cache_file=False,
+    )
     if update:
         data.save_to_disk((out_dir / "data-updated").__str__())
     else:
