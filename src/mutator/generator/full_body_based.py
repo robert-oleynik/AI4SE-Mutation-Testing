@@ -4,10 +4,10 @@ from ..ai.transform import trim_prompt
 from ..source import MutationTarget
 from ..treesitter.context import Context
 from .config import GeneratorConfig
-from .generator import Mutation, MutationGenerator
+from .generator import Mutation, SimpleMutationGenerator
 
 
-class FullBodyBasedGenerator(MutationGenerator):
+class FullBodyBasedGenerator(SimpleMutationGenerator):
     def generate_prompt(self, node: ts.Node) -> str:
         raise NotImplementedError
 

@@ -22,16 +22,7 @@ class Sample:
         self.mutation_node = mutation_node
 
     def to_dict(self, generator: MutationGenerator) -> dict:
-        prompt = generator.generate_prompt(self.source_node)
-        indent = "    "
-        for c in prompt.splitlines(False)[-1]:
-            if c.isspace():
-                indent += c
-            else:
-                break
-        prompt += indent + self.mutation_node.child_by_field_name("body").text.decode(
-            "utf-8"
-        )
+        prompt = generator.generate_sample_prompt(self.source_node, self.mutation_node)
         return {
             "commit": self.commit.hexsha,
             "file": self.diff.b_path,

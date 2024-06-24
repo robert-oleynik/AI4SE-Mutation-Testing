@@ -5,10 +5,10 @@ from ..source import MutationTarget
 from ..treesitter.context import Context
 from ..treesitter.python import tsLang, tsParser
 from .config import GeneratorConfig
-from .generator import Mutation, MutationGenerator
+from .generator import Mutation, SimpleMutationGenerator
 
 
-class DocStringBasedGenerator(MutationGenerator):
+class DocStringBasedGenerator(SimpleMutationGenerator):
     def generate_prompt(self, node: ts.Node) -> str:
         raise NotImplementedError
 

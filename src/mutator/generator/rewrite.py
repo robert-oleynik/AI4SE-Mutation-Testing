@@ -3,10 +3,10 @@ import tree_sitter as ts
 from ..source import MutationTarget
 from ..treesitter.context import Context
 from .config import GeneratorConfig
-from .generator import Mutation, MutationGenerator
+from .generator import Mutation, SimpleMutationGenerator
 
 
-class CommentRewriteGenerator(MutationGenerator):
+class CommentRewriteGenerator(SimpleMutationGenerator):
     """
     Tries to regenerate new mutation by comment the old function and prompt the AI to
     regenerate this function.

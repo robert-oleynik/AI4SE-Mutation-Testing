@@ -8,7 +8,7 @@ from .generator import Mutation, MutationGenerator
 
 
 class ForcedBranchGenerator(MutationGenerator):
-    def generate_prompt(self, node: ts.Node) -> str:
+    def generate_sample_prompt(self, source_node: ts.Node, mutation_node: ts.Node) -> str:
         raise NotImplementedError
 
     def generate(

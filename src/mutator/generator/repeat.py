@@ -3,10 +3,10 @@ import tree_sitter as ts
 from ..source import MutationTarget
 from ..treesitter.context import Context
 from .config import GeneratorConfig
-from .generator import Mutation, MutationGenerator
+from .generator import Mutation, SimpleMutationGenerator
 
 
-class RepeatGenerator(MutationGenerator):
+class RepeatGenerator(SimpleMutationGenerator):
     """
     Generate Mutations by indicating repeated source code, but forcing changes.
     """
