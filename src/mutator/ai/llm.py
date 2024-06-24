@@ -38,7 +38,11 @@ class LLM:
         self.generate_kwargs = generate_kwargs
 
     def generate(
-        self, inputs, transform_result: Callable[[str], str], **extra_args
+        self,
+        inputs,
+        prompt_len: int,
+        transform_result: Callable[[str], str],
+        **extra_args,
     ) -> list[str]:
         token_count = inputs["input_ids"].shape[1]
         if token_count >= MAX_TOKEN_COUNT:
@@ -78,6 +82,7 @@ class LLM:
         def decode_and_trim(output):
             result = decode(output)
             while any(limiter.is_too_long(result) for limiter in limiters):
+            while any(limiter.is_too_long(result, prompt_len) for limiter in limiters):
                 output = output[:-1]
                 result = decode(output)
             return result
@@ -89,6 +94,7 @@ class LLM:
     ) -> list[str]:
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         results = self.generate(inputs, transform_result, **extra_args)
+        results = self.generate(inputs, len(prompt), transform_result, **extra_args)
         gc.collect()
         return results
 
