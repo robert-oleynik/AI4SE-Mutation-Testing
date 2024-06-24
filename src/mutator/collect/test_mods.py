@@ -5,8 +5,8 @@ import git
 import tree_sitter as ts
 import tree_sitter_python as tsp
 
-from ..source import compare_tree
 from ..treesitter.node import upgrade_to_ty
+from ..treesitter.tree_walker import compare
 from .strategy import Sample, Strategy
 
 _tsLang = ts.Language(tsp.language())
@@ -59,8 +59,7 @@ class TestMods(Strategy):
                     b_tree = parser.parse(b_blob)
                     matcher = difflib.SequenceMatcher(None, a_blob, b_blob)
                     for a_node, b_node in _source_nodes(matcher, a_tree, b_tree):
-                        if compare_tree(a_node, b_node):
-                            continue
-                        # TODO: Generate Prompt
-                        yield Sample(commit, o, a_node, b_node)
-                        yield Sample(commit, o, b_node, a_node)
+                        equal, _, _ = compare(a_node.walk(), b_node.walk())
+                        if not equal:
+                            yield Sample(commit, o, a_node, b_node)
+                            yield Sample(commit, o, b_node, a_node)

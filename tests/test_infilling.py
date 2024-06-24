@@ -9,7 +9,11 @@ def setup(*sources: list[str]) -> ts.Node:
     lang = ts.Language(tsp.language())
     parser = ts.Parser(lang)
     return [
-        first_capture_named("bar", parser.parse(source).root_node, '(function_definition name: (identifier) @name (#eq? @name "bar")) @bar')
+        first_capture_named(
+            "bar",
+            parser.parse(source).root_node,
+            '(function_definition name: (identifier) @name (#eq? @name "bar")) @bar',
+        )
         for source in sources
     ]
 
@@ -44,7 +48,9 @@ class Foo:
 
 
 def test_generate_prompt():
-    source, mutation = setup(source1, b"""
+    source, mutation = setup(
+        source1,
+        b"""
 def bar(self) -> str:
     for y in range(10):
         do_something(y)
@@ -53,7 +59,8 @@ def bar(self) -> str:
         if 2 * i == 5:
             print(i)
     return "foobar"
-""")
+""",
+    )
     expected = """@Decorator1
 @Decorator2
 class Foo:

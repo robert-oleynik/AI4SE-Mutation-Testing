@@ -16,9 +16,10 @@ from ..generator import (
     InfillingGenerator,
     RepeatGenerator,
 )
-from ..source import Filter, SourceFile, compare_tree
+from ..source import Filter, SourceFile
 from ..store import MutationStore
 from ..treesitter.python import tsParser
+from ..treesitter.tree_walker import compare
 
 generators = {
     "doc_string_based": DocStringBasedGenerator(),
@@ -123,8 +124,8 @@ def generate(
     if not no_llm:
         import mutator.ai.llm
 
-        from ..ai.llm import LLM
         from ..ai.limiter.function import FunctionLimiter
+        from ..ai.llm import LLM
 
         mutator.ai.llm.llm = LLM(device, model, [FunctionLimiter], max_new_tokens=2000)
     filters = Filter(filter)
@@ -176,7 +177,7 @@ def generate(
                             continue
                         for mutation in mutations:
                             new_tree = tsParser.parse(mutation.content).root_node
-                            if any(compare_tree(tree, new_tree) for tree in trees):
+                            if any(compare(tree, new_tree)[0] for tree in trees):
                                 dropped += 1
                             else:
                                 counter += 1

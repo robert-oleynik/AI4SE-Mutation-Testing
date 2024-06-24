@@ -2,9 +2,10 @@ import random
 
 import tree_sitter as ts
 
-from ..source import MutationTarget, compare_tree
+from ..source import MutationTarget
 from ..treesitter.context import Context
 from ..treesitter.python import tsLang
+from ..treesitter.tree_walker import compare
 from .config import GeneratorConfig
 from .generator import Mutation, MutationGenerator, NoMutationPossible
 
@@ -18,14 +19,16 @@ _targets_query = tsLang.query("""
 
 
 class InfillingGenerator(MutationGenerator):
-    def generate_sample_prompt(self, source_node: ts.Node, mutation_node: ts.Node) -> str:
+    def generate_sample_prompt(
+        self, source_node: ts.Node, mutation_node: ts.Node
+    ) -> str:
         definition, indent = Context(source_node).relevant_class_definition()
-        equal, source_diff, mutation_diff = compare_tree(source_node, mutation_node)
+        equal, source, mutation = compare(source_node.walk(), mutation_node.walk())
         if equal:
             raise NoMutationPossible()
-        prefix = source_node.text[: source_diff.start_byte - source_node.start_byte].decode()
-        suffix = source_node.text[source_diff.end_byte - source_node.start_byte :].decode()
-        middle = mutation_diff.text.decode()
+        prefix = source_node.text[: source.start_byte - source_node.start_byte].decode()
+        suffix = source_node.text[source.end_byte - source_node.start_byte :].decode()
+        middle = mutation.text.decode()
         return f"{definition}<|fim_prefix|>{indent}{prefix}<|fim_suffix|>{suffix}<|fim_middle|>{middle}"
 
     def generate(
@@ -38,16 +41,21 @@ class InfillingGenerator(MutationGenerator):
         target_matches = _targets_query.matches(body)
         exclude = set()
         targets = set()
-        for matches, ranges in [(docstring_matches, exclude), (target_matches, targets)]:
+        for matches, ranges in [
+            (docstring_matches, exclude),
+            (target_matches, targets),
+        ]:
             for _, match in matches:
-                for name, node in match.items():
+                for _, node in match.items():
                     ranges.add(node.byte_range)
         targets.difference_update(exclude)
         targets = list(targets)
         content = target.source.content
         definition, indent = Context(target.node).relevant_class_definition()
         results = []
-        for start, end in random.sample(targets, min(config.tries_per_target, len(targets))):
+        for start, end in random.sample(
+            targets, min(config.tries_per_target, len(targets))
+        ):
             prefix = content[target.node.start_byte : start].decode()
             suffix = content[end : target.node.end_byte].decode()
             prompt = f"{definition}<|fim_prefix|>{indent}{prefix}<|fim_suffix|>{suffix}<|fim_middle|>"
