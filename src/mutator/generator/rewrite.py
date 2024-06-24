@@ -32,23 +32,28 @@ class CommentRewriteGenerator(MutationGenerator):
         import mutator.ai.llm
 
         prompt = self.generate_prompt(target.node)
-        strip_len = len(prompt) - (len(Context(target.node).fn_signature()) + 1)
 
         def transform(result: str) -> str:
-            return result[strip_len:]
+            return result
 
-        fim_tokens = ["<|fim_middle|>", "<|fim_suffix|>", "<|fim_prefix|>"]
-        fim_tokens = [
+        forbidden_tokens = [
+            "<|fim_middle|>",
+            "<|fim_suffix|>",
+            "<|fim_prefix|>",
+            "<|file_separator|>",
+            "<pad>",
+        ]
+        forbidden_tokens = [
             [token]
             for token in mutator.ai.llm.tokenizer.encode(
-                fim_tokens, add_special_tokens=False
+                forbidden_tokens, add_special_tokens=False
             )
         ]
 
         model_kwargs = {
             **config.model_kwargs,
-            "length_penalty": 4,
-            "bad_words_ids": fim_tokens,
+            "length_penalty": 16,
+            "bad_words_ids": forbidden_tokens,
         }
 
         results = mutator.ai.llm.prompt(
