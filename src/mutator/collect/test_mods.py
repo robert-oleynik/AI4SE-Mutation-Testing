@@ -59,7 +59,7 @@ class TestMods(Strategy):
                     b_tree = parser.parse(b_blob)
                     matcher = difflib.SequenceMatcher(None, a_blob, b_blob)
                     for a_node, b_node in _source_nodes(matcher, a_tree, b_tree):
-                        if not compare_tree(a_node, b_node):
+                        if compare_tree(a_node, b_node):
                             continue
                         # TODO: Generate Prompt
                         yield Sample(commit, o, a_node, b_node)
