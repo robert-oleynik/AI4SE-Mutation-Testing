@@ -9,7 +9,8 @@ from .generator import Mutation, MutationGenerator
 
 class ForcedBranchGenerator(MutationGenerator):
     def generate_sample_prompt(self, source_node: ts.Node, mutation_node: ts.Node) -> str:
-        raise NotImplementedError
+        definition, indent = Context(mutation_node).relevant_class_definition()
+        return definition + indent + mutation_node.text.decode()
 
     def generate(
         self, target: MutationTarget, config: GeneratorConfig
