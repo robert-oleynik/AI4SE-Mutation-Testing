@@ -204,7 +204,8 @@ def train(
     for j in range(num_epochs):
         print(f"{j}: train_loss={sorted_epochs[j]} test_loss={sorted_epochs[j]}")
     print(f"best epoch: {best_epoch}")
-    shutil.rmtree(out_dir / "final")
+    if (out_dir / "final").exists():
+        shutil.rmtree(out_dir / "final")
     shutil.copy(out_dir / "checkpoints" / str(best_epoch), out_dir / "final")
 
     #    from transformers import Trainer, TrainingArguments

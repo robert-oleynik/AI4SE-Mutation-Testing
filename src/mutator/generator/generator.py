@@ -17,7 +17,9 @@ class Mutation:
 
 class MutationGenerator(abc.ABC):
     @abc.abstractmethod
-    def generate_sample_prompt(self, source_node: ts.Node, mutation_node: ts.Node) -> str:
+    def generate_sample_prompt(
+        self, source_node: ts.Node, mutation_node: ts.Node
+    ) -> str:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -30,15 +32,17 @@ class SimpleMutationGenerator(MutationGenerator):
     def generate_prompt(self, node: ts.Node) -> str:
         raise NotImplementedError
 
-    def generate_sample_prompt(self, source_node: ts.Node, mutation_node: ts.Node) -> str:
-        prompt = generator.generate_prompt(self.source_node)
+    def generate_sample_prompt(
+        self, source_node: ts.Node, mutation_node: ts.Node
+    ) -> str:
+        prompt = self.generate_prompt(source_node)
         indent = "    "
         for c in prompt.splitlines(False)[-1]:
             if c.isspace():
                 indent += c
             else:
                 break
-        prompt += indent + self.mutation_node.child_by_field_name("body").text.decode(
+        prompt += indent + mutation_node.child_by_field_name("body").text.decode(
             "utf-8"
         )
         return prompt
