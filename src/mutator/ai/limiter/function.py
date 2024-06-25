@@ -3,10 +3,17 @@ from .limiter import Limiter
 
 
 class FunctionLimiter(Limiter):
-    def is_too_long(self, result: str, prompt_len: int) -> bool:
-        tree = tsParser.parse(result.encode("utf-8"))
-        walker = tree.walk()
-        while walker.node.type != "function_definition":
-            if not walker.goto_first_child_for_byte(prompt_len - 1):
-                return False  # NOTE: Invalid Syntax/Not a function
-        return walker.goto_next_sibling()
+    def is_too_long(self, result: str) -> bool:
+        source = result.encode()
+        tree = tsParser.parse(source)
+        root = tree.root_node
+        if root.type == "ERROR":
+            # let the LLM generate more code until its at least partially valid
+            return False
+        assert root.type == "module"
+        count = len(root.children)
+        return (
+            count > 1
+            or count == 1
+            and root.children[0].type not in ["ERROR", "function_definition"]
+        )
