@@ -35,6 +35,7 @@ configs = {
     "single_result": GeneratorConfig(
         {
             "num_return_sequences": 1,
+            "max_new_tokens": 4096,
         },
         tries_per_target=1,
     ),
@@ -44,6 +45,7 @@ configs = {
             "num_beams": 8,
             "no_repeat_ngram_size": 32,
             "num_return_sequences": 4,
+            "max_new_tokens": 4096,
         },
         tries_per_target=4,
     ),
@@ -127,7 +129,7 @@ def generate(
         from ..ai.limiter.function import FunctionLimiter
         from ..ai.llm import LLM
 
-        mutator.ai.llm.llm = LLM(device, model, [FunctionLimiter], max_new_tokens=2000)
+        mutator.ai.llm.llm = LLM(device, model, [FunctionLimiter])
     filters = Filter(filter)
     sourceRoot = pathlib.Path(project.joinpath("src")).resolve()
     source_files = [
