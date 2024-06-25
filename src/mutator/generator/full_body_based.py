@@ -14,7 +14,7 @@ class FullBodyBasedGenerator(SimpleMutationGenerator):
         prompt = definition + indent + "# Original version\n"
         prompt += indent + node.text.decode()
         prompt += f"\n\n{indent}# Mutated version for mutation testing\n{indent}"
-        prompt += context.fn_signature().text.decode()
+        prompt += context.fn_signature()
         return prompt
 
     def generate(
