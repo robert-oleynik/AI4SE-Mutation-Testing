@@ -29,4 +29,4 @@ class OutputStoppingCriteria(StoppingCriteria):
     ) -> bool:
         input = self.tokenizer.decode(input_ids[0])
         input = self.transform_result(input)
-        return self.limiter.is_too_long(input)
+        return self.limiter.is_too_long(input, self.prompt_len)

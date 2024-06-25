@@ -45,7 +45,7 @@ class CommentRewriteGenerator(SimpleMutationGenerator):
         ]
         forbidden_tokens = [
             [token]
-            for token in mutator.ai.llm.tokenizer.encode(
+            for token in mutator.ai.llm.llm.tokenizer.encode(
                 forbidden_tokens, add_special_tokens=False
             )
         ]

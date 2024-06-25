@@ -62,7 +62,9 @@ class LLM:
             **extra_args,
             "stopping_criteria": transformers.StoppingCriteriaList(
                 [
-                    OutputStoppingCriteria(limiter, self.tokenizer, transform)
+                    OutputStoppingCriteria(
+                        limiter, self.tokenizer, transform, prompt_len
+                    )
                     for limiter in limiters
                 ]
                 + self.generate_kwargs.get("stopping_criteria", [])
@@ -81,7 +83,6 @@ class LLM:
 
         def decode_and_trim(output):
             result = decode(output)
-            while any(limiter.is_too_long(result) for limiter in limiters):
             while any(limiter.is_too_long(result, prompt_len) for limiter in limiters):
                 output = output[:-1]
                 result = decode(output)
@@ -93,7 +94,6 @@ class LLM:
         self, prompt: str, transform_result: Callable[[str], str], **extra_args
     ) -> list[str]:
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
-        results = self.generate(inputs, transform_result, **extra_args)
         results = self.generate(inputs, len(prompt), transform_result, **extra_args)
         gc.collect()
         return results

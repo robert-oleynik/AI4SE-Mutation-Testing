@@ -177,7 +177,10 @@ def generate(
                             continue
                         for mutation in mutations:
                             new_tree = tsParser.parse(mutation.content).root_node
-                            if any(compare(tree, new_tree)[0] for tree in trees):
+                            if any(
+                                compare(tree.walk(), new_tree.walk())[0]
+                                for tree in trees
+                            ):
                                 dropped += 1
                             else:
                                 counter += 1
