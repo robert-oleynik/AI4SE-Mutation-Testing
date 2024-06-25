@@ -1,5 +1,7 @@
-from ...treesitter.python import tsParser
+from ...treesitter.python import tsLang, tsParser
 from .limiter import Limiter
+
+_errQuery = tsLang.query("(ERROR)")
 
 
 class FunctionLimiter(Limiter):
@@ -7,13 +9,13 @@ class FunctionLimiter(Limiter):
         source = result.encode()
         tree = tsParser.parse(source)
         root = tree.root_node
-        if root.type == "ERROR":
+        detected_errors = list(_errQuery.matches(root))
+        if root.type == "ERROR" or len(detected_errors) > 0:
             # let the LLM generate more code until its at least partially valid
             return False
         assert root.type == "module"
         count = len(root.children)
-        return (
-            count > 1
-            or count == 1
-            and root.children[0].type not in ["ERROR", "function_definition"]
+        result = count > 1 or (
+            count == 1 and root.children[0].type not in ["ERROR", "function_definition"]
         )
+        return result
