@@ -156,10 +156,11 @@ def generate(
             counter = 0
             dropped = 0
             target_index += 1
+            generator_index = 0
 
             def status_update():
                 print(
-                    f"\r - {target_path:<80} [{target_index}/{num_targets}] [mutations: {counter} dropped: {dropped}] ",
+                    f"\r[{target_index:>{len(str(num_targets))}}/{num_targets}] {target_path:<80} [generators: {generator_index}/{len(generator)} mutations: {counter} dropped: {dropped}] ",
                     end="",
                 )
 
@@ -171,6 +172,7 @@ def generate(
                     if gen not in generators:
                         raise GeneratorNotFound(gen)
                     g = generators[gen]
+                    generator_index += 1
                     for conf in config:
                         if conf not in configs:
                             raise GeneratorConfigNotFound(conf)
