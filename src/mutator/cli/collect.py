@@ -6,12 +6,18 @@ import click
 from git import Repo
 
 from ..collect import TestMods
-from ..generator import CommentRewriteGenerator, RepeatGenerator
+from ..generator import (
+    CommentRewriteGenerator,
+    DocStringBasedGenerator,
+    InfillingGenerator,
+)
+from ..generator.generator import NoMutationPossible
 from ..helper.metrics import dstrloc, locfrac, strloc
 
 formatter = {
-    "repeat": RepeatGenerator(),
     "rewrite": CommentRewriteGenerator(),
+    "doc_string": DocStringBasedGenerator(),
+    "infilling": InfillingGenerator(),
 }
 
 strategies = {"test_mods": TestMods()}
@@ -24,6 +30,7 @@ def generate_samples(
     formatter_names: list[str],
 ) -> typing.Generator[dict, None, None]:
     def _gen():
+        global formatter
         repos = list(map(lambda g: (True, g), bare_repos)) + list(
             map(lambda g: (False, g), git)
         )
@@ -88,8 +95,23 @@ def generate_samples(
 )
 @click.option("--max-prompt-loc", default=1024, type=int, help="Max LOC for prompt")
 @click.option("-s", "--strategy", multiple=True, default=list(strategies.keys()))
+@click.option(
+    "-f",
+    "--formatter",
+    multiple=True,
+    type=click.Choice(formatter.keys()),
+    default=list(formatter.keys()),
+)
 def collect(
-    out_dir, bare, git, strategy, max_dloc, max_loc_ratio, max_prompt_loc, update
+    out_dir,
+    bare,
+    git,
+    strategy,
+    max_dloc,
+    max_loc_ratio,
+    max_prompt_loc,
+    update,
+    formatter,
 ):
     import datasets
 
@@ -106,7 +128,7 @@ def collect(
         data = datasets.load_from_disk(dataset_path=(out_dir / "data").__str__())
     else:
         data = datasets.Dataset.from_generator(
-            generate_samples(bare, git, strategy, ["rewrite"]),
+            generate_samples(bare, git, strategy, formatter),
             keep_in_memory=True,
             cache_dir=cache_dir,
         )

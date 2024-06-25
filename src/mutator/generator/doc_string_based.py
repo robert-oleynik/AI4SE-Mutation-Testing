@@ -3,9 +3,8 @@ import tree_sitter as ts
 from ..ai.transform import trim_prompt
 from ..source import MutationTarget
 from ..treesitter.context import Context
-from ..treesitter.python import tsLang, tsParser
 from .config import GeneratorConfig
-from .generator import Mutation, SimpleMutationGenerator, NoMutationPossible
+from .generator import Mutation, NoMutationPossible, SimpleMutationGenerator
 
 
 class DocStringBasedGenerator(SimpleMutationGenerator):
