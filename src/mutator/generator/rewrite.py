@@ -32,9 +32,10 @@ class CommentRewriteGenerator(SimpleMutationGenerator):
         import mutator.ai.llm
 
         prompt = self.generate_prompt(target.node)
+        strip_len = len(prompt) - (len(Context(target.node).fn_signature()) + 1)
 
         def transform(result: str) -> str:
-            return result
+            return result[strip_len:]
 
         forbidden_tokens = [
             "<|fim_middle|>",
