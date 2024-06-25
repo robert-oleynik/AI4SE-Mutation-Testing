@@ -7,7 +7,7 @@ from transformers import PreTrainedTokenizer, StoppingCriteria
 
 class Limiter(abc.ABC):
     @abc.abstractmethod
-    def is_too_long(self, result: str) -> bool:
+    def extract_result(self, result: str) -> str | None:
         raise NotImplementedError
 
 
@@ -27,4 +27,4 @@ class OutputStoppingCriteria(StoppingCriteria):
     ) -> bool:
         input = self.tokenizer.decode(input_ids[0])
         input = self.transform_result(input)
-        return self.limiter.is_too_long(input)
+        return self.limiter.extract_result(input) is not None

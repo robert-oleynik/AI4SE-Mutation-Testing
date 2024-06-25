@@ -78,16 +78,20 @@ class LLM:
             return []
 
         def decode(output):
-            return transform(self.tokenizer.decode(output))
-
-        def decode_and_trim(output):
-            result = decode(output)
-            while any(limiter.is_too_long(result) for limiter in limiters):
-                output = output[:-1]
-                result = decode(output)
+            result = transform(self.tokenizer.decode(output))
+            while True:
+                for limiter in limiters:
+                    trimmed = limiter.extract_result(result)
+                    if trimmed is not None:
+                        result = trimmed
+                        limiters.remove(limiter)
+                        break
+                else:
+                    # no limiter trimmed anything
+                    break
             return result
 
-        return [decode_and_trim(output) for output in outputs]
+        return [decode(output) for output in outputs]
 
     def prompt(
         self, prompt: str, transform_result: Callable[[str], str], **extra_args
