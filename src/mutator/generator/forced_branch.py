@@ -17,15 +17,18 @@ class ForcedBranchGenerator(MutationGenerator):
     ) -> list[Mutation]:
         import mutator.ai.llm
 
-        definition, indent = Context(target.node).relevant_class_definition()
+        context = Context(target.node)
+        definition, indent = context.relevant_class_definition()
         signature = target.get_signature().decode()
+        docstring = context.docstring()
+        docstring_len = len(docstring.text.decode()) if docstring else 0
         results = []
         for _ in range(config.tries_per_target):
             prompt = definition + indent + target.content().decode()
             results += mutator.ai.llm.llm.force_branch(
                 prompt,
                 transform_result=trim_prompt(definition + indent),
-                keep_prefix_len=len(definition) + len(indent) + len(signature),
+                keep_prefix_len=len(definition) + len(indent) + len(signature) + docstring_len,
                 **config.model_kwargs,
             )
         return Mutation.map(results)
