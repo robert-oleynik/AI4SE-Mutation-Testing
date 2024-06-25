@@ -79,12 +79,13 @@ class LLM:
 
         def decode(output):
             result = transform(self.tokenizer.decode(output))
+            local_limiters = limiters.copy()
             while True:
-                for limiter in limiters:
+                for limiter in local_limiters:
                     trimmed = limiter.extract_result(result)
                     if trimmed is not None:
                         result = trimmed
-                        limiters.remove(limiter)
+                        local_limiters.remove(limiter)
                         break
                 else:
                     # no limiter trimmed anything
