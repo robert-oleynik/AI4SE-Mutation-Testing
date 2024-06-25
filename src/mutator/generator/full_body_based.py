@@ -9,10 +9,12 @@ from .generator import Mutation, SimpleMutationGenerator
 
 class FullBodyBasedGenerator(SimpleMutationGenerator):
     def generate_prompt(self, node: ts.Node) -> str:
-        definition, indent = Context(node).relevant_class_definition()
+        context = Context(node)
+        definition, indent = context.relevant_class_definition()
         prompt = definition + indent + "# Original version\n"
         prompt += indent + node.text.decode()
         prompt += f"\n\n{indent}# Mutated version for mutation testing\n{indent}"
+        prompt += context.fn_signature().text.decode()
         return prompt
 
     def generate(
