@@ -26,9 +26,11 @@ class InfillingGenerator(MutationGenerator):
         equal, source, mutation = compare(source_node.walk(), mutation_node.walk())
         if equal:
             raise NoMutationPossible()
-        prefix = source_node.text[: source.start_byte - source_node.start_byte].decode()
-        suffix = source_node.text[source.end_byte - source_node.start_byte :].decode()
-        middle = mutation.text.decode()
+        start = source.start_byte if source else mutation.start_byte
+        end = source.end_byte if source else mutation.start_byte
+        prefix = source_node.text[: start - source_node.start_byte].decode()
+        suffix = source_node.text[end - source_node.start_byte :].decode()
+        middle = mutation.text.decode() if mutation else ""
         return f"{definition}<|fim_prefix|>{indent}{prefix}<|fim_suffix|>{suffix}<|fim_middle|>{middle}"
 
     def generate(
