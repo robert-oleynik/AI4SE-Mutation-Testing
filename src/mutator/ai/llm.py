@@ -8,7 +8,6 @@ import transformers
 
 from .limiter.limiter import Limiter, OutputStoppingCriteria
 from .limiter.special_tokens import SpecialTokensLimiter
-from .transform import identity
 
 MAX_TOKEN_COUNT = 2048
 
@@ -61,9 +60,7 @@ class LLM:
             **extra_args,
             "stopping_criteria": transformers.StoppingCriteriaList(
                 [
-                    OutputStoppingCriteria(
-                        limiter, self.tokenizer, transform
-                    )
+                    OutputStoppingCriteria(limiter, self.tokenizer, transform)
                     for limiter in limiters
                 ]
                 + self.generate_kwargs.get("stopping_criteria", [])

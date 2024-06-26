@@ -93,6 +93,7 @@ def generate_samples(
     is_flag=True,
     help="Update Dataset in place without regenerating (Will ignore git repositories)",
 )
+@click.option("--min-prompt-loc", default=0, type=int, help="Min LOC for prompt")
 @click.option("--max-prompt-loc", default=1024, type=int, help="Max LOC for prompt")
 @click.option("-s", "--strategy", multiple=True, default=list(strategies.keys()))
 @click.option(
@@ -109,6 +110,7 @@ def collect(
     strategy,
     max_dloc,
     max_loc_ratio,
+    min_prompt_loc,
     max_prompt_loc,
     update,
     formatter,
@@ -143,6 +145,7 @@ def collect(
         _loc_ratio,
         load_from_cache_file=False,
     )
+    data = data.filter(lambda row: min_prompt_loc < strloc(row["prompt"]))
     data = data.filter(
         lambda row: strloc(row["prompt"]) < max_prompt_loc,
         load_from_cache_file=False,

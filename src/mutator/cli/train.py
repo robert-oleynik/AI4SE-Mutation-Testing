@@ -1,3 +1,4 @@
+import hashlib
 import math
 import os
 import pathlib
@@ -53,14 +54,6 @@ import click
     help="Number of epochs to used for LoRa training",
 )
 @click.option(
-    "-b",
-    "--batch-size",
-    default=4,
-    type=int,
-    show_default=True,
-    help="Number of batches for LoRa training [Bugged]",
-)
-@click.option(
     "-t",
     "--test-size",
     default=0.1,
@@ -86,7 +79,6 @@ def train(
     dataset,
     learning_rate,
     num_epochs,
-    batch_size,
     test_size,
     seed,
     alpha,
@@ -94,13 +86,17 @@ def train(
     rank,
 ):
     import datasets
+    import pandas
     import torch
     import torch.utils.data
     import tqdm
     import transformers
 
+    batch_size = 1
+
     data = datasets.load_from_disk(dataset_path=dataset.absolute().__str__())
     data = datasets.Dataset.from_dict({"prompt": data["prompt"]})
+    print(data)
 
     device = torch.device(device)
     tokenizer = transformers.GemmaTokenizer.from_pretrained(model_id)
@@ -109,9 +105,11 @@ def train(
     )
 
     def _tokenize(row):
-        tokens = tokenizer(row["prompt"] + "<eos>")
-        labels = tokens.input_ids.copy()
-        return {**tokens, "labels": labels}
+        hasher = hashlib.new("sha256")
+        hasher.update(row["prompt"].encode())
+        input_ids = tokenizer.encode(row["prompt"]) + [tokenizer.eos_token_id]
+        label_ids = input_ids.copy()
+        return {"input_ids": input_ids, "labels": label_ids, "hash": hasher.hexdigest()}
 
     tokenized_data = data.map(_tokenize)
     tokenized_data = tokenized_data.remove_columns(["prompt"])
@@ -130,10 +128,14 @@ def train(
     import torch.utils.data
 
     train_dataloader = torch.utils.data.DataLoader(
-        train_data, collate_fn=data_collator, batch_size=batch_size
+        train_data.remove_columns(["hash"]),
+        collate_fn=data_collator,
+        batch_size=batch_size,
     )
     test_dataloader = torch.utils.data.DataLoader(
-        test_data, collate_fn=data_collator, batch_size=batch_size
+        test_data.remove_columns(["hash"]),
+        collate_fn=data_collator,
+        batch_size=batch_size,
     )
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
@@ -156,6 +158,11 @@ def train(
     )
     model.add_adapter(peft_config)
 
+    train_loss_idx = []
+    train_loss_values = []
+    test_loss_idx = []
+    test_loss_values = []
+
     epoch_train_loss = []
     epoch_test_loss = []
     for epoch in range(num_epochs):
@@ -164,16 +171,22 @@ def train(
         for step, batch in enumerate(tqdm.tqdm(train_dataloader)):
             outputs = model(**batch.to(device))
             loss = outputs.loss
-            train_loss += loss.detach().cpu().float()
+            loss_step = loss.detach().cpu().float()
+
+            train_loss_idx.append(train_data[step]["hash"])
+            train_loss_values.append(loss_step.item())
+
+            train_loss += loss_step
             if math.isnan(train_loss):
                 print(tokenizer.decode(batch))
-                print(loss.detach().cpu().float())
+                print(loss_step)
                 raise ValueError("training reach NaN")
             loss.backward()
             optimizer.step()
             lr_scheduler.step()
             optimizer.zero_grad()
-            if step % 200 == 199:
+
+            if step % 2000 == 1999:
                 inter_train_loss = train_loss / step
                 msg = f"{step=} loss={inter_train_loss.item()}"
                 columns = os.get_terminal_size().columns
@@ -185,7 +198,12 @@ def train(
             with torch.no_grad():
                 outputs = model(**batch.to(device))
             loss = outputs.loss
-            test_loss += loss.detach().cpu().float()
+            loss_step = loss.detach().cpu().float()
+
+            test_loss_idx.append(test_data[step]["hash"])
+            test_loss_values.append(loss_step.item())
+
+            test_loss += loss_step
 
         test_epoch_loss = test_loss / len(test_dataloader)
         train_epoch_loss = train_loss / len(train_dataloader)
@@ -196,39 +214,23 @@ def train(
 
         model.save_pretrained(str(out_dir / "checkpoints" / str(epoch)))
 
-    sorted_epochs = epoch_test_loss.copy()
-    sorted_epochs.sort()
+    train_series = pandas.Series(
+        name="train-loss", data=train_loss_values, index=train_loss_idx
+    )
+    train_series.to_json(out_dir / "train-series.json", orient="split")
+
+    test_series = pandas.Series(
+        name="test-loss", data=test_loss_values, index=test_loss_idx
+    )
+    test_series.to_json(out_dir / "test-series.json", orient="split")
+
+    sorted_epochs = sorted(epoch_test_loss)
     _, best_epoch = sorted_epochs[0]
 
     print("Results:")
     for j in range(num_epochs):
-        print(f"{j}: train_loss={sorted_epochs[j]} test_loss={sorted_epochs[j]}")
+        print(f"{j}: train_loss={epoch_train_loss[j]} test_loss={epoch_test_loss[j]}")
     print(f"best epoch: {best_epoch}")
     if (out_dir / "final").exists():
         shutil.rmtree(out_dir / "final")
-    shutil.copy(out_dir / "checkpoints" / str(best_epoch), out_dir / "final")
-
-    #    from transformers import Trainer, TrainingArguments
-    #    args = TrainingArguments(
-    #        output_dir=out_dir.__str__(),
-    #        learning_rate=learning_rate,
-    #        per_device_train_batch_size=batch_size,
-    #        per_device_eval_batch_size=batch_size,
-    #        num_train_epochs=num_epochs,
-    #        weight_decay=0.01,
-    #        eval_strategy="epoch",
-    #        save_strategy="epoch",
-    #        load_best_model_at_end=True,
-    #        push_to_hub=False,
-    #    )
-    #
-    #    trainer = Trainer(
-    #        model=model,
-    #        args=args,
-    #        train_dataset=train_data,
-    #        eval_dataset=test_data,
-    #        tokenizer=tokenizer,
-    #        data_collator=data_collator,
-    #    )
-    #
-    #    trainer.train()
+    shutil.copy_tree(out_dir / "checkpoints" / str(best_epoch), out_dir / "final")
