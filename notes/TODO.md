@@ -19,10 +19,6 @@
 - [x] Mutatest
 - [-] Custom Mutation testing tool.
 
-# What Metrics to use for Evaluation?
-
-- [ ] Number of disjoint/uncaught mutants (per project)?
-
 # What Projects to use for testing?
 
 - [ ] Flask
@@ -33,3 +29,14 @@
 - [ ] Mine real changes (check for simultaneous changes of code and test)
 - [ ] Synthetic test data based on mutatest
 - [ ] Fine tune once per generator (regarding specific format)
+
+# Report
+
+- Measure number of syntax errors, caught mutations, missed mutations and timeouts
+  - Per generator
+  - Per model + fine-tuned models
+  - Against traditional mutation testers
+- Measure performance against traditional mutation testers
+- "Human-likeness" (manually evaluate)
+- Related Work / Intro: andere paper zitieren als "Inspiration"
+  - müssen nicht unbedingt viele paper lesen und zitieren
