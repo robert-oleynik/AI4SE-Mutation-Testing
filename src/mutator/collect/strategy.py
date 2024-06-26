@@ -30,7 +30,7 @@ class Sample:
             "end": self.mutation_node.end_byte,
             "source": autopep8.fix_code(self.source_node.text.decode("utf-8")),
             "mutation": autopep8.fix_code(self.mutation_node.text.decode("utf-8")),
-            "prompt": autopep8.fix_code(prompt),
+            "prompt": prompt,
         }
 
 
