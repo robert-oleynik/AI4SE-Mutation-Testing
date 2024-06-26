@@ -145,7 +145,7 @@ def train(
         num_training_steps=len(train_dataloader) * num_epochs,
     )
 
-    from peft import LoraConfig, TaskType
+    from peft import LoraConfig, TaskType, get_peft_model
 
     peft_config = LoraConfig(
         lora_alpha=alpha,
@@ -156,7 +156,9 @@ def train(
         bias="all",
         task_type=TaskType.CAUSAL_LM,
     )
-    model.add_adapter(peft_config)
+    # model.add_adapter(peft_config)
+    peft_model = get_peft_model(model, peft_config)
+    peft_model.print_trainable_parameters()
 
     train_loss_idx = []
     train_loss_values = []
@@ -212,7 +214,7 @@ def train(
         epoch_train_loss.append(train_epoch_loss)
         epoch_test_loss.append((test_epoch_loss, epoch))
 
-        model.save_pretrained(str(out_dir / "checkpoints" / str(epoch)))
+        peft_model.save_pretrained(str(out_dir / "checkpoints" / str(epoch)))
 
     train_series = pandas.Series(
         name="train-loss", data=train_loss_values, index=train_loss_idx
@@ -233,4 +235,4 @@ def train(
     print(f"best epoch: {best_epoch}")
     if (out_dir / "final").exists():
         shutil.rmtree(out_dir / "final")
-    shutil.copy_tree(out_dir / "checkpoints" / str(best_epoch), out_dir / "final")
+    shutil.copytree(out_dir / "checkpoints" / str(best_epoch), out_dir / "final")
