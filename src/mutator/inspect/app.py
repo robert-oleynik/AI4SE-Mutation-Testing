@@ -1,7 +1,7 @@
 import pathlib
 
 from textual.app import App, ComposeResult
-from textual.widgets import ListView
+from textual.widgets import ListView, Button
 
 from ..result import Result
 from .module_view import Target, TargetList, TargetView
@@ -73,6 +73,17 @@ class InspectApp(App):
         target = ev.item
         if isinstance(target, Target):
             self.target_view.update(target._name, target._target)
+
+    def on_button_pressed(self, ev: Button.Pressed) -> None:
+        if ev.button.name == "next":
+            self.target_view._header.select_next()
+        elif ev.button.name == "prev":
+            self.target_view._header.select_prev()
+        else:
+            return
+        self.target_view.update(
+            self.target_view._header._name, self.target_view._header._target
+        )
 
     def on_mount(self) -> None:
         module = self.target_list.modules[0]

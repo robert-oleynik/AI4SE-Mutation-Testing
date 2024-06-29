@@ -75,7 +75,8 @@ def dataset(dataset, metric):
 @click.command(help="Ananlyze fine-tuining result")
 @click.argument("dir", type=pathlib.Path)
 @click.argument("dataset", type=pathlib.Path)
-def train_result(dir, dataset):
+@click.option("--min-loss", type=float, default=2.0)
+def train_result(dir, dataset, min_loss):
     import datasets
     import matplotlib.pyplot as plt
     import pandas
@@ -106,7 +107,7 @@ def train_result(dir, dataset):
     train_ds_series = pandas.DataFrame(**_dataset_to_dataframe(dataset))
     train_info = train_ds_series.merge(train_series, left_index=True, right_index=True)
     print(train_info)
-    train_info = train_info.loc[train_info["train-loss"] > 2.0]
+    train_info = train_info.loc[train_info["train-loss"] > min_loss]
     train_info = train_info.sort_values(by=["train-loss"])
     print(train_info)
 

@@ -54,9 +54,10 @@ class TargetHeader(Widget):
         self._update()
 
     def update(self, name: str, target) -> None:
-        self._name = name
-        self._target = target
-        self._selected = 0
+        if self._name != name:
+            self._name = name
+            self._target = target
+            self._selected = 0
         self._update()
 
     def _update(self) -> None:
@@ -151,12 +152,23 @@ class TargetView(Widget):
         self._log = TargetLog(classes="target-log")
         self._info = TargetInfo(out_dir, classes="target-info")
 
-    def update(self, name: str, module) -> None:
-        self._header.update(name, module)
-        target = module[str(self._header._selected)]
-        self._content.update(target)
-        self._log.update(target)
-        self._info.update(target)
+    def update(self, name: str, target) -> None:
+        self._header.update(name, target)
+        mutation = target[str(self._header._selected)]
+        self._content.update(mutation)
+        self._log.update(mutation)
+        self._info.update(mutation)
+
+    def on_button_pressed(self, ev: Button.Pressed) -> None:
+        if ev.button.name == "next":
+            self.target_view._header.select_next()
+        elif ev.button.name == "prev":
+            self.target_view._header.select_prev()
+        else:
+            return
+        self.target_view.update(
+            self.target_view._header._name, self.target_view._header._target
+        )
 
     def compose(self) -> ComposeResult:
         yield self._header
@@ -168,12 +180,3 @@ class TargetView(Widget):
             Button("Next", name="next", classes="toolbar-button"),
             classes="target-view-toolbar",
         )
-
-    def on_button_pressed(self, ev: Button.Pressed) -> None:
-        if ev.button.name == "next":
-            self._header.select_next()
-        elif ev.button.name == "prev":
-            self._header.select_prev()
-        else:
-            return
-        self.update(self._header._name, self._header._target)
