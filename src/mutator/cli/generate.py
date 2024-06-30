@@ -49,6 +49,15 @@ configs = {
         },
         tries_per_target=4,
     ),
+    "experimental": GeneratorConfig(
+        {
+            "do_sample": True,
+            "num_beams": 2,
+            "num_return_sequences": 2,
+            "max_new_tokens": 2048,
+        },
+        tries_per_target=1,
+    ),
 }
 
 
@@ -110,6 +119,9 @@ configs = {
 )
 @click.option("--no-llm", is_flag=True, help="Do not load LLM. May brake generators")
 @click.option("--clean", is_flag=True, help="Regenerate all mutations")
+@click.option(
+    "--no-drop", is_flag=True, help="Do not drop mutations, but add annotation"
+)
 def generate(
     out_dir,
     generator,
@@ -119,6 +131,7 @@ def generate(
     model,
     device,
     no_llm,
+    no_drop,
     clean,
     checkpoint,
 ):
@@ -186,10 +199,12 @@ def generate(
                         for mutation in mutations:
                             new_tree = tsParser.parse(mutation.content).root_node
                             if any(
-                                compare(tree.walk(), new_tree.walk())[0]
+                                compare(tree.walk(), new_tree.walk(), False)[0]
                                 for tree in trees
                             ):
                                 dropped += 1
+                                if no_drop:
+                                    store.add(target, mutation, gen, c, ("dropped"))
                             else:
                                 counter += 1
                                 store.add(target, mutation, gen, c)
