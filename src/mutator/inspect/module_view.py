@@ -161,14 +161,12 @@ class TargetView(Widget):
 
     def on_button_pressed(self, ev: Button.Pressed) -> None:
         if ev.button.name == "next":
-            self.target_view._header.select_next()
+            self._header.select_next()
         elif ev.button.name == "prev":
-            self.target_view._header.select_prev()
+            self._header.select_prev()
         else:
             return
-        self.target_view.update(
-            self.target_view._header._name, self.target_view._header._target
-        )
+        self.update(self._header._name, self._header._target)
 
     def compose(self) -> ComposeResult:
         yield self._header
