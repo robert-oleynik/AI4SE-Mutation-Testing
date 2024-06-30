@@ -62,7 +62,7 @@ class PairTreeCursor:
 
 
 def compare(
-    a: ts.TreeCursor, b: ts.TreeCursor
+    a: ts.TreeCursor, b: ts.TreeCursor, protect_renames: bool = True
 ) -> tuple[bool, ts.Node | None, ts.Node | None]:
     atob = {}
     cursor = PairTreeCursor(TreeCursor(a), TreeCursor(b))
@@ -72,6 +72,8 @@ def compare(
         if a_node is None and b_node is None:
             a_node, b_node = cursor.a.node, cursor.b.node
             if a_node.type == "identifier":
+                if not protect_renames:
+                    return a_node.text == b_node.text, a_node, b_node
                 apn = a_node.parent
                 appn = apn.parent
                 isfuncident = (

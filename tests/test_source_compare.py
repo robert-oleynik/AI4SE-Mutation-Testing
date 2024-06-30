@@ -169,5 +169,30 @@ def foo(a: int, b: int) -> int:
     assert b_node.text.decode() == "+"
 
 
+def test_conditional():
+    source_a = b"""
+def foo() -> int:
+    if True:
+        a = 1
+    else:
+        a = 1
+    return a
+"""
+    source_b = b"""
+def foo() -> int:
+    if True:
+        a = 1
+    else:
+        b = 1
+    return a
+"""
+    a_tree = parser.parse(source_a)
+    b_tree = parser.parse(source_b)
+    equal, a_node, b_node = compare(a_tree.walk(), b_tree.walk())
+    assert not equal
+    assert a_node.text.decode() == "a"
+    assert b_node.text.decode() == "b"
+
+
 if __name__ == "__main__":
     test_same()
