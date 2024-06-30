@@ -1,6 +1,5 @@
 import tree_sitter as ts
 
-from ..ai.transform import trim_prompt
 from ..source import MutationTarget
 from ..treesitter.context import Context
 from .config import GeneratorConfig
@@ -26,6 +25,7 @@ class DocStringBasedGenerator(SimpleMutationGenerator):
         self, target: MutationTarget, config: GeneratorConfig
     ) -> list[Mutation]:
         import mutator.ai.llm
+        from mutator.ai.transform import trim_prompt
 
         try:
             prompt, to_trim = self._generate_prompt(target.node)
