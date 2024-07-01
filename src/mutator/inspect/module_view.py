@@ -4,6 +4,7 @@ import pathlib
 
 from textual.app import ComposeResult, RenderResult
 from textual.containers import Horizontal
+from textual.scroll_view import ScrollableContainer
 from textual.widget import Widget
 from textual.widgets import Button, ListItem, ListView, Pretty, Static, TextArea
 
@@ -135,19 +136,23 @@ class TargetLog(TextArea):
         self.load_text(target["output"])
 
 
-class TargetInfo(Pretty):
+class TargetInfo(Widget):
     def __init__(self, out_dir: pathlib.Path, **kwargs):
-        super().__init__(None, **kwargs)
+        super().__init__(**kwargs)
         self.out_dir = out_dir
+        self._pretty = Pretty(None)
 
     def update(self, target):
         try:
             file = (self.out_dir / target["file"]).with_suffix(".json")
             metadata = json.load(open(file))
             del metadata["mutation"]
-            super().update(metadata)
+            self._pretty.update(metadata)
         except FileNotFoundError as e:
-            super().update(e)
+            self._pretty.update(e)
+
+    def compose(self) -> ComposeResult:
+        yield ScrollableContainer(self._pretty)
 
 
 class TargetView(Widget):
