@@ -4,6 +4,7 @@ from .analyze import dataset, train_result
 from .collect import collect
 from .generate import generate
 from .inspect import inspect
+from .stats import stats
 from .test import test
 from .train import train
 
@@ -16,6 +17,7 @@ def cli():
 cli.add_command(generate)
 cli.add_command(test)
 cli.add_command(inspect)
+cli.add_command(stats)
 cli.add_command(collect)
 cli.add_command(train)
 cli.add_command(dataset)

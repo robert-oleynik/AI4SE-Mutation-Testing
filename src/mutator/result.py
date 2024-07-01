@@ -16,6 +16,11 @@ class Result:
         data = {"modules": self.modules}
         path.write_bytes(json.dumps(data).encode())
 
+    def read(path: pathlib.Path):
+        if not path.is_file():
+            return None
+        return json.load(open(path))["modules"]
+
     def insert(
         self,
         module: str,
