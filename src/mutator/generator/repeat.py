@@ -3,7 +3,7 @@ import tree_sitter as ts
 from ..source import MutationTarget
 from ..treesitter.context import Context
 from .config import GeneratorConfig
-from .generator import Mutation, SimpleMutationGenerator
+from .generator import Mutation, NoMutationPossible, SimpleMutationGenerator
 
 
 class RepeatGenerator(SimpleMutationGenerator):
@@ -14,6 +14,8 @@ class RepeatGenerator(SimpleMutationGenerator):
     def generate_prompt(self, node: ts.Node) -> str:
         context = Context(node)
         n = context.get_parent_class()
+        if n is None:
+            raise NoMutationPossible()
         signature = context.fn_signature()
         return (
             "<|file_separator|>\n"
@@ -28,7 +30,10 @@ class RepeatGenerator(SimpleMutationGenerator):
     ) -> list[Mutation]:
         import mutator.ai.llm
 
-        prompt = self.generate_prompt(target.node)
+        try:
+            prompt = self.generate_prompt(target.node)
+        except NoMutationPossible:
+            return []
 
         def transform(result: str) -> str:
             offset = len(prompt.splitlines(True)[:-2].join())
