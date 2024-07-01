@@ -63,9 +63,11 @@ def test(out_dir, project, filter, timeout):
             count = len(target)
 
             def status_update(icon: str, index: int, **kwargs):
-                missed = index - caught - syntax_error_count - timeout_count
+                missed = index - caught - syntax_error_count - timeout_count  # noqa: B023
                 print(
-                    f" {icon} {target_name:<80} [{index}/{count}] caught: {caught} missed: {missed} syntax errors: {syntax_error_count} timeout: {timeout_count}",
+                    f" {icon} {target_name:<80} [{index}/{count}]",  # noqa: B023
+                    f"caught: {caught} missed: {missed}",  # noqa: B023
+                    f"syntax errors: {syntax_error_count} timeout: {timeout_count}",  # noqa: B023
                     **kwargs,
                 )
 

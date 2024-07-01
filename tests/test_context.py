@@ -10,7 +10,11 @@ def setup(source: str) -> ts.Node:
     lang = ts.Language(tsp.language())
     parser = ts.Parser(lang)
     module = parser.parse(source).root_node
-    return first_capture_named("bar", module, '(function_definition name: (identifier) @name (#eq? @name "bar")) @bar')
+    return first_capture_named(
+        "bar",
+        module,
+        '(function_definition name: (identifier) @name (#eq? @name "bar")) @bar',
+    )
 
 
 source1 = b"""

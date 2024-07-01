@@ -69,7 +69,7 @@ class MutationStore:
                 for file in os.listdir(target_path):
                     if file.endswith(".py"):
                         metadata = json.load(
-                            open((target_path / file).with_suffix(".json"), "r")
+                            open((target_path / file).with_suffix(".json"))
                         )
                         source_file = metadata["file"]
                         file_path = target_path.joinpath(file)

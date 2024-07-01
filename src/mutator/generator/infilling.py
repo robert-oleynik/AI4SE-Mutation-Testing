@@ -31,7 +31,9 @@ class InfillingGenerator(MutationGenerator):
         prefix = source_node.text[: start - source_node.start_byte].decode()
         suffix = source_node.text[end - source_node.start_byte :].decode()
         middle = mutation.text.decode() if mutation else ""
-        return f"{definition}<|fim_prefix|>{indent}{prefix}<|fim_suffix|>{suffix}<|fim_middle|>{middle}"
+        prompt = f"{definition}<|fim_prefix|>{indent}{prefix}"
+        prompt += f"<|fim_suffix|>{suffix}<|fim_middle|>{middle}"
+        return prompt
 
     def generate(
         self, target: MutationTarget, config: GeneratorConfig
@@ -60,10 +62,11 @@ class InfillingGenerator(MutationGenerator):
         ):
             prefix = content[target.node.start_byte : start].decode()
             suffix = content[end : target.node.end_byte].decode()
-            prompt = f"{definition}<|fim_prefix|>{indent}{prefix}<|fim_suffix|>{suffix}<|fim_middle|>"
+            prompt = f"{definition}<|fim_prefix|>{indent}{prefix}"
+            prompt += f"<|fim_suffix|>{suffix}<|fim_middle|>"
 
             def transform(result: str) -> str:
-                return prefix + result[len(prompt) :] + suffix
+                return prefix + result[len(prompt) :] + suffix  # noqa: B023
 
             results += mutator.ai.llm.llm.prompt(
                 prompt,

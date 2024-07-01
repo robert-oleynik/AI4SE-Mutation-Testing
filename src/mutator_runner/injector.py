@@ -28,11 +28,11 @@ class DependencyInjector(importlib.abc.MetaPathFinder):
         self.path = path
 
     def find_spec(
-            self,
-            fullname: str,
-            path: collections.abc.Sequence[str] | None,
-            target: types.ModuleType | None = ...
-            ) -> importlib.machinery.ModuleSpec | None:
+        self,
+        fullname: str,
+        path: collections.abc.Sequence[str] | None,
+        target: types.ModuleType | None = ...,
+    ) -> importlib.machinery.ModuleSpec | None:
         if fullname == self.module:
             loader = MutationLoader(self.module, self.path)
             return importlib.machinery.ModuleSpec(fullname, loader)

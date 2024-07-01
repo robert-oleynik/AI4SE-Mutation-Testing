@@ -160,7 +160,7 @@ def generate(
         print("error: found existing mutations. use flag `--clean` to generate new.")
         return 1
 
-    num_targets = sum((len(source_file.targets) for source_file in source_files))
+    num_targets = sum(len(source_file.targets) for source_file in source_files)
     target_index = 0
 
     for source_file in source_files:
@@ -173,7 +173,11 @@ def generate(
 
             def status_update():
                 print(
-                    f"\r[{target_index:>{len(str(num_targets))}}/{num_targets}] {target_path:<80} [generators: {generator_index}/{len(generator)} mutations: {counter} dropped: {dropped}] ",
+                    f"\r[{target_index:>{len(str(num_targets))}}/{num_targets}]",  # noqa: B023
+                    f"{target_path:<80}",  # noqa: B023
+                    f"[generators: {generator_index}/{len(generator)}",  # noqa: B023
+                    f"mutations: {counter}",  # noqa: B023
+                    f"dropped: {dropped}] ",  # noqa: B023
                     end="",
                 )
 

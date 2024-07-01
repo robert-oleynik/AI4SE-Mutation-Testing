@@ -17,7 +17,7 @@ class LLM:
         self,
         device: str,
         model_id: str,
-        limiter_classes: list[type[Limiter]] = [],
+        limiter_classes: list[type[Limiter]] | None = None,
         checkpoint: pathlib.Path | None = None,
         **generate_kwargs,
     ):
@@ -33,7 +33,7 @@ class LLM:
             self.model = transformers.AutoModelForCausalLM.from_pretrained(
                 model_id, device_map=self.device, torch_dtype=torch.float16
             )
-        self.limiter_classes = limiter_classes
+        self.limiter_classes = limiter_classes or []
         self.generate_kwargs = generate_kwargs
 
     def generate(

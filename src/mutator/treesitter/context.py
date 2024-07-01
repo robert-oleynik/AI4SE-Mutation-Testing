@@ -5,8 +5,7 @@ import tree_sitter as ts
 from ..treesitter.node import ts_node_parents
 from ..treesitter.python import tsLang
 
-
-_calls_query = tsLang.query(f"""
+_calls_query = tsLang.query("""
     (call function: [
         (identifier) @name
         (attribute attribute: (identifier) @name)
@@ -101,10 +100,13 @@ class Context:
         indent = prompt.split(":")[-1][1:]
         prompt = prompt[: -len(indent)]
 
-        method_body = self.node.child_by_field_name("body").text.decode()
         method_name = self.name()
 
-        function_calls = [node.text.decode() for _, match in _calls_query.matches(self.node) for _, node in match.items()]
+        function_calls = [
+            node.text.decode()
+            for _, match in _calls_query.matches(self.node)
+            for _, node in match.items()
+        ]
         class_body = parent_class_node.child_by_field_name("body")
         for sibling in class_body.children:
             sibling_context = Context(sibling)
