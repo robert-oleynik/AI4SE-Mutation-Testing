@@ -77,7 +77,7 @@ class TargetHeader(Widget):
                 if "timeout" in mutation and mutation["timeout"]:
                     self.lbl_target.update("[red]timeout[/red]")
                 else:
-                    self.lbl_target.update("[red]caught[/red]")
+                    self.lbl_target.update("[red]missed[/red]")
                 if self.has_class("valid"):
                     self.remove_class("valid")
                 if not self.has_class("invalid"):
