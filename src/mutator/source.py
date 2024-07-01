@@ -41,19 +41,12 @@ class Symbol:
 class Filter:
     class Matcher:
         def __init__(self, f: str):
-            module, symbol = f.split(":")
-
-            def _toRegex(f):
-                return re.compile(f.replace(".", "\\.").replace("*", "[^\\.]*") + "$")
-
-            self.module = _toRegex(module)
-            self.symbol = _toRegex(symbol)
+            self.regex = re.compile(
+                "^" + f.replace(".", "\\.").replace("*", ".*") + "$"
+            )
 
         def match(self, module: str, symbol: str) -> bool:
-            return (
-                self.module.fullmatch(module) is not None
-                and self.symbol.fullmatch(symbol) is not None
-            )
+            return self.regex.fullmatch(f"{module}:{symbol}") is not None
 
     def __init__(self, filters: list[str]):
         self.include = []
