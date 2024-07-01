@@ -13,18 +13,6 @@ def setup(source: str) -> ts.Node:
     return first_capture_named("bar", module, '(function_definition name: (identifier) @name (#eq? @name "bar")) @bar')
 
 
-# source1 = b"""
-# @Decorator1
-# @Decorator2
-# class Foo:
-#    def __init__(self):
-#        "Hello, World"
-#        pass
-#
-#    def another(self, a, b):
-#        "Hello, WOrld"
-#        return a + b
-#
 source1 = b"""
 @Decorator1
 @Decorator2
@@ -68,50 +56,15 @@ class Foo:
         "Some info"
         ...
 
->>>>>>> ed09e39574614288dad2a195f080c29a587bd9bc
 #    @Decorator3
 #    @Decorator4
 #    def bar(self) -> str:
 #        self.called()
 #        return "foobar"
-# """
 
-
-# def test_write_class_header():
-#    node = setup(source1)
-#    expected_class_header = "@Decorator1\n@Decorator2\nclass Foo:\n    "
-#    node = node.child(0)
-#    assert write_class_header(node) == expected_class_header
-
-
-# def test_generate_prompt():
-#    node = (
-#        setup(source1)
-#        .child(0)
-#        .child_by_field_name("definition")
-#        .child_by_field_name("body")
-#        .child(2)
-#        .child_by_field_name("definition")
-#    )
-#    expected = """@Decorator1
-# @Decorator2
-# class Foo:
-#    def __init__(self):
-#        "Hello, World"
-#        ...
-#
-#    def another(self, a, b):
-#        "Hello, WOrld"
-#        ...
-#
-#    @Decorator3
-#    @Decorator4
-#    def bar(self) -> str:
-#        return "foobar"
-#
-#    @Decorator3
-#    @Decorator4
-#    def bar(self) -> str:
-# """
-#    prompt = CommentRewriteGenerator().generate_prompt(node)
-#    assert prompt == expected
+    @Decorator3
+    @Decorator4
+    def bar(self) -> str:
+"""
+    prompt = CommentRewriteGenerator().generate_prompt(node)
+    assert prompt == expected
