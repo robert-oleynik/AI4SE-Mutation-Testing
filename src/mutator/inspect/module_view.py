@@ -12,10 +12,10 @@ from ..result import Result
 
 
 class Target(ListItem):
-    def __init__(self, name: str, target, **kwargs):
+    def __init__(self, name: str, mutations: list[(str, dict)], **kwargs):
         super().__init__(**kwargs)
         self._name = name
-        self._target = target
+        self._mutations = mutations
 
     def render(self) -> RenderResult:
         if self.is_everything_caught():
@@ -23,18 +23,26 @@ class Target(ListItem):
         return f"[red]{self._name}[/red]"
 
     def is_everything_caught(self) -> bool:
-        return all(r["caught"] for _, r in self._target.items())
+        return all(m["caught"] for _, m in self._mutations)
 
 
 class TargetList(Widget):
     def __init__(self, result: Result, **kwargs):
         super().__init__(**kwargs)
+
+        def mutations_sort_key(item):
+            index, mutation = item
+            return mutation["caught"]
+
         targets = [
-            Target(f"{modname}:{name}", target)
+            Target(
+                f"{modname}:{name}",
+                list(sorted(mutations.items(), key=mutations_sort_key)),
+            )
             for modname, module in result.modules.items()
-            for name, target in module.items()
+            for name, mutations in module.items()
         ]
-        self.modules = sorted(targets, key=lambda m: int(m.is_everything_caught()))
+        self.modules = sorted(targets, key=lambda m: m.is_everything_caught())
 
     def compose(self) -> ComposeResult:
         yield ListView(*self.modules)
@@ -44,29 +52,26 @@ class TargetHeader(Widget):
     def __init__(self, out_dir: pathlib.Path, **kwargs):
         super().__init__(**kwargs)
         self._name = None
-        self._target = None
+        self._mutations = None
         self._selected = 0
         self.out_dir = out_dir
         self.lbl_module = Static(classes="header-first")
-        self.lbl_target = Static(classes="header-last")
+        self.lbl_mutation = Static(classes="header-last")
 
     def on_mount(self) -> None:
         self._update()
 
-    def update(self, name: str, target) -> None:
+    def update(self, name: str, mutations) -> None:
         if self._name != name:
             self._name = name
-            self._target = target
+            self._mutations = mutations
             self._selected = 0
         self._update()
 
     def _update(self) -> None:
-        if self._name is not None and self._target is not None:
-            self.lbl_module.update(
-                f"[{self._selected + 1}/{len(self._target)}]  {self._name}"
-            )
-        if self._target is not None and self._selected < len(self._target):
-            mutation = self._target[str(self._selected)]
+        if self._mutations is not None and self._selected < len(self._mutations):
+            index, mutation = self._mutations[self._selected]
+            self.lbl_module.update(f"[{index}/{len(self._mutations)}]  {self._name}")
             label = ""
             if mutation["caught"]:
                 label += "[green]"
@@ -87,19 +92,19 @@ class TargetHeader(Widget):
             metadata = json.load(open(file))
             for annotation in metadata.get("annotations", []):
                 label += ", " + annotation
-            self.lbl_target.update(label)
+            self.lbl_mutation.update(label)
 
     def select_next(self) -> None:
-        self._selected = (self._selected + 1) % len(self._target)
+        self._selected = (self._selected + 1) % len(self._mutations)
         self._update()
 
     def select_prev(self) -> None:
-        self._selected = (self._selected - 1 + len(self._target)) % len(self._target)
+        self._selected = (self._selected - 1) % len(self._mutations)
         self._update()
 
     def compose(self) -> ComposeResult:
         yield self.lbl_module
-        yield self.lbl_target
+        yield self.lbl_mutation
 
 
 class TargetDiff(TextArea):
@@ -162,9 +167,9 @@ class TargetView(Widget):
         self._log = TargetLog(classes="target-log")
         self._info = TargetInfo(out_dir, classes="target-info")
 
-    def update(self, name: str, target) -> None:
-        self._header.update(name, target)
-        mutation = target[str(self._header._selected)]
+    def update(self, name: str, mutations) -> None:
+        self._header.update(name, mutations)
+        index, mutation = mutations[self._header._selected]
         self._content.update(mutation)
         self._log.update(mutation)
         self._info.update(mutation)
@@ -176,7 +181,7 @@ class TargetView(Widget):
             self._header.select_prev()
         else:
             return
-        self.update(self._header._name, self._header._target)
+        self.update(self._header._name, self._header._mutations)
 
     def compose(self) -> ComposeResult:
         yield self._header

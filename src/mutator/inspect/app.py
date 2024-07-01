@@ -1,7 +1,7 @@
 import pathlib
 
 from textual.app import App, ComposeResult
-from textual.widgets import Button, ListView
+from textual.widgets import ListView
 
 from ..result import Result
 from .module_view import Target, TargetList, TargetView
@@ -72,11 +72,11 @@ class InspectApp(App):
     def on_list_view_highlighted(self, ev: ListView.Highlighted) -> None:
         target = ev.item
         if isinstance(target, Target):
-            self.target_view.update(target._name, target._target)
+            self.target_view.update(target._name, target._mutations)
 
     def on_mount(self) -> None:
-        module = self.target_list.modules[0]
-        self.target_view.update(module._name, module._target)
+        target = self.target_list.modules[0]
+        self.target_view.update(target._name, target._mutations)
 
     def compose(self) -> ComposeResult:
         yield self.target_list
