@@ -36,7 +36,14 @@ from .spinner import Spinner
 @click.option(
     "-t", "--timeout", type=int, default=60, help="Test suite timeout in seconds"
 )
-def test(out_dir, project, filter, timeout):
+@click.option(
+    "--git-reset",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Run git reset --hard before each run of the test suite",
+)
+def test(out_dir, project, filter, timeout, git_reset):
     filters = Filter(filter)
 
     mutation = {}
@@ -73,6 +80,10 @@ def test(out_dir, project, filter, timeout):
 
             for i, (mutation, source) in enumerate(target):
                 status_update(spinner, i, end="\r")
+                if git_reset:
+                    subprocess.run(
+                        ["git", "reset", "--hard"], capture_output=True, cwd=project
+                    )
                 args = [
                     "python3",
                     "-m",
