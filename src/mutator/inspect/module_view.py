@@ -42,11 +42,12 @@ class TargetList(Widget):
 
 
 class TargetHeader(Widget):
-    def __init__(self, **kwargs):
+    def __init__(self, out_dir: pathlib.Path, **kwargs):
         super().__init__(**kwargs)
         self._name = None
         self._target = None
         self._selected = 0
+        self.out_dir = out_dir
         self.lbl_module = Static(classes="header-first")
         self.lbl_target = Static(classes="header-last")
 
@@ -67,21 +68,26 @@ class TargetHeader(Widget):
             )
         if self._target is not None and self._selected < len(self._target):
             mutation = self._target[str(self._selected)]
+            label = ""
             if mutation["caught"]:
-                self.lbl_target.update("[green]caught[/green]")
-                if self.has_class("invalid"):
-                    self.remove_class("invalid")
-                if not self.has_class("valid"):
-                    self.add_class("valid")
+                label += "[green]caught[/green]"
+                self.remove_class("invalid")
+                self.add_class("valid")
             else:
-                if "timeout" in mutation and mutation["timeout"]:
-                    self.lbl_target.update("[red]timeout[/red]")
-                else:
-                    self.lbl_target.update("[red]missed[/red]")
-                if self.has_class("valid"):
-                    self.remove_class("valid")
-                if not self.has_class("invalid"):
-                    self.add_class("invalid")
+                label += "[red]"
+                label += (
+                    "timeout"
+                    if "timeout" in mutation and mutation["timeout"]
+                    else "missed"
+                )
+                label += "[/red]"
+                self.remove_class("valid")
+                self.add_class("invalid")
+            file = (self.out_dir / mutation["file"]).with_suffix(".json")
+            metadata = json.load(open(file))
+            for annotation in metadata.get("annotations", []):
+                label += ", " + annotation
+            self.lbl_target.update(label)
 
     def select_next(self) -> None:
         self._selected = (self._selected + 1) % len(self._target)
@@ -147,7 +153,7 @@ class TargetInfo(Pretty):
 class TargetView(Widget):
     def __init__(self, base_dir: pathlib.Path, out_dir: pathlib.Path, **kwargs):
         super().__init__(**kwargs)
-        self._header = TargetHeader(classes="target-header")
+        self._header = TargetHeader(out_dir, classes="target-header")
         self._content = TargetDiff(base_dir, out_dir, classes="target-diff")
         self._log = TargetLog(classes="target-log")
         self._info = TargetInfo(out_dir, classes="target-info")
