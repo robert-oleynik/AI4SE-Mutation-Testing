@@ -69,17 +69,18 @@ class TargetHeader(Widget):
             mutation = self._target[str(self._selected)]
             label = ""
             if mutation["caught"]:
-                label += "[green]caught[/green]"
+                label += "[green]"
+                if mutation.get("syntax_error", False):
+                    label += "syntax error"
+                elif mutation.get("timeout", False):
+                    label += "timeout"
+                else:
+                    label += "caught"
+                label += "[/green]"
                 self.remove_class("invalid")
                 self.add_class("valid")
             else:
-                label += "[red]"
-                label += (
-                    "timeout"
-                    if "timeout" in mutation and mutation["timeout"]
-                    else "missed"
-                )
-                label += "[/red]"
+                label += "[red]missed[/red]"
                 self.remove_class("valid")
                 self.add_class("invalid")
             file = (self.out_dir / mutation["file"]).with_suffix(".json")

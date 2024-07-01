@@ -58,12 +58,16 @@ def test(out_dir, project, filter, timeout):
             if not filters.match(module_name, target_name):
                 continue
             timeout_count = 0
+            syntax_error_count = 0
             caught = 0
             count = len(target)
 
             def status_update(icon: str, index: int, **kwargs):
-                missed = index - caught - timeout_count
-                print(f" {icon} {target_name:<80} [{index}/{count}] caught: {caught} missed: {missed} timeout: {timeout_count}", **kwargs)
+                missed = index - caught - syntax_error_count - timeout_count
+                print(
+                    f" {icon} {target_name:<80} [{index}/{count}] caught: {caught} missed: {missed} syntax errors: {syntax_error_count} timeout: {timeout_count}",
+                    **kwargs,
+                )
 
             for i, (mutation, source) in enumerate(target):
                 status_update(spinner, i, end="\r")
@@ -85,10 +89,13 @@ def test(out_dir, project, filter, timeout):
                     spinner.next()
                     status_update(spinner, i, end="\r")
                     counter += 1
-                if counter >= timeout:
-                    timeout_count += 1
                 process.kill()
-                is_caught = process.poll() != 0
+                exit_code = process.poll()
+                is_timeout = counter >= timeout
+                is_syntax_error = (
+                    exit_code is not None and exit_code > 1 and not is_timeout
+                )
+                is_caught = exit_code != 0
                 output = process.stdout.read().decode()
                 output_err = process.stderr.read().decode()
                 output = output if output != "" else output_err
@@ -99,10 +106,15 @@ def test(out_dir, project, filter, timeout):
                     mutation.absolute().relative_to(out_dir.resolve("./mutations")),
                     source,
                     is_caught,
-                    counter >= timeout,
+                    is_syntax_error,
+                    is_timeout,
                     output,
                 )
-                if is_caught and counter < timeout:
+                if is_caught and not is_syntax_error and not is_timeout:
                     caught += 1
+                if is_syntax_error:
+                    syntax_error_count += 1
+                if is_timeout:
+                    timeout_count += 1
             status_update("✔", count)
     result.write(out_dir / "test-result.json")
