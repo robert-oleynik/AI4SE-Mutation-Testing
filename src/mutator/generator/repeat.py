@@ -36,7 +36,7 @@ class RepeatGenerator(SimpleMutationGenerator):
             return []
 
         def transform(result: str) -> str:
-            offset = len(prompt.splitlines(True)[:-2].join())
+            offset = len("".join(prompt.splitlines(True)[:-2]))
             return result[offset:]
 
         results = mutator.ai.llm.llm.prompt(
