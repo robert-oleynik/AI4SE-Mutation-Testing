@@ -23,9 +23,7 @@ class Target(ListItem):
         return f"[red]{self._name}[/red]"
 
     def is_everything_caught(self) -> bool:
-        if not all(r["caught"] for _, r in self._target.items()):
-            return False
-        return True
+        return all(r["caught"] for _, r in self._target.items())
 
 
 class TargetList(Widget):
