@@ -24,8 +24,10 @@ class MutationStore:
         mutation: Mutation,
         generator: str,
         config: GeneratorConfig,
-        annotations: list[str] = (),
+        annotations: list[str] = None,
     ):
+        if annotations is None:
+            annotations = []
         path = self.base / f"{target.source.module}" / target.fullname
         path.mkdir(parents=True, exist_ok=True)
         if path not in self.counter:

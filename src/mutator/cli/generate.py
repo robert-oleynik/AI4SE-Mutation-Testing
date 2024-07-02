@@ -208,7 +208,7 @@ def generate(
                             ):
                                 dropped += 1
                                 if no_drop:
-                                    store.add(target, mutation, gen, c, ("dropped"))
+                                    store.add(target, mutation, gen, c, ["dropped"])
                             else:
                                 counter += 1
                                 store.add(target, mutation, gen, c)
