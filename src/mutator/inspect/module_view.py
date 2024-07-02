@@ -4,7 +4,9 @@ import pathlib
 
 from textual.app import ComposeResult, RenderResult
 from textual.containers import Horizontal
+from textual.screen import ModalScreen
 from textual.scroll_view import ScrollableContainer
+from textual.suggester import SuggestFromList
 from textual.widget import Widget
 from textual.widgets import Button, Input, ListItem, ListView, Pretty, Static, TextArea
 
@@ -190,6 +192,24 @@ class TargetView(Widget):
         self._header.select_prev()
         self.update(self._header._name, self._header._mutations)
 
+    def action_annotate(self):
+        if self._mutation is None:
+            return
+
+        def annotate(annotation: str) -> None:
+            annotation = annotation.strip()
+            if annotation == "":
+                return
+            file = (self._out_dir / self._mutation["file"]).with_suffix(".json")
+            metadata = json.load(open(file))
+            metadata["annotations"] = metadata.get("annotations", []) + [annotation]
+            self._annotation_editor.value = ", ".join(metadata["annotations"])
+            json.dump(metadata, open(file, "w"))
+            del metadata["mutation"]
+            self._info._pretty.update(metadata)
+
+        self.app.push_screen(AnnotateScreen(), annotate)
+
     def on_button_pressed(self, ev: Button.Pressed) -> None:
         if ev.button.name == "next":
             self.action_select_next()
@@ -220,3 +240,19 @@ class TargetView(Widget):
             Button("Next", name="next", classes="toolbar-button"),
             classes="target-view-toolbar",
         )
+
+
+class AnnotateScreen(ModalScreen[str]):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.app.update_all_annotations()
+        self.input = Input(
+            value="",
+            suggester=SuggestFromList(self.app.all_annotations),
+        )
+
+    def compose(self):
+        yield self.input
+
+    def on_input_submitted(self):
+        self.dismiss(self.input.value)
