@@ -24,6 +24,7 @@ class MutationStore:
         mutation: Mutation,
         generator: str,
         config: GeneratorConfig,
+        is_dropped: bool,
         annotations: list[str] = None,
     ):
         if annotations is None:
@@ -41,6 +42,7 @@ class MutationStore:
         )
         json.dump(
             {
+                "dropped": is_dropped,
                 "file": str(target.source.path),
                 "mutation": mutation.content.decode(),
                 "start": target.node.start_point,
@@ -61,7 +63,9 @@ class MutationStore:
 
     def list_mutation(
         self,
-    ) -> typing.Generator[tuple[str, str, pathlib.Path, pathlib.Path], None, None]:
+    ) -> typing.Generator[
+        tuple[str, str, pathlib.Path, pathlib.Path, dict], None, None
+    ]:
         for module in os.listdir(self.base):
             module_path = self.base.joinpath(module)
             if not module_path.is_dir():
@@ -75,4 +79,4 @@ class MutationStore:
                         )
                         source_file = metadata["file"]
                         file_path = target_path.joinpath(file)
-                        yield module, target, file_path, source_file
+                        yield module, target, file_path, source_file, metadata
