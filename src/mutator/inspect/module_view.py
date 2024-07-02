@@ -49,12 +49,11 @@ class TargetList(Widget):
 
 
 class TargetHeader(Widget):
-    def __init__(self, out_dir: pathlib.Path, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._name = None
         self._mutations = None
         self._selected = 0
-        self.out_dir = out_dir
         self.lbl_module = Static(classes="header-first")
         self.lbl_mutation = Static(classes="header-last")
 
@@ -90,10 +89,6 @@ class TargetHeader(Widget):
                 label += "[red]missed[/red]"
                 self.remove_class("valid")
                 self.add_class("invalid")
-            file = (self.out_dir / mutation["file"]).with_suffix(".json")
-            metadata = json.load(open(file))
-            for annotation in metadata.get("annotations", []):
-                label += ", " + annotation
             self.lbl_mutation.update(label)
 
     def select_next(self) -> None:
@@ -166,7 +161,7 @@ class TargetInfo(Widget):
 class TargetView(Widget):
     def __init__(self, base_dir: pathlib.Path, out_dir: pathlib.Path, **kwargs):
         super().__init__(**kwargs)
-        self._header = TargetHeader(out_dir, classes="target-header")
+        self._header = TargetHeader(classes="target-header")
         self._content = TargetDiff(base_dir, out_dir, classes="target-diff")
         self._log = TargetLog(classes="target-log")
         self._info = TargetInfo(out_dir, classes="target-info")
