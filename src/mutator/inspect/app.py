@@ -67,6 +67,11 @@ class InspectApp(App):
     }
     """
 
+    BINDINGS = [
+        ("left", "select_prev()", "Select Previous"),
+        ("right", "select_next()", "Select Next"),
+    ]
+
     def __init__(self, base_dir: pathlib.Path, out_dir: pathlib.Path):
         super().__init__()
         self.result = Result(path=out_dir / "test-result.json")
@@ -77,6 +82,12 @@ class InspectApp(App):
         target = ev.item
         if isinstance(target, Target):
             self.target_view.update(target._name, target._mutations)
+
+    def action_select_next(self):
+        self.target_view.action_select_next()
+
+    def action_select_prev(self):
+        self.target_view.action_select_prev()
 
     def on_mount(self) -> None:
         target = self.target_list.modules[0]

@@ -187,14 +187,19 @@ class TargetView(Widget):
         )
         self._mutation = mutation
 
+    def action_select_next(self):
+        self._header.select_next()
+        self.update(self._header._name, self._header._mutations)
+
+    def action_select_prev(self):
+        self._header.select_prev()
+        self.update(self._header._name, self._header._mutations)
+
     def on_button_pressed(self, ev: Button.Pressed) -> None:
         if ev.button.name == "next":
-            self._header.select_next()
+            self.action_select_next()
         elif ev.button.name == "prev":
-            self._header.select_prev()
-        else:
-            return
-        self.update(self._header._name, self._header._mutations)
+            self.action_select_prev()
 
     def on_input_changed(self, ev: Input.Changed) -> None:
         if ev.input.name == "annotation" and self._mutation is not None:
