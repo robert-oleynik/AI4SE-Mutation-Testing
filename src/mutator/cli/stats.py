@@ -30,13 +30,13 @@ def stats(out_dir, show_dropped):
         ["mutations", "dropped", "caught", "syntax_error", "timeout", "missed"]
     )
 
-    def insert_stat(group: dict, category: str):
-        group[category] = group.get(category, 0) + 1
+    def insert_stat(group: dict, category: str, value: int):
+        group[category] = group.get(category, 0) + value
 
-    def stat(category: str, generator: str):
+    def stat(category: str, generator: str, value=1):
         categories.add(category)
-        insert_stat(total, category)
-        insert_stat(per_generator.setdefault(generator, {}), category)
+        insert_stat(total, category, value)
+        insert_stat(per_generator.setdefault(generator, {}), category, value)
 
     test_result = Result.read(out_dir / "test-result.json")
     for module, target, path, _, metadata in store.list_mutation():
@@ -49,6 +49,8 @@ def stats(out_dir, show_dropped):
             stat("mutations", generator)
         for annotation in metadata.get("annotations", []):
             stat(annotation, generator)
+        for llm_stat, value in metadata.get("llm_stats", {}).items():
+            stat(f"llm_{llm_stat}", generator, value)
         if test_result:
             try:
                 result = test_result[module][target][path.stem]
@@ -75,4 +77,4 @@ def stats(out_dir, show_dropped):
         for category in categories:
             count = group.get(category, 0)
             category = category + ":"
-            print(f"{category:<20}{count:>20}")
+            print(f"{category:<30}{count:>10}")

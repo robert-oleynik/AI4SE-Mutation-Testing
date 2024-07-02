@@ -4,6 +4,7 @@ import pathlib
 import typing
 from dataclasses import asdict
 
+from .ai.llm_stats import LLMStats
 from .generator import GeneratorConfig, Mutation
 from .source import MutationTarget
 
@@ -25,6 +26,7 @@ class MutationStore:
         generator: str,
         config: GeneratorConfig,
         is_dropped: bool,
+        llm_stats: LLMStats,
         annotations: list[str] = None,
     ):
         if annotations is None:
@@ -49,6 +51,7 @@ class MutationStore:
                 "end": target.node.end_point,
                 "generator": generator,
                 "config": asdict(config),
+                "llm_stats": llm_stats.to_dict(),
                 "annotations": annotations,
             },
             open(path / f"{self.counter[path]}.json", "w"),

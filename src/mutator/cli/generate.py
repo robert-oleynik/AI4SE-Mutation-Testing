@@ -4,6 +4,7 @@ import traceback
 
 import click
 
+from ..ai.llm_stats import LLMStats
 from ..generator import (
     CommentRewriteGenerator,
     DocStringBasedGenerator,
@@ -190,6 +191,8 @@ def generate(
                         if conf not in configs:
                             raise GeneratorConfigNotFound(conf)
                         c = configs[conf]
+                        if not no_llm:
+                            mutator.ai.llm.llm.reset_stats()
                         try:
                             mutations = g.generate(target, c)
                         except Exception as e:
@@ -202,7 +205,10 @@ def generate(
                                 compare(tree.walk(), new_tree.walk(), False)[0]
                                 for tree in trees
                             )
-                            store.add(target, mutation, gen, c, is_dropped)
+                            llm_stats = (
+                                LLMStats() if no_llm else mutator.ai.llm.llm.stats
+                            )
+                            store.add(target, mutation, gen, c, is_dropped, llm_stats)
                             if is_dropped:
                                 dropped += 1
                             else:
