@@ -15,29 +15,47 @@ from ..store import MutationStore
     default=pathlib.Path("out", "mutations"),
     show_default=True,
 )
-def stats(out_dir):
+@click.option(
+    "--show-dropped",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Include stats of dropped mutations",
+)
+def stats(out_dir, show_dropped):
     store = MutationStore(out_dir)
     total = {}
     per_generator = {}
-    categories = set(["mutations", "caught", "syntax_error", "timeout", "missed"])
+    categories = set(
+        ["mutations", "dropped", "caught", "syntax_error", "timeout", "missed"]
+    )
 
-    def insert_stat(group: dict, category: str):
-        group[category] = group.get(category, 0) + 1
+    def insert_stat(group: dict, category: str, value: int):
+        group[category] = group.get(category, 0) + value
 
-    def stat(category: str, generator: str):
+    def stat(category: str, generator: str, value=1):
         categories.add(category)
-        insert_stat(total, category)
-        insert_stat(per_generator.setdefault(generator, {}), category)
+        insert_stat(total, category, value)
+        insert_stat(per_generator.setdefault(generator, {}), category, value)
 
     test_result = Result.read(out_dir / "test-result.json")
-    for module, target, path, _ in store.list_mutation():
-        metadata = json.load(open(path.with_suffix(".json")))
+    for module, target, path, _, metadata in store.list_mutation():
         generator = metadata["generator"]
-        stat("mutations", generator)
+        if metadata.get("dropped", False):
+            stat("dropped", generator)
+            if not show_dropped:
+                continue
+        else:
+            stat("mutations", generator)
         for annotation in metadata.get("annotations", []):
             stat(annotation, generator)
+        for llm_stat, value in metadata.get("llm_stats", {}).items():
+            stat(f"llm_{llm_stat}", generator, value)
         if test_result:
-            result = test_result[module][target][path.stem]
+            try:
+                result = test_result[module][target][path.stem]
+            except AttributeError:
+                continue
             syntax_error = result.get("syntax_error", False)
             timeout = result.get("timeout", False)
             caught = result.get("caught", False)
@@ -59,4 +77,4 @@ def stats(out_dir):
         for category in categories:
             count = group.get(category, 0)
             category = category + ":"
-            print(f"{category:<20}{count:>20}")
+            print(f"{category:<30}{count:>10}")

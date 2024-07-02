@@ -8,6 +8,7 @@ import transformers
 
 from .limiter.limiter import Limiter, OutputStoppingCriteria
 from .limiter.special_tokens import SpecialTokensLimiter
+from .llm_stats import LLMStats
 
 MAX_TOKEN_COUNT = 2048
 
@@ -21,6 +22,7 @@ class LLM:
         checkpoint: pathlib.Path | None = None,
         **generate_kwargs,
     ):
+        self.stats = LLMStats()
         self.device = torch.device(device)
         self.tokenizer = transformers.GemmaTokenizer.from_pretrained(model_id)
         if checkpoint is not None:
@@ -36,16 +38,21 @@ class LLM:
         self.limiter_classes = limiter_classes or []
         self.generate_kwargs = generate_kwargs
 
+    def reset_stats(self):
+        self.stats = LLMStats()
+
     def generate(
         self,
         inputs,
         transform_result: Callable[[str], str],
         **extra_args,
     ) -> list[str]:
-        token_count = inputs["input_ids"].shape[1]
-        if token_count >= MAX_TOKEN_COUNT:
-            print(f"\nwarning: prompt too long ({token_count}), skip")
+        input_token_count = inputs["input_ids"].shape[1]
+        if input_token_count >= MAX_TOKEN_COUNT:
+            print(f"\nwarning: prompt too long ({input_token_count}), skip")
+            self.stats.input_too_long_count += 1
             return []
+        self.stats.generate_count += 1
 
         bos_len = len(self.tokenizer.bos_token)
 
@@ -72,6 +79,7 @@ class LLM:
                 outputs = self.model.generate(**inputs, **kwargs)
         except torch.cuda.OutOfMemoryError:
             print("\nwarning: caught out of memory error, skip")
+            self.stats.out_of_memory_count += 1
             return []
 
         def decode(output):
@@ -89,6 +97,15 @@ class LLM:
                     break
             return result
 
+        for output in outputs:
+            self.stats.input_token_count += input_token_count
+            null_token_indices = torch.where(output == 0)[0]
+            output_token_count = (
+                len(output)
+                if len(null_token_indices) == 0
+                else null_token_indices[0].item()
+            )
+            self.stats.output_token_count += output_token_count
         return [decode(output) for output in outputs]
 
     def prompt(

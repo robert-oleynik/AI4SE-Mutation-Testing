@@ -4,6 +4,7 @@ import pathlib
 import typing
 from dataclasses import asdict
 
+from .ai.llm_stats import LLMStats
 from .generator import GeneratorConfig, Mutation
 from .source import MutationTarget
 
@@ -24,6 +25,8 @@ class MutationStore:
         mutation: Mutation,
         generator: str,
         config: GeneratorConfig,
+        is_dropped: bool,
+        llm_stats: LLMStats,
         annotations: list[str] = None,
     ):
         if annotations is None:
@@ -41,12 +44,14 @@ class MutationStore:
         )
         json.dump(
             {
+                "dropped": is_dropped,
                 "file": str(target.source.path),
                 "mutation": mutation.content.decode(),
                 "start": target.node.start_point,
                 "end": target.node.end_point,
                 "generator": generator,
                 "config": asdict(config),
+                "llm_stats": llm_stats.to_dict(),
                 "annotations": annotations,
             },
             open(path / f"{self.counter[path]}.json", "w"),
@@ -61,7 +66,9 @@ class MutationStore:
 
     def list_mutation(
         self,
-    ) -> typing.Generator[tuple[str, str, pathlib.Path, pathlib.Path], None, None]:
+    ) -> typing.Generator[
+        tuple[str, str, pathlib.Path, pathlib.Path, dict], None, None
+    ]:
         for module in os.listdir(self.base):
             module_path = self.base.joinpath(module)
             if not module_path.is_dir():
@@ -75,4 +82,4 @@ class MutationStore:
                         )
                         source_file = metadata["file"]
                         file_path = target_path.joinpath(file)
-                        yield module, target, file_path, source_file
+                        yield module, target, file_path, source_file, metadata

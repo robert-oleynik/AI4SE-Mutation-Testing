@@ -43,12 +43,21 @@ from .spinner import Spinner
     show_default=True,
     help="Run git reset --hard before each run of the test suite",
 )
-def test(out_dir, project, filter, timeout, git_reset):
+@click.option(
+    "--test-dropped",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Also test dropped mutations",
+)
+def test(out_dir, project, filter, timeout, git_reset, test_dropped):
     filters = Filter(filter)
 
     mutation = {}
     store = MutationStore(out_dir)
-    for module, target, path, source in store.list_mutation():
+    for module, target, path, source, metadata in store.list_mutation():
+        if not test_dropped and metadata.get("dropped", False):
+            continue
         if module not in mutation:
             mutation[module] = {}
         if target not in mutation[module]:
