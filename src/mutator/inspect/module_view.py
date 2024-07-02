@@ -177,8 +177,8 @@ class TargetView(Widget):
         self._content.update(mutation)
         self._log.update(mutation)
         self._info.update(mutation)
-        self._annotation_editor.value = json.dumps(
-            self._info._meta.get("annotations", ["_"])
+        self._annotation_editor.value = ", ".join(
+            self._info._meta.get("annotations", [])
         )
         self._mutation = mutation
 
@@ -198,19 +198,15 @@ class TargetView(Widget):
 
     def on_input_changed(self, ev: Input.Changed) -> None:
         if ev.input.name == "annotation" and self._mutation is not None:
-            try:
-                file = (self._out_dir / self._mutation["file"]).with_suffix(".json")
-                metadata = json.load(open(file))
-                metadata["annotations"] = json.loads(ev.input.value)
-                json.dump(metadata, open(file, "w"))
-                del metadata["mutation"]
-                self._info._pretty.update(metadata)
-
-                ev.input.remove_class("invalid")
-                ev.input.add_class("valid")
-            except json.JSONDecodeError:
-                ev.input.remove_class("valid")
-                ev.input.add_class("invalid")
+            annotations = [
+                annotation.strip() for annotation in ev.input.value.split(",")
+            ]
+            file = (self._out_dir / self._mutation["file"]).with_suffix(".json")
+            metadata = json.load(open(file))
+            metadata["annotations"] = annotations
+            json.dump(metadata, open(file, "w"))
+            del metadata["mutation"]
+            self._info._pretty.update(metadata)
 
     def compose(self) -> ComposeResult:
         yield self._header
