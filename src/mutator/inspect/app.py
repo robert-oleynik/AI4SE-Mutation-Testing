@@ -55,6 +55,10 @@ class InspectApp(App):
     .toolbar-spacer {
         width: 1;
     }
+    .annotation-input {
+        width: 2fr;
+        border: solid white;
+    }
     .valid {
         border: green;
     }

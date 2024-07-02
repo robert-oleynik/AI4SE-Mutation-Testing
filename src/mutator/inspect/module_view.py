@@ -6,7 +6,7 @@ from textual.app import ComposeResult, RenderResult
 from textual.containers import Horizontal
 from textual.scroll_view import ScrollableContainer
 from textual.widget import Widget
-from textual.widgets import Button, ListItem, ListView, Pretty, Static, TextArea
+from textual.widgets import Button, Input, ListItem, ListView, Pretty, Static, TextArea
 
 from ..result import Result
 
@@ -147,12 +147,14 @@ class TargetInfo(Widget):
         super().__init__(**kwargs)
         self.out_dir = out_dir
         self._pretty = Pretty(None)
+        self._meta = {}
 
     def update(self, target):
         try:
             file = (self.out_dir / target["file"]).with_suffix(".json")
             metadata = json.load(open(file))
             del metadata["mutation"]
+            self._meta = metadata
             self._pretty.update(metadata)
         except FileNotFoundError as e:
             self._pretty.update(e)
@@ -168,6 +170,11 @@ class TargetView(Widget):
         self._content = TargetDiff(base_dir, out_dir, classes="target-diff")
         self._log = TargetLog(classes="target-log")
         self._info = TargetInfo(out_dir, classes="target-info")
+        self._annotation_editor = Input(
+            value="", name="annotation", classes="annotation-input valid"
+        )
+        self._mutation = None
+        self._out_dir = out_dir
 
     def update(self, name: str, mutations) -> None:
         self._header.update(name, mutations)
@@ -175,6 +182,10 @@ class TargetView(Widget):
         self._content.update(mutation)
         self._log.update(mutation)
         self._info.update(mutation)
+        self._annotation_editor.value = json.dumps(
+            self._info._meta.get("annotations", ["_"])
+        )
+        self._mutation = mutation
 
     def on_button_pressed(self, ev: Button.Pressed) -> None:
         if ev.button.name == "next":
@@ -185,6 +196,22 @@ class TargetView(Widget):
             return
         self.update(self._header._name, self._header._mutations)
 
+    def on_input_changed(self, ev: Input.Changed) -> None:
+        if ev.input.name == "annotation" and self._mutation is not None:
+            try:
+                file = (self._out_dir / self._mutation["file"]).with_suffix(".json")
+                metadata = json.load(open(file))
+                metadata["annotations"] = json.loads(ev.input.value)
+                json.dump(metadata, open(file, "w"))
+                del metadata["mutation"]
+                self._info._pretty.update(metadata)
+
+                ev.input.remove_class("invalid")
+                ev.input.add_class("valid")
+            except json.JSONDecodeError:
+                ev.input.remove_class("valid")
+                ev.input.add_class("invalid")
+
     def compose(self) -> ComposeResult:
         yield self._header
         yield self._content
@@ -192,6 +219,7 @@ class TargetView(Widget):
         yield Horizontal(
             Button("Prev", name="prev", classes="toolbar-button"),
             Static(" ", classes="toolbar-spacer"),
+            self._annotation_editor,
             Static(" ", classes="toolbar-spacer"),
             Button("Next", name="next", classes="toolbar-button"),
             classes="target-view-toolbar",
