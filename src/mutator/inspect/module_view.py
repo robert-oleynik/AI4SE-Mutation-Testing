@@ -31,7 +31,7 @@ class TargetList(Widget):
         super().__init__(**kwargs)
 
         def mutations_sort_key(item):
-            index, mutation = item
+            _, mutation = item
             return mutation["caught"]
 
         targets = [
@@ -70,8 +70,10 @@ class TargetHeader(Widget):
 
     def _update(self) -> None:
         if self._mutations is not None and self._selected < len(self._mutations):
-            index, mutation = self._mutations[self._selected]
-            self.lbl_module.update(f"[{index}/{len(self._mutations)}]  {self._name}")
+            id, mutation = self._mutations[self._selected]
+            self.lbl_module.update(
+                f"[{int(id) + 1}/{len(self._mutations)}]  {self._name}"
+            )
             label = ""
             if mutation["caught"]:
                 label += "[green]"
@@ -169,7 +171,7 @@ class TargetView(Widget):
 
     def update(self, name: str, mutations) -> None:
         self._header.update(name, mutations)
-        index, mutation = mutations[self._header._selected]
+        _, mutation = mutations[self._header._selected]
         self._content.update(mutation)
         self._log.update(mutation)
         self._info.update(mutation)
@@ -189,6 +191,7 @@ class TargetView(Widget):
         yield Horizontal(self._log, self._info)
         yield Horizontal(
             Button("Prev", name="prev", classes="toolbar-button"),
+            Static(" ", classes="toolbar-spacer"),
             Static(" ", classes="toolbar-spacer"),
             Button("Next", name="next", classes="toolbar-button"),
             classes="target-view-toolbar",
