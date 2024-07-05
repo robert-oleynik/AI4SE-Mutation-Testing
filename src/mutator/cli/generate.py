@@ -15,8 +15,8 @@ from ..generator import (
     GeneratorNotFound,
     Identity,
     InfillingGenerator,
-    RepeatGenerator,
     Prompt,
+    RepeatGenerator,
 )
 from ..source import Filter, SourceFile
 from ..store import MutationStore
@@ -55,8 +55,8 @@ configs = {
     "experimental": GeneratorConfig(
         {
             "do_sample": True,
-            "num_beams": 2,
-            "num_return_sequences": 2,
+            "num_beams": 4,
+            "num_return_sequences": 4,
             "max_new_tokens": 2048,
         },
         tries_per_target=1,
