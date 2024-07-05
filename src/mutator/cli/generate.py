@@ -16,6 +16,7 @@ from ..generator import (
     Identity,
     InfillingGenerator,
     RepeatGenerator,
+    Prompt,
 )
 from ..source import Filter, SourceFile
 from ..store import MutationStore
@@ -30,6 +31,7 @@ generators = {
     "infilling": InfillingGenerator(),
     "repeat": RepeatGenerator(),
     "comment_rewrite": CommentRewriteGenerator(),
+    "prompt": Prompt(),
 }
 
 configs = {

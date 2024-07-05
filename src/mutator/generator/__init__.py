@@ -5,6 +5,7 @@ from .full_body_based import FullBodyBasedGenerator
 from .generator import Mutation, MutationGenerator
 from .identity import Identity
 from .infilling import InfillingGenerator
+from .prompt import Prompt
 from .repeat import RepeatGenerator
 from .rewrite import CommentRewriteGenerator
 
@@ -42,6 +43,7 @@ __all__ = [
     "Mutation",
     "MutationGenerator",
     "RepeatGenerator",
+    "Prompt",
     "configs",
     "generators",
 ]
