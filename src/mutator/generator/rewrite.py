@@ -43,12 +43,12 @@ class CommentRewriteGenerator(SimpleMutationGenerator):
             "<|fim_prefix|>",
             "<|file_separator|>",
             "<pad>",
+            "#",
+            '"""',
         ]
         forbidden_tokens = [
-            [token]
-            for token in mutator.ai.llm.llm.tokenizer.encode(
-                forbidden_tokens, add_special_tokens=False
-            )
+            mutator.ai.llm.llm.tokenizer.encode(t, add_special_tokens=False)
+            for t in forbidden_tokens
         ]
 
         model_kwargs = {
