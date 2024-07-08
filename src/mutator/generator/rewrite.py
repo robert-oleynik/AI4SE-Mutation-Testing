@@ -38,11 +38,6 @@ class CommentRewriteGenerator(SimpleMutationGenerator):
             return result[strip_len:]
 
         forbidden_tokens = [
-            "<|fim_middle|>",
-            "<|fim_suffix|>",
-            "<|fim_prefix|>",
-            "<|file_separator|>",
-            "<pad>",
             "#",
             '"""',
         ]

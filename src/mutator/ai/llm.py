@@ -60,7 +60,14 @@ class LLM:
             return transform_result(result[bos_len:])
 
         limiters = [limiter_class() for limiter_class in self.limiter_classes]
-        stop_tokens = [self.tokenizer.eos_token, "<|file_separator|>"]
+        stop_tokens = [
+            self.tokenizer.eos_token,
+            "<|file_separator|>",
+            "<pad>",
+            "<|fim_prefix|>",
+            "<|fim_suffix|>",
+            "<|fim_middle|>",
+        ]
         limiters.append(SpecialTokensLimiter(stop_tokens))
         kwargs = {
             **self.generate_kwargs,

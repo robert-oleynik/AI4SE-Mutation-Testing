@@ -45,23 +45,7 @@ class Prompt(SimpleMutationGenerator):
         def transform(result: str) -> str:
             return result[strip_len:]
 
-        forbidden_tokens = [
-            "<|fim_middle|>",
-            "<|fim_suffix|>",
-            "<|fim_prefix|>",
-            "<|file_separator|>",
-            "<pad>",
-        ]
-        forbidden_tokens = [
-            mutator.ai.llm.llm.tokenizer.encode(t, add_special_tokens=False)
-            for t in forbidden_tokens
-        ]
-        model_kwargs = {
-            **config.model_kwargs,
-            "bad_words_ids": forbidden_tokens,
-        }
-
         results = mutator.ai.llm.prompt(
-            prompt, transform_result=transform, **model_kwargs
+            prompt, transform_result=transform, **config.model_kwargs
         )
         return Mutation.map(results)
