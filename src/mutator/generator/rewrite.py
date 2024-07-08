@@ -37,24 +37,15 @@ class CommentRewriteGenerator(SimpleMutationGenerator):
         def transform(result: str) -> str:
             return result[strip_len:]
 
-        forbidden_tokens = [
-            "#",
-            '"""',
-        ]
-        forbidden_tokens = [
-            mutator.ai.llm.llm.tokenizer.encode(t, add_special_tokens=False)
-            for t in forbidden_tokens
-        ]
-
         model_kwargs = {
             **config.model_kwargs,
             "length_penalty": 16,
-            "bad_words_ids": forbidden_tokens,
         }
 
         results = mutator.ai.llm.llm.prompt(
             prompt,
             transform_result=transform,
+            bad_words=["#", '""""'],
             **model_kwargs,
         )
         return Mutation.map(results)
