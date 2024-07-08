@@ -27,7 +27,7 @@ def stats(out_dir, show_dropped):
     total = {}
     per_generator = {}
     categories = set(
-        ["mutations", "dropped", "caught", "syntax_error", "timeout", "missed"]
+        ["mutations", "kept", "dropped", "caught", "syntax_error", "timeout", "missed"]
     )
 
     def insert_stat(group: dict, category: str, value: int):
@@ -41,12 +41,13 @@ def stats(out_dir, show_dropped):
     test_result = Result.read(out_dir / "test-result.json")
     for module, target, path, _, metadata in store.list_mutation():
         generator = metadata["generator"]
+        stat("mutations", generator)
         if metadata.get("dropped", False):
             stat("dropped", generator)
             if not show_dropped:
                 continue
         else:
-            stat("mutations", generator)
+            stat("kept", generator)
         for annotation in metadata.get("annotations", []):
             stat(annotation, generator)
         for llm_stat, value in metadata.get("llm_stats", {}).items():
