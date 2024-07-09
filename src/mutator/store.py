@@ -42,6 +42,10 @@ class MutationStore:
             + mutation.content
             + target.source.content[target.node.end_byte :]
         )
+        if mutation.llm_result is None:
+            llm_metadata = {}
+        else:
+            llm_metadata = {"llm": asdict(mutation.llm_result)}
         json.dump(
             {
                 "dropped": is_dropped,
@@ -53,6 +57,7 @@ class MutationStore:
                 "config": asdict(config),
                 "llm_stats": llm_stats.to_dict(),
                 "annotations": annotations,
+                **llm_metadata,
             },
             open(path / f"{self.counter[path]}.json", "w"),
         )

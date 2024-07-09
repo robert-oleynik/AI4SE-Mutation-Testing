@@ -150,7 +150,9 @@ class TargetInfo(Widget):
         try:
             file = (self.out_dir / target["file"]).with_suffix(".json")
             metadata = json.load(open(file))
-            del metadata["mutation"]
+            for key in ["mutation", "llm"]:
+                if key in metadata:
+                    del metadata[key]
             self._meta = metadata
             self._pretty.update(metadata)
         except FileNotFoundError as e:

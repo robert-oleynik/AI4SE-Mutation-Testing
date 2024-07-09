@@ -6,9 +6,9 @@ from collections.abc import Callable
 import torch
 import transformers
 
-from ..helper.debug import debug_print
 from .limiter.limiter import Limiter, OutputStoppingCriteria
 from .limiter.special_tokens import SpecialTokensLimiter
+from .llm_result import LLMResult
 from .llm_stats import LLMStats
 
 MAX_TOKEN_COUNT = 2048
@@ -44,10 +44,11 @@ class LLM:
 
     def generate(
         self,
-        inputs,
+        prompt: str,
+        inputs: dict,
         transform_result: Callable[[str], str],
         **extra_args,
-    ) -> list[str]:
+    ) -> list[LLMResult]:
         input_token_count = inputs["input_ids"].shape[1]
         if input_token_count >= MAX_TOKEN_COUNT:
             print(f"\nwarning: prompt too long ({input_token_count}), skip")
@@ -101,7 +102,9 @@ class LLM:
             return []
 
         def decode(output):
-            result = transform(self.tokenizer.decode(output))
+            output = self.tokenizer.decode(output)
+            transformed = transform(output)
+            result = transformed
             local_limiters = limiters.copy()
             while True:
                 for limiter in local_limiters:
@@ -113,7 +116,7 @@ class LLM:
                 else:
                     # no limiter trimmed anything
                     break
-            return result
+            return LLMResult(prompt, output, transformed, result)
 
         for output in outputs:
             self.stats.input_token_count += input_token_count
@@ -128,9 +131,9 @@ class LLM:
 
     def prompt(
         self, prompt: str, transform_result: Callable[[str], str], **extra_args
-    ) -> list[str]:
+    ) -> list[LLMResult]:
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
-        results = self.generate(inputs, transform_result, **extra_args)
+        results = self.generate(prompt, inputs, transform_result, **extra_args)
         gc.collect()
         return results
 
@@ -140,7 +143,7 @@ class LLM:
         transform_result: Callable[[str], str],
         keep_prefix_len: int,
         **extra_args,
-    ) -> list[str]:
+    ) -> list[LLMResult]:
         inputs = self.tokenizer(prompt, return_tensors="pt")
         num_tokens = inputs.input_ids.shape[1]
         prefix_len = len(self.tokenizer(prompt[:keep_prefix_len]).input_ids)
@@ -148,6 +151,7 @@ class LLM:
         for key in inputs.keys():
             inputs[key] = inputs[key][:, :index]
         results = self.generate(
+            prompt,
             inputs.to(self.device),
             transform_result=transform_result,
             **extra_args,

@@ -59,4 +59,4 @@ class Prompt(SimpleMutationGenerator):
                 ]
             )[indent:]
 
-        return Mutation.map([add_indent(result) for result in results])
+        return [Mutation(add_indent(result.final), result) for result in results]
