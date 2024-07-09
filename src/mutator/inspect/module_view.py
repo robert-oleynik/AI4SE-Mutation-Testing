@@ -93,12 +93,8 @@ class TargetHeader(Widget):
                 self.add_class("invalid")
             self.lbl_mutation.update(label)
 
-    def select_next(self) -> None:
-        self._selected = (self._selected + 1) % len(self._mutations)
-        self._update()
-
-    def select_prev(self) -> None:
-        self._selected = (self._selected - 1) % len(self._mutations)
+    def cycle_selected(self, offset: int) -> None:
+        self._selected = (self._selected + offset) % len(self._mutations)
         self._update()
 
     def compose(self) -> ComposeResult:
@@ -107,28 +103,58 @@ class TargetHeader(Widget):
 
 
 class TargetDiff(TextArea):
+    LLM_RESULT_KEYS = [None, "prompt", "output", "transformed", "final"]
+
     def __init__(self, base_dir: pathlib.Path, out_dir: pathlib.Path, **kwargs):
         super().__init__("", read_only=True, **kwargs)
         self.base_dir = base_dir
         self.out_dir = out_dir
+        self.llm_result_stage = 0
+
+    def llm_result_key(self):
+        return self.LLM_RESULT_KEYS[self.llm_result_stage]
+
+    def cycle_llm_result_stage(self, offset: int):
+        self.llm_result_stage = (self.llm_result_stage + offset) % len(
+            self.LLM_RESULT_KEYS
+        )
 
     def update(self, target):
         try:
-            file = self.out_dir / target["file"]
-            file_lines = list(
-                map(lambda line: line.decode(), file.read_bytes().splitlines(True))
+            text = (
+                self.get_diff(target)
+                if self.llm_result_key() is None
+                else self.get_llm_result_stage(target)
             )
-            source = self.base_dir / "src" / target["source"]
-            source_lines = list(
-                map(lambda line: line.decode(), source.read_bytes().splitlines(True))
-            )
-
-            lines = difflib.unified_diff(
-                source_lines, file_lines, fromfile=f"{file}", tofile=f"{source}"
-            )
-            self.load_text("".join(lines))
+            self.load_text(text)
         except FileNotFoundError as e:
             self.load_text(str(e))
+
+    def get_diff(self, target):
+        file = self.out_dir / target["file"]
+        file_lines = list(
+            map(lambda line: line.decode(), file.read_bytes().splitlines(True))
+        )
+        source = self.base_dir / "src" / target["source"]
+        source_lines = list(
+            map(lambda line: line.decode(), source.read_bytes().splitlines(True))
+        )
+
+        lines = difflib.unified_diff(
+            source_lines, file_lines, fromfile=f"{file}", tofile=f"{source}"
+        )
+        return "".join(lines)
+
+    def get_llm_result_stage(self, target):
+        file = (self.out_dir / target["file"]).with_suffix(".json")
+        metadata = json.load(open(file))
+        try:
+            return metadata["llm"][self.llm_result_key()]
+        except KeyError:
+            return (
+                f"The llm result stage {self.llm_result_key()} "
+                + "is not defined for this mutation"
+            )
 
 
 class TargetLog(TextArea):
@@ -186,13 +212,16 @@ class TargetView(Widget):
         )
         self._mutation = mutation
 
-    def action_select_next(self):
-        self._header.select_next()
+    def update_with_current(self):
         self.update(self._header._name, self._header._mutations)
 
-    def action_select_prev(self):
-        self._header.select_prev()
-        self.update(self._header._name, self._header._mutations)
+    def action_cycle_mutation(self, offset: int):
+        self._header.cycle_selected(offset)
+        self.update_with_current()
+
+    def action_cycle_llm_result_stage(self, offset: int):
+        self._content.cycle_llm_result_stage(offset)
+        self.update_with_current()
 
     def action_annotate(self):
         if self._mutation is None:
@@ -214,9 +243,9 @@ class TargetView(Widget):
 
     def on_button_pressed(self, ev: Button.Pressed) -> None:
         if ev.button.name == "next":
-            self.action_select_next()
+            self.action_select_next_mutation()
         elif ev.button.name == "prev":
-            self.action_select_prev()
+            self.action_select_prev_mutation()
 
     def on_input_changed(self, ev: Input.Changed) -> None:
         if ev.input.name == "annotation" and self._mutation is not None:
