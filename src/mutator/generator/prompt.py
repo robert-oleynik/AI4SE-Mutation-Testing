@@ -1,3 +1,4 @@
+import autopep8
 import tree_sitter as ts
 
 from ..source import MutationTarget
@@ -30,7 +31,7 @@ class Prompt(SimpleMutationGenerator):
         context = Context(node)
         prompt = _prompt + "\n\n"
         # TODO: Remove indent from function body
-        prompt += "Source:\n" + node.text.decode() + "\n\n"
+        prompt += "Source:\n" + autopep8.fix_code(node.text.decode()) + "\n\n"
         prompt += "Mutation:\n" + context.fn_signature() + "\n"
         return prompt
 
@@ -39,6 +40,7 @@ class Prompt(SimpleMutationGenerator):
     ) -> list[Mutation]:
         import mutator.ai.llm
 
+        indent = target.node.start_point[1]
         prompt = self.generate_prompt(target.node)
         strip_len = len(prompt) - (len(Context(target.node).fn_signature()) + 1)
 
@@ -61,7 +63,16 @@ class Prompt(SimpleMutationGenerator):
             "bad_words_ids": forbidden_tokens,
         }
 
-        results = mutator.ai.llm.prompt(
+        results = mutator.ai.llm.llm.prompt(
             prompt, transform_result=transform, **model_kwargs
         )
-        return Mutation.map(results)
+
+        def add_indent(input: str) -> str:
+            return "".join(
+                [
+                    " " * indent + line if line != "\n" else "\n"
+                    for line in input.splitlines(True)
+                ]
+            )[indent:]
+
+        return Mutation.map([add_indent(result) for result in results])
