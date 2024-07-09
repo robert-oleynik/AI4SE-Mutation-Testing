@@ -5,36 +5,25 @@ import typing
 import click
 from git import Repo
 
+from ..cli.generate import generators
 from ..collect import TestMods
-from ..generator import (
-    CommentRewriteGenerator,
-    DocStringBasedGenerator,
-    InfillingGenerator,
-)
 from ..generator.generator import NoMutationPossible
 from ..helper.metrics import dstrloc, locfrac, strloc
-
-formatter = {
-    "rewrite": CommentRewriteGenerator(),
-    "doc_string": DocStringBasedGenerator(),
-    "infilling": InfillingGenerator(),
-}
 
 strategies = {"test_mods": TestMods()}
 
 
 def generate_samples(
     bare_repos: list[pathlib.Path],
-    git: list[pathlib.Path],
+    repos: list[pathlib.Path],
     strategy: list[str],
-    formatter_names: list[str],
+    generator_names: list[str],
 ) -> typing.Generator[dict, None, None]:
     def _gen():
-        global formatter
-        repos = list(map(lambda g: (True, g), bare_repos)) + list(
-            map(lambda g: (False, g), git)
+        all_repos = list(map(lambda g: (True, g), bare_repos)) + list(
+            map(lambda g: (False, g), repos)
         )
-        for bare, path in repos:
+        for bare, path in all_repos:
             repo = Repo.init(path, bare=bare)
             counter = 0
             for s in strategy:
@@ -42,9 +31,9 @@ def generate_samples(
                     continue
                 for sample in strategies[s].apply(repo):
                     counter += 1
-                    for name in formatter_names:
+                    for name in generator_names:
                         try:
-                            s = sample.to_dict(formatter[name])
+                            s = sample.to_dict(generators[name])
                             s["formatter"] = name
                             yield s
                         except NoMutationPossible:
@@ -70,8 +59,8 @@ def generate_samples(
     help="Bare git repositories to extract mutations from",
 )
 @click.option(
-    "-g",
-    "--git",
+    "-r",
+    "--repository",
     multiple=True,
     type=pathlib.Path,
     help="Git repositories to extract mutations from",
@@ -97,23 +86,23 @@ def generate_samples(
 @click.option("--max-prompt-loc", default=1024, type=int, help="Max LOC for prompt")
 @click.option("-s", "--strategy", multiple=True, default=list(strategies.keys()))
 @click.option(
-    "-f",
-    "--formatter",
+    "-g",
+    "--generator",
     multiple=True,
-    type=click.Choice(formatter.keys()),
-    default=list(formatter.keys()),
+    type=click.Choice(generators.keys()),
+    default=list(generators.keys()),
 )
 def collect(
     out_dir,
     bare,
-    git,
+    repository,
     strategy,
     max_dloc,
     max_loc_ratio,
     min_prompt_loc,
     max_prompt_loc,
     update,
-    formatter,
+    generator,
 ):
     import datasets
 
@@ -130,7 +119,7 @@ def collect(
         data = datasets.load_from_disk(dataset_path=(out_dir / "data").__str__())
     else:
         data = datasets.Dataset.from_generator(
-            generate_samples(bare, git, strategy, formatter),
+            generate_samples(bare, repository, strategy, generator),
             keep_in_memory=True,
             cache_dir=cache_dir,
         )

@@ -6,6 +6,7 @@ from collections.abc import Callable
 import torch
 import transformers
 
+from ..helper.debug import debug_print
 from .limiter.limiter import Limiter, OutputStoppingCriteria
 from .limiter.special_tokens import SpecialTokensLimiter
 from .llm_stats import LLMStats
@@ -60,11 +61,28 @@ class LLM:
             return transform_result(result[bos_len:])
 
         limiters = [limiter_class() for limiter_class in self.limiter_classes]
-        stop_tokens = [self.tokenizer.eos_token, "<|file_separator|>"]
+        bad_words = [
+            "<pad>",
+            "<|fim_prefix|>",
+            "<|fim_suffix|>",
+            "<|fim_middle|>",
+            *extra_args.get("bad_words", []),
+        ]
+        bad_words = list(set(bad_words))
+        bad_word_ids = [
+            self.tokenizer.encode(word, add_special_tokens=False) for word in bad_words
+        ]
+        bad_word_ids.extend(extra_args.get("bad_word_ids", []))
+        stop_tokens = [
+            self.tokenizer.eos_token,
+            "<|file_separator|>",
+            *bad_words,
+        ]
         limiters.append(SpecialTokensLimiter(stop_tokens))
         kwargs = {
             **self.generate_kwargs,
             **extra_args,
+            "bad_words_ids": bad_word_ids,
             "stopping_criteria": transformers.StoppingCriteriaList(
                 [
                     OutputStoppingCriteria(limiter, self.tokenizer, transform)

@@ -73,7 +73,7 @@ class TargetHeader(Widget):
         if self._mutations is not None and self._selected < len(self._mutations):
             id, mutation = self._mutations[self._selected]
             self.lbl_module.update(
-                f"[{int(id) + 1}/{len(self._mutations)}]  {self._name}"
+                f"[{self._selected + 1}/{len(self._mutations)}] (id {id}) {self._name}"
             )
             label = ""
             if mutation["caught"]:

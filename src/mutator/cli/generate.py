@@ -42,6 +42,14 @@ configs = {
         },
         tries_per_target=1,
     ),
+    "multi_sample": GeneratorConfig(
+        {
+            "do_sample": True,
+            "num_return_sequences": 3,
+            "max_new_tokens": 4096,
+        },
+        tries_per_target=8,
+    ),
     "beam_search": GeneratorConfig(
         {
             "do_sample": True,

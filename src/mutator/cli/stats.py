@@ -26,31 +26,41 @@ def stats(out_dir, show_dropped):
     store = MutationStore(out_dir)
     total = {}
     per_generator = {}
-    categories = set(
-        ["mutations", "dropped", "caught", "syntax_error", "timeout", "missed"]
-    )
+    count_categories = [
+        "mutations",
+        "dropped",
+        "kept",
+        "missed",
+        "caught",
+        "syntax_error",
+        "timeout",
+    ]
+    llm_categories = set()
+    annotation_categories = set()
 
     def insert_stat(group: dict, category: str, value: int):
         group[category] = group.get(category, 0) + value
 
     def stat(category: str, generator: str, value=1):
-        categories.add(category)
         insert_stat(total, category, value)
         insert_stat(per_generator.setdefault(generator, {}), category, value)
 
     test_result = Result.read(out_dir / "test-result.json")
     for module, target, path, _, metadata in store.list_mutation():
         generator = metadata["generator"]
+        stat("mutations", generator)
         if metadata.get("dropped", False):
             stat("dropped", generator)
             if not show_dropped:
                 continue
         else:
-            stat("mutations", generator)
+            stat("kept", generator)
         for annotation in metadata.get("annotations", []):
+            annotation_categories.add(annotation)
             stat(annotation, generator)
         for llm_stat, value in metadata.get("llm_stats", {}).items():
-            stat(f"llm_{llm_stat}", generator, value)
+            llm_categories.add(llm_stat)
+            stat(llm_stat, generator, value)
         if test_result:
             try:
                 result = test_result[module][target][path.stem]
@@ -70,11 +80,20 @@ def stats(out_dir, show_dropped):
                 if is_category:
                     stat(category, generator)
 
-    categories = list(sorted(categories))
+    category_sections = [
+        ("counts", count_categories),
+        ("llm", list(sorted(llm_categories))),
+        ("annotations", list(sorted(annotation_categories))),
+    ]
     for name, group in [("total", total), *sorted(per_generator.items())]:
         name = f" {name} "
         print(f"{name:=^40}")
-        for category in categories:
-            count = group.get(category, 0)
-            category = category + ":"
-            print(f"{category:<30}{count:>10}")
+        for section, annotation_categories in category_sections:
+            if len(annotation_categories) == 0:
+                continue
+            section = f" {section} "
+            print(f"{section:-^40}")
+            for category in annotation_categories:
+                count = group.get(category, 0)
+                category = category + ":"
+                print(f"{category:<30}{count:>10}")
