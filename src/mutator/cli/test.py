@@ -10,14 +10,14 @@ from ..store import MutationStore
 from .spinner import Spinner
 
 
-@click.command()
+@click.command(help="Runs the hole test suite for all mutations.")
 @click.option(
     "-o",
     "--out-dir",
     default=pathlib.Path("out", "mutations"),
     type=pathlib.Path,
     show_default=True,
-    help="Directory used to store mutations",
+    help="Directory to read mutations from and to store.",
 )
 @click.option(
     "-p",
@@ -25,30 +25,30 @@ from .spinner import Spinner
     default=pathlib.Path("."),
     type=pathlib.Path,
     show_default=True,
-    help="Project to run tests on",
+    help="Path to project to run tests on.",
 )
 @click.option(
     "-f",
     "--filter",
     multiple=True,
-    help="Specify select filter for identifying mutations",
+    help="Specify select filter for identifying mutations.",
 )
 @click.option(
-    "-t", "--timeout", type=int, default=60, help="Test suite timeout in seconds"
+    "-t", "--timeout", type=int, default=60, help="Test suite timeout in seconds."
 )
 @click.option(
     "--git-reset",
     is_flag=True,
     default=False,
     show_default=True,
-    help="Run git reset --hard before each run of the test suite",
+    help="Run git reset --hard before each run of the test suite.",
 )
 @click.option(
     "--test-dropped",
     is_flag=True,
     default=False,
     show_default=True,
-    help="Also test dropped mutations",
+    help="Also run tests on dropped mutations. Used for testing purposes.",
 )
 def test(out_dir, project, filter, timeout, git_reset, test_dropped):
     filters = Filter(filter)

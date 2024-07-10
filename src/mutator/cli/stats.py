@@ -1,4 +1,3 @@
-import json
 import pathlib
 
 import click
@@ -7,20 +6,23 @@ from ..result import Result
 from ..store import MutationStore
 
 
-@click.command()
+@click.command(
+    help="Display stats produced during testing. Expects `test` to be run before."
+)
 @click.option(
     "-o",
     "--out-dir",
     type=pathlib.Path,
     default=pathlib.Path("out", "mutations"),
     show_default=True,
+    help="Path to mutation directories.",
 )
 @click.option(
     "--show-dropped",
     is_flag=True,
     default=False,
     show_default=True,
-    help="Include stats of dropped mutations",
+    help="Include stats of dropped mutations.",
 )
 def stats(out_dir, show_dropped):
     store = MutationStore(out_dir)

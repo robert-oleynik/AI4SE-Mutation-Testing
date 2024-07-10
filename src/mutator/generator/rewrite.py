@@ -39,13 +39,20 @@ class CommentRewriteGenerator(SimpleMutationGenerator):
 
         model_kwargs = {
             **config.model_kwargs,
-            "length_penalty": 16,
         }
 
-        results = mutator.ai.llm.llm.prompt(
-            prompt,
-            transform_result=transform,
-            bad_words=["#", '""""'],
-            **model_kwargs,
-        )
+        def _gen():
+            try:
+                return mutator.ai.llm.llm.prompt(
+                    prompt,
+                    transform_result=transform,
+                    bad_words=["#", '""""'],
+                    **model_kwargs,
+                )
+            except Exception as e:
+                print(e)
+                return []
+
+        results = [sample for i in range(config.tries_per_target) for sample in _gen()]
+
         return Mutation.map(results)

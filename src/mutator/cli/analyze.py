@@ -6,11 +6,12 @@ import click
 from ..helper.metrics import dstrloc, locfrac, strloc
 
 
-@click.command()
+@click.command(help="Analyze the dataset generated with `collect`.")
 @click.option(
     "--dataset",
     type=pathlib.Path,
-    help="Path to dataset to inspect.",
+    default=pathlib.Path("out", "dataset", "data"),
+    help="Path to dataset.",
     show_default=True,
 )
 @click.option(
@@ -19,7 +20,9 @@ from ..helper.metrics import dstrloc, locfrac, strloc
         ["dloc", "source_loc", "mutation_loc", "loc_frac", "prompt_loc"],
         case_sensitive=False,
     ),
-    help="Metric used to inspect dataset (Ignored if not used with `--dataset`)",
+    help="""
+    Metric used to inspect dataset. If not specified the full dataset will be dumped.
+    """,
 )
 def dataset(dataset, metric):
     import datasets
@@ -72,10 +75,26 @@ def dataset(dataset, metric):
     plt.show()
 
 
-@click.command(help="Ananlyze fine-tuining result")
-@click.argument("dir", type=pathlib.Path)
-@click.argument("dataset", type=pathlib.Path)
-@click.option("--min-loss", type=float, default=2.0)
+@click.command(
+    help="Inspects trainig samples based on the loss value received during training.",
+)
+@click.option(
+    "--dir",
+    type=pathlib.Path,
+    help="Path to training/model output directory.",
+)
+@click.option(
+    "-d",
+    "--dataset",
+    type=pathlib.Path,
+    help="Path to dataset used during training.",
+)
+@click.option(
+    "--min-loss",
+    type=float,
+    default=2.0,
+    help="Ignore all training samples with a loss less than this value.",
+)
 def train_result(dir, dataset, min_loss):
     import datasets
     import matplotlib.pyplot as plt

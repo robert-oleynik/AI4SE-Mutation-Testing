@@ -42,61 +42,97 @@ def generate_samples(
     return _gen
 
 
-@click.command(help="Extract mutation samples from repository")
+@click.command(
+    help="""
+    Collect mutation samples from git repositories and generate a dataset for training.
+    """
+)
 @click.option(
     "-o",
     "--out-dir",
     default=pathlib.Path("out", "dataset"),
     type=pathlib.Path,
     show_default=True,
-    help="Directory used to store extracted samples",
+    help="Directory used to generate data.",
 )
 @click.option(
     "-b",
     "--bare",
     multiple=True,
     type=pathlib.Path,
-    help="Bare git repositories to extract mutations from",
+    help="""
+    Specify path to a bare git repository used to extract mutation samples from.
+    Can be used multiple times.
+    """,
 )
 @click.option(
     "-r",
     "--repository",
     multiple=True,
     type=pathlib.Path,
-    help="Git repositories to extract mutations from",
+    help="""
+    Specify path to a git repository used to extract mutation samples from.
+    Can be used multiple times.
+    """,
 )
 @click.option(
     "--max-dloc",
     default=20,
     type=int,
-    help="Drop all entries with more change in loc than this value",
+    help="""
+    Remove all samples with a change in lines of code from source to mutation greater
+    than this values.
+    """,
 )
 @click.option(
     "--max-loc-ratio",
     default=10.0,
     type=float,
-    help="Max ration between mutation LOC and source LOC",
+    help="""
+    Remove all samples with a ration of lines of code for mutation to source greater
+    than this value.
+    """,
+)
+@click.option(
+    "--min-prompt-loc",
+    default=0,
+    type=int,
+    help="""
+    Removes all samples with a prompt lines of code less than the specified value.
+    """,
+)
+@click.option(
+    "--max-prompt-loc",
+    default=1024,
+    type=int,
+    help="""
+    Removes all samples with a prompt lines of codes greater than the specified values.
+    """,
 )
 @click.option(
     "--update",
     is_flag=True,
-    help="Update Dataset in place without regenerating (Will ignore git repositories)",
+    help="""
+    Update Dataset in place without generating new samples (Will ignore specified
+    git repositories). The updated dataset will be stored at `<out_dir>/data-updated`
+    insted of the default `<out_dir>/data`. Use the first directory for training
+    instead.
+    """,
 )
-@click.option("--min-prompt-loc", default=0, type=int, help="Min LOC for prompt")
-@click.option("--max-prompt-loc", default=1024, type=int, help="Max LOC for prompt")
-@click.option("-s", "--strategy", multiple=True, default=list(strategies.keys()))
 @click.option(
     "-g",
     "--generator",
     multiple=True,
     type=click.Choice(generators.keys()),
-    default=list(generators.keys()),
+    help="""
+    Specify generator to collect and generate samples for. While it is possible to
+    use multiple generators, it is not recommended.
+    """,
 )
 def collect(
     out_dir,
     bare,
     repository,
-    strategy,
     max_dloc,
     max_loc_ratio,
     min_prompt_loc,
@@ -119,7 +155,7 @@ def collect(
         data = datasets.load_from_disk(dataset_path=(out_dir / "data").__str__())
     else:
         data = datasets.Dataset.from_generator(
-            generate_samples(bare, repository, strategy, generator),
+            generate_samples(bare, repository, "test_mods", generator),
             keep_in_memory=True,
             cache_dir=cache_dir,
         )

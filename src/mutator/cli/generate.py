@@ -72,14 +72,16 @@ configs = {
 }
 
 
-@click.command()
+@click.command(
+    help="Generate mutations for the specified project and function targets."
+)
 @click.option(
     "-o",
     "--out-dir",
     default=pathlib.Path("out", "mutations"),
     type=pathlib.Path,
     show_default=True,
-    help="Directory used to store mutations",
+    help="Directory used to store mutations in.",
 )
 @click.option(
     "-g",
@@ -88,7 +90,7 @@ configs = {
     type=click.Choice(generators.keys(), case_sensitive=False),
     default=list(generators.keys()),
     show_default=True,
-    help="Specify generator used for generating mutations",
+    help="Specify generator used for generating mutations.",
 )
 @click.option(
     "-c",
@@ -96,7 +98,7 @@ configs = {
     multiple=True,
     default=list(configs.keys()),
     show_default=True,
-    help="LLM configuration to use for generators",
+    help="LLM configuration to use for generators.",
 )
 @click.option(
     "-p",
@@ -104,32 +106,35 @@ configs = {
     type=pathlib.Path,
     default=".",
     show_default=True,
-    help="Path to project directory",
+    help="Path to project directory.",
 )
 @click.option(
     "-f",
     "--filter",
     multiple=True,
-    help="Specify select filter for identifying mutations",
+    help="Specify select filter for identifying mutations.",
 )
 @click.option(
     "-m",
     "--model",
     default="google/codegemma-1.1-2b",
-    help="LLM model used to generate mutations",
+    help="LLM model used to generate mutations.",
 )
 @click.option(
-    "--checkpoint", type=pathlib.Path, help="Load checkpoints instead of model"
+    "--checkpoint", type=pathlib.Path, help="Load checkpoints instead of model."
 )
 @click.option(
     "-d",
     "--device",
     default="cuda:0",
     show_default=True,
-    help="GPU device used to run LLM on",
+    help="GPU device used to run LLM on.",
 )
-@click.option("--no-llm", is_flag=True, help="Do not load LLM. May brake generators")
-@click.option("--clean", is_flag=True, help="Regenerate all mutations")
+@click.option(
+    "--clean",
+    is_flag=True,
+    help="Regenerate all mutations. Warning: Will delete all existing mutations.",
+)
 def generate(
     out_dir,
     generator,
@@ -142,14 +147,13 @@ def generate(
     clean,
     checkpoint,
 ):
-    # foo
-    if not no_llm:
-        import mutator.ai.llm
+    import mutator.ai.llm
 
-        from ..ai.limiter.function import FunctionLimiter
-        from ..ai.llm import LLM
+    from ..ai.limiter.function import FunctionLimiter
+    from ..ai.llm import LLM
 
-        mutator.ai.llm.llm = LLM(device, model, [FunctionLimiter])
+    mutator.ai.llm.llm = LLM(device, model, [FunctionLimiter])
+
     filters = Filter(filter)
     sourceRoot = pathlib.Path(project.joinpath("src")).resolve()
     source_files = [
