@@ -2,17 +2,19 @@ import abc
 
 import tree_sitter as ts
 
+from ..ai.llm_result import LLMResult
 from ..source import MutationTarget
 
 
 class Mutation:
-    def __init__(self, content: str | bytes):
+    def __init__(self, content: str | bytes, llm_result: LLMResult | None):
         if isinstance(content, str):
             content = content.encode()
         self.content = content
+        self.llm_result = llm_result
 
-    def map(contents: list[str | bytes]) -> list["Mutation"]:
-        return [Mutation(content) for content in contents]
+    def map(contents: list[LLMResult]) -> list["Mutation"]:
+        return [Mutation(llm_result.final, llm_result) for llm_result in contents]
 
 
 class MutationGenerator(abc.ABC):

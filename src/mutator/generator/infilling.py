@@ -19,20 +19,26 @@ _targets_query = tsLang.query("""
 
 
 class InfillingGenerator(MutationGenerator):
+    def create_prompt(
+        self, source_node: ts.Node, start_byte: int, end_byte: int, middle=""
+    ):
+        definition, indent = Context(source_node).relevant_class_definition()
+        prefix = source_node.text[: start_byte - source_node.start_byte].decode()
+        suffix = source_node.text[end_byte - source_node.start_byte :].decode()
+        prompt = f"{definition}<|fim_prefix|>{indent}{prefix}"
+        prompt += f"<|fim_suffix|>{suffix}<|fim_middle|>{middle}"
+        return prompt, prefix, suffix
+
     def generate_sample_prompt(
         self, source_node: ts.Node, mutation_node: ts.Node
     ) -> str:
-        definition, indent = Context(source_node).relevant_class_definition()
         equal, source, mutation = compare(source_node.walk(), mutation_node.walk())
         if equal:
             raise NoMutationPossible()
-        start = source.start_byte if source else mutation.start_byte
-        end = source.end_byte if source else mutation.start_byte
-        prefix = source_node.text[: start - source_node.start_byte].decode()
-        suffix = source_node.text[end - source_node.start_byte :].decode()
+        start_byte = source.start_byte if source else mutation.start_byte
+        end_byte = source.end_byte if source else mutation.start_byte
         middle = mutation.text.decode() if mutation else ""
-        prompt = f"{definition}<|fim_prefix|>{indent}{prefix}"
-        prompt += f"<|fim_suffix|>{suffix}<|fim_middle|>{middle}"
+        prompt, _, _ = self.create_prompt(source_node, start_byte, end_byte, middle)
         return prompt
 
     def generate(
@@ -54,16 +60,13 @@ class InfillingGenerator(MutationGenerator):
                     ranges.add(node.byte_range)
         targets.difference_update(exclude)
         targets = list(targets)
-        content = target.source.content
-        definition, indent = Context(target.node).relevant_class_definition()
         results = []
-        for start, end in random.sample(
+        for start_byte, end_byte in random.sample(
             targets, min(config.tries_per_target, len(targets))
         ):
-            prefix = content[target.node.start_byte : start].decode()
-            suffix = content[end : target.node.end_byte].decode()
-            prompt = f"{definition}<|fim_prefix|>{indent}{prefix}"
-            prompt += f"<|fim_suffix|>{suffix}<|fim_middle|>"
+            prompt, prefix, suffix = self.create_prompt(
+                target.node, start_byte, end_byte
+            )
 
             def transform(result: str) -> str:
                 return prefix + result[len(prompt) :] + suffix  # noqa: B023

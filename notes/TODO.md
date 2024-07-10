@@ -9,10 +9,10 @@
 # Technical Features
 
 - [ ] Pass decorators into MutationTargets
-- [ ] Provide function context (e. g. class around method)
-- [ ] Provide more context to avoid loops
+- [x] Provide function context (e. g. class around method)
+- [x] Provide more context to avoid loops
 - [x] Use version 1.1 2b of model
-- [ ] Use 7b model
+- [x] Use 7b model
 
 # Against which baseline to evaluate?
 
@@ -26,9 +26,9 @@
 
 # Finetuning
 
-- [ ] Mine real changes (check for simultaneous changes of code and test)
+- [x] Mine real changes (check for simultaneous changes of code and test)
 - [ ] Synthetic test data based on mutatest
-- [ ] Fine tune once per generator (regarding specific format)
+- [x] Fine tune once per generator (regarding specific format)
 
 # Report
 

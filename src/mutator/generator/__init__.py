@@ -3,7 +3,6 @@ from .doc_string_based import DocStringBasedGenerator
 from .forced_branch import ForcedBranchGenerator
 from .full_body_based import FullBodyBasedGenerator
 from .generator import Mutation, MutationGenerator
-from .identity import Identity
 from .infilling import InfillingGenerator
 from .prompt import Prompt
 from .repeat import RepeatGenerator
@@ -38,7 +37,6 @@ __all__ = [
     "GeneratorConfig",
     "GeneratorConfigNotFound",
     "GeneratorNotFound",
-    "Identity",
     "InfillingGenerator",
     "Mutation",
     "MutationGenerator",

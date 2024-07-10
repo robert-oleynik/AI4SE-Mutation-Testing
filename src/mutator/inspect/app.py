@@ -69,8 +69,18 @@ class InspectApp(App):
     """
 
     BINDINGS = [
-        ("left", "select_prev()", "Select Previous"),
-        ("right", "select_next()", "Select Next"),
+        ("left", "select_prev_mutation()", "Select Previous Mutation"),
+        ("right", "select_next_mutation()", "Select Next Mutation"),
+        (
+            "ctrl+left",
+            "select_prev_llm_result_stage()",
+            "Select Previous LLM Result Stage",
+        ),
+        (
+            "ctrl+right",
+            "select_next_llm_result_stage()",
+            "Select Next LLM Result Stage",
+        ),
         ("ctrl+a", "annotate()", "Annotate"),
     ]
 
@@ -97,11 +107,17 @@ class InspectApp(App):
     def action_annotate(self):
         self.target_view.action_annotate()
 
-    def action_select_next(self):
-        self.target_view.action_select_next()
+    def action_select_next_mutation(self):
+        self.target_view.action_cycle_mutation(1)
 
-    def action_select_prev(self):
-        self.target_view.action_select_prev()
+    def action_select_prev_mutation(self):
+        self.target_view.action_cycle_mutation(-1)
+
+    def action_select_next_llm_result_stage(self):
+        self.target_view.action_cycle_llm_result_stage(1)
+
+    def action_select_prev_llm_result_stage(self):
+        self.target_view.action_cycle_llm_result_stage(-1)
 
     def on_mount(self) -> None:
         target = self.target_list.modules[0]
