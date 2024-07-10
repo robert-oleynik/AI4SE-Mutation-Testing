@@ -66,6 +66,7 @@ class LLM:
             "<|fim_prefix|>",
             "<|fim_suffix|>",
             "<|fim_middle|>",
+            "<|file_seperator|>",
             *extra_args.get("bad_words", []),
         ]
         bad_words = list(set(bad_words))
@@ -79,6 +80,7 @@ class LLM:
             *bad_words,
         ]
         limiters.append(SpecialTokensLimiter(stop_tokens))
+        del extra_args["bad_words"]
         kwargs = {
             **self.generate_kwargs,
             **extra_args,
