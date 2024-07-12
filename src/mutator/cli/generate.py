@@ -15,7 +15,6 @@ from ..generator import (
     GeneratorNotFound,
     InfillingGenerator,
     Prompt,
-    RepeatGenerator,
 )
 from ..source import Filter, SourceFile
 from ..store import MutationStore
@@ -23,12 +22,11 @@ from ..treesitter.python import tsParser
 from ..treesitter.tree_walker import compare
 
 generators = {
-    "doc_string_based": DocStringBasedGenerator(),
-    "forced_branch": ForcedBranchGenerator(),
-    "full_body_based": FullBodyBasedGenerator(),
-    "infilling": InfillingGenerator(),
-    "repeat": RepeatGenerator(),
+    "doc_string": DocStringBasedGenerator(),
     "comment_rewrite": CommentRewriteGenerator(),
+    "forced_branch": ForcedBranchGenerator(),
+    "full_body": FullBodyBasedGenerator(),
+    "infilling": InfillingGenerator(),
     "prompt": Prompt(),
 }
 
@@ -57,15 +55,6 @@ configs = {
             "max_new_tokens": 4096,
         },
         tries_per_target=4,
-    ),
-    "experimental": GeneratorConfig(
-        {
-            "do_sample": True,
-            "num_beams": 4,
-            "num_return_sequences": 4,
-            "max_new_tokens": 2048,
-        },
-        tries_per_target=1,
     ),
 }
 
@@ -110,6 +99,7 @@ configs = {
     "-f",
     "--filter",
     multiple=True,
+    default=["*"],
     help="Specify select filter for identifying mutations.",
 )
 @click.option(
@@ -141,7 +131,6 @@ def generate(
     filter,
     model,
     device,
-    no_llm,
     clean,
     checkpoint,
 ):
@@ -203,8 +192,7 @@ def generate(
                         if conf not in configs:
                             raise GeneratorConfigNotFound(conf)
                         c = configs[conf]
-                        if not no_llm:
-                            mutator.ai.llm.llm.reset_stats()
+                        mutator.ai.llm.llm.reset_stats()
                         try:
                             mutations = g.generate(target, c)
                         except Exception as e:
@@ -217,9 +205,7 @@ def generate(
                                 compare(tree.walk(), new_tree.walk(), False)[0]
                                 for tree in trees
                             )
-                            llm_stats = (
-                                LLMStats() if no_llm else mutator.ai.llm.llm.stats
-                            )
+                            llm_stats = mutator.ai.llm.llm.stats
                             store.add(target, mutation, gen, c, is_dropped, llm_stats)
                             if is_dropped:
                                 dropped += 1

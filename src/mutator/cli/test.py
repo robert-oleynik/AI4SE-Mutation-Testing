@@ -31,6 +31,7 @@ from .spinner import Spinner
     "-f",
     "--filter",
     multiple=True,
+    default=["*"],
     help="Specify select filter for identifying mutations.",
 )
 @click.option(
