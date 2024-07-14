@@ -68,12 +68,9 @@ class LLM:
             "<|fim_suffix|>",
             "<|fim_middle|>",
             "<|file_seperator|>",
-            *extra_args.get("bad_words", []),
         ]
         bad_words = list(set(bad_words))
-        bad_word_ids = [
-            self.tokenizer.encode(word, add_special_tokens=False) for word in bad_words
-        ]
+        bad_word_ids = self.tokenizer.convert_tokens_to_ids(bad_words)
         bad_word_ids.extend(extra_args.get("bad_word_ids", []))
         stop_tokens = [
             self.tokenizer.eos_token,
@@ -85,7 +82,8 @@ class LLM:
         kwargs = {
             **self.generate_kwargs,
             **extra_args,
-            "bad_words_ids": bad_word_ids,
+            # "bad_words_ids": bad_word_ids,
+            "eos_token_id": bad_word_ids,
             "stopping_criteria": transformers.StoppingCriteriaList(
                 [
                     OutputStoppingCriteria(limiter, self.tokenizer, transform)
