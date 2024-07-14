@@ -101,7 +101,7 @@ We will start with the `infilling` generator with the `single_result`.
 These can be set by the `-g/--generator` and `-c/--config` respectively.
 
 ```
-mutator generate -g infilling -c single_result -f "flask.app:Flask.*"
+mutator generate --generator infilling --config single_result --filter "flask.app:Flask.*"
 ```
 
 > **Note:**
@@ -139,23 +139,70 @@ mutations work directory.
 
 ### Fine-Tuning
 
-TODO
+In some context, it is beneficial to use fine-tuning for improving LLM results. 
+To do so, this tool provides some utilities from collecting datasets to training the model.
 
 #### Generating Datasets
 
-TODO
+As we already discussed we have multiple approaches for generating prompts.
+Because of this, generating datasets need to account for the different input formats.
 
-#### Improving Datasets
+In the following we will generate a dataset from flask repository.
+To do so, we will use a bare git repository of flask.
 
-TODO
+```sh
+git clone --bare https://github.com/pallets/flask
+```
+
+To collect samples from this repository, we can use `mutator collect` as following:
+
+```sh
+mutator collect --bare ./flask.git --generator "infilling"
+```
+
+This will collect mutations from the source files and format these for the `infilling`
+generator. While it is possible to specify multiple generators, it is not recommended.
+In addition, it is also possible to specify multiple bare git repositories.
+It is also possible to use normal git repositories using the `--repository` flag
+instead.
+
+These samples can be filtered by using following:
+
+- `--max-dloc` Maximum change in lines of code (LOC) from source to mutation.
+- `--max-loc-ratio` Maximum ratio between source and mutation LOC (`>1` means the
+  mutation has more lines the source).
+- `--min-prompt-loc` Minimum LOC for the generated prompt.
+- `--max-prompt-loc` Maximum LOC for the generated prompt.
+
+It is recommended to use these options in combination with `--update`.
+This flag will load the dataset at `<out_dir>/data`, apply the limits and store
+the result in `<out_dir>/data-updated`.
+Using this command looks like:
+
+```sh
+mutator collect --update --max-dloc 10
+```
 
 #### Run Fine-Tuning
 
-TODO
+We can use the generated dataset with the following sub command:
+
+```sh
+mutator train --dataset "<collect_out_dir>/data-updated"
+```
+
+For more details on the available arguments see `mutator train --help`.
+In addition, it is worthy to note, that the directory specified with
+`--dataset` is the `data` or `data-updated` subdirectory of the output
+directory specified with `collect`.
 
 #### Evaluating Training
 
-TODO
+To evaluate the loss per training sample use the following command:
+
+```sh
+mutator train-result --dir out/model --dataset out/dataset/data-updated
+```
 
 ## Development
 
