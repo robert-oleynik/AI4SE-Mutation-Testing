@@ -243,9 +243,9 @@ class TargetView(Widget):
 
     def on_button_pressed(self, ev: Button.Pressed) -> None:
         if ev.button.name == "next":
-            self.action_select_next_mutation()
+            self.action_cycle_mutation(1)
         elif ev.button.name == "prev":
-            self.action_select_prev_mutation()
+            self.action_cycle_mutation(-1)
 
     def on_input_changed(self, ev: Input.Changed) -> None:
         if ev.input.name == "annotation" and self._mutation is not None:
