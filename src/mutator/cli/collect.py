@@ -16,7 +16,7 @@ strategies = {"test_mods": TestMods()}
 def generate_samples(
     bare_repos: list[pathlib.Path],
     repos: list[pathlib.Path],
-    strategy: list[str],
+    strategy: str,
     generator_names: list[str],
 ) -> typing.Generator[dict, None, None]:
     def _gen():
@@ -26,18 +26,15 @@ def generate_samples(
         for bare, path in all_repos:
             repo = Repo.init(path, bare=bare)
             counter = 0
-            for s in strategy:
-                if s not in strategies:
-                    continue
-                for sample in strategies[s].apply(repo):
-                    counter += 1
-                    for name in generator_names:
-                        try:
-                            s = sample.to_dict(generators[name])
-                            s["formatter"] = name
-                            yield s
-                        except NoMutationPossible:
-                            pass
+            for sample in strategies[strategy].apply(repo):
+                counter += 1
+                for name in generator_names:
+                    try:
+                        s = sample.to_dict(generators[name])
+                        s["formatter"] = name
+                        yield s
+                    except NoMutationPossible:
+                        pass
 
     return _gen
 
@@ -156,8 +153,18 @@ def collect(
     else:
         data = datasets.Dataset.from_generator(
             generate_samples(bare, repository, "test_mods", generator),
-            keep_in_memory=True,
-            cache_dir=cache_dir,
+            features=datasets.Features(
+                {
+                    "commit": datasets.Value(dtype="string"),
+                    "file": datasets.Value(dtype="string"),
+                    "start": datasets.Value(dtype="int64"),
+                    "end": datasets.Value(dtype="int64"),
+                    "source": datasets.Value(dtype="large_string"),
+                    "mutation": datasets.Value(dtype="large_string"),
+                    "prompt": datasets.Value(dtype="large_string"),
+                    "formatter": datasets.Value(dtype="string"),
+                }
+            ),
         )
 
     print(data)
