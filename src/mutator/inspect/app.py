@@ -4,8 +4,8 @@ from textual.app import App, ComposeResult
 from textual.widgets import ListView
 
 from ..result import Result
-from .module_view import Target, TargetList, TargetView
 from ..store import MutationStore
+from .module_view import Target, TargetList, TargetView
 
 
 class InspectApp(App):

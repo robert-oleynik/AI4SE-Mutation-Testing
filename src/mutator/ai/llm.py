@@ -70,15 +70,16 @@ class LLM:
             "<|file_seperator|>",
         ]
         bad_words = list(set(bad_words))
-        bad_word_ids = self.tokenizer.convert_tokens_to_ids(bad_words)
-        bad_word_ids.extend(extra_args.get("bad_word_ids", []))
+        bad_word_ids = self.tokenizer.convert_tokens_to_ids(bad_words) + [
+            self.tokenizer.eos_token_id
+        ]
         stop_tokens = [
             self.tokenizer.eos_token,
             "<|file_separator|>",
             *bad_words,
         ]
         limiters.append(SpecialTokensLimiter(stop_tokens))
-        del extra_args["bad_words"]
+        # del extra_args["bad_words"]
         kwargs = {
             **self.generate_kwargs,
             **extra_args,

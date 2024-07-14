@@ -1,3 +1,5 @@
+import traceback
+
 import tree_sitter as ts
 
 from ..source import MutationTarget
@@ -46,11 +48,10 @@ class CommentRewriteGenerator(SimpleMutationGenerator):
                 return mutator.ai.llm.llm.prompt(
                     prompt,
                     transform_result=transform,
-                    bad_words=["#", '""""'],
                     **model_kwargs,
                 )
             except Exception as e:
-                print(e)
+                print(traceback.print_exception(e))
                 return []
 
         results = [sample for i in range(config.tries_per_target) for sample in _gen()]
