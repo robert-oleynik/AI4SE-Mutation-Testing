@@ -24,10 +24,18 @@ from ..store import MutationStore
     show_default=True,
     help="Include stats of dropped mutations.",
 )
-def stats(out_dir, show_dropped):
+@click.option(
+    "-g",
+    "--group-by",
+    type=click.Choice(["model_or_checkpoint", "generator", "config_name"]),
+    multiple=True,
+    default=[],
+    help="Attributes by which to group the statistics. "
+    + "Specify none to get a total across all mutations.",
+)
+def stats(out_dir, group_by, show_dropped):
     store = MutationStore(out_dir)
-    total = {}
-    per_generator = {}
+    groups = {}
     count_categories = [
         "mutations",
         "dropped",
@@ -40,29 +48,30 @@ def stats(out_dir, show_dropped):
     llm_categories = set()
     annotation_categories = set()
 
-    def insert_stat(group: dict, category: str, value: int):
-        group[category] = group.get(category, 0) + value
-
-    def stat(category: str, generator: str, value=1):
-        insert_stat(total, category, value)
-        insert_stat(per_generator.setdefault(generator, {}), category, value)
-
     test_result = Result.read(out_dir / "test-result.json")
     for module, target, path, _, metadata in store.list_mutation():
-        generator = metadata["generator"]
-        stat("mutations", generator)
+        key = []
+        for key_name in group_by:
+            key.append(metadata.get(key_name, "unknown"))
+        key = tuple(key)
+        group = groups.setdefault(key, {})
+
+        def stat(category: str, value=1):
+            group[category] = group.get(category, 0) + value  # noqa: B023
+
+        stat("mutations")
         if metadata.get("dropped", False):
-            stat("dropped", generator)
+            stat("dropped")
             if not show_dropped:
                 continue
         else:
-            stat("kept", generator)
+            stat("kept")
         for annotation in metadata.get("annotations", []):
             annotation_categories.add(annotation)
-            stat(annotation, generator)
+            stat(annotation)
         for llm_stat, value in metadata.get("llm_stats", {}).items():
             llm_categories.add(llm_stat)
-            stat(llm_stat, generator, value)
+            stat(llm_stat, value)
         if test_result:
             try:
                 result = test_result[module][target][path.stem]
@@ -80,16 +89,20 @@ def stats(out_dir, show_dropped):
                 ("missed", missed),
             ]:
                 if is_category:
-                    stat(category, generator)
+                    stat(category)
 
     category_sections = [
         ("counts", count_categories),
         ("llm", list(sorted(llm_categories))),
         ("annotations", list(sorted(annotation_categories))),
     ]
-    for name, group in [("total", total), *sorted(per_generator.items())]:
-        name = f" {name} "
-        print(f"{name:=^40}")
+    for key, group in groups.items():
+        print("=" * 40)
+        for name, value in zip(group_by, key, strict=True):
+            name = f"{name}: {value}"
+            print(f"{name:^40}")
+        if len(group_by) == 0:
+            print(f"{'total':^40}")
         for section, annotation_categories in category_sections:
             if len(annotation_categories) == 0:
                 continue
