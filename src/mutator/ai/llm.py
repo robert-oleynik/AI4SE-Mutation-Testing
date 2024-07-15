@@ -18,24 +18,29 @@ class LLM:
     def __init__(
         self,
         device: str,
-        model_id: str,
+        model_id_or_checkpoint: str | pathlib.Path,
         limiter_classes: list[type[Limiter]] | None = None,
-        checkpoint: pathlib.Path | None = None,
         **generate_kwargs,
     ):
         self.stats = LLMStats()
         self.device = torch.device(device)
-        self.tokenizer = transformers.GemmaTokenizer.from_pretrained(model_id)
-        if checkpoint is not None:
+        if isinstance(model_id_or_checkpoint, pathlib.Path):
             import peft
 
             self.model = peft.AutoPeftModelForCausalLM.from_pretrained(
-                checkpoint, device_map=self.device, torch_dtype=torch.float16
+                model_id_or_checkpoint,
+                device_map=self.device,
+                torch_dtype=torch.float16,
             )
+            model_id = self.model.peft_config["default"].base_model_name_or_path
         else:
             self.model = transformers.AutoModelForCausalLM.from_pretrained(
-                model_id, device_map=self.device, torch_dtype=torch.float16
+                model_id_or_checkpoint,
+                device_map=self.device,
+                torch_dtype=torch.float16,
             )
+            model_id = model_id_or_checkpoint
+        self.tokenizer = transformers.GemmaTokenizer.from_pretrained(model_id)
         self.limiter_classes = limiter_classes or []
         self.generate_kwargs = generate_kwargs
 
