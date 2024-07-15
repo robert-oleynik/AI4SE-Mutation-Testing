@@ -1,3 +1,4 @@
+import gc
 import pathlib
 import shutil
 import traceback
@@ -244,3 +245,6 @@ def generate(
                                 status_update()
                 finally:
                     print()
+
+        mutator.ai.llm.llm = None
+        gc.collect()
