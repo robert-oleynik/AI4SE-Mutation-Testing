@@ -146,7 +146,7 @@ def generate(
     from ..ai.limiter.function import FunctionLimiter
     from ..ai.llm import LLM
 
-    mutator.ai.llm.llm = LLM(device, model, [FunctionLimiter])
+    mutator.ai.llm.llm = LLM(device, model, [FunctionLimiter], checkpoint=checkpoint)
 
     filters = Filter(filter)
     sourceRoot = pathlib.Path(project.joinpath("src")).resolve()
