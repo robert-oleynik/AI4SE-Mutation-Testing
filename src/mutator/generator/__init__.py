@@ -1,7 +1,7 @@
 from .config import GeneratorConfig
-from .doc_string_based import DocStringBasedGenerator
+from .docstring import DocstringGenerator
 from .forced_branch import ForcedBranchGenerator
-from .full_body_based import FullBodyBasedGenerator
+from .full_body import FullBodyGenerator
 from .generator import Mutation, MutationGenerator
 from .infilling import InfillingGenerator
 from .prompt import Prompt
@@ -31,9 +31,9 @@ class GeneratorConfigNotFound(Exception):
 
 __all__ = [
     "CommentRewriteGenerator",
-    "DocStringBasedGenerator",
+    "DocstringGenerator",
     "ForcedBranchGenerator",
-    "FullBodyBasedGenerator",
+    "FullBodyGenerator",
     "GeneratorConfig",
     "GeneratorConfigNotFound",
     "GeneratorNotFound",

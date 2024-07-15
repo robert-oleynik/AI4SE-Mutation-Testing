@@ -6,7 +6,7 @@ from .config import GeneratorConfig
 from .generator import Mutation, SimpleMutationGenerator
 
 
-class FullBodyBasedGenerator(SimpleMutationGenerator):
+class FullBodyGenerator(SimpleMutationGenerator):
     def generate_prompt(self, node: ts.Node) -> str:
         context = Context(node)
         definition, indent = context.relevant_class_definition()

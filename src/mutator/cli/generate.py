@@ -7,9 +7,9 @@ import click
 from ..ai.llm_stats import LLMStats
 from ..generator import (
     CommentRewriteGenerator,
-    DocStringBasedGenerator,
+    DocstringGenerator,
     ForcedBranchGenerator,
-    FullBodyBasedGenerator,
+    FullBodyGenerator,
     GeneratorConfig,
     GeneratorConfigNotFound,
     GeneratorNotFound,
@@ -22,10 +22,10 @@ from ..treesitter.python import tsParser
 from ..treesitter.tree_walker import compare
 
 generators = {
-    "doc_string": DocStringBasedGenerator(),
+    "docstring": DocstringGenerator(),
     "comment_rewrite": CommentRewriteGenerator(),
     "forced_branch": ForcedBranchGenerator(),
-    "full_body": FullBodyBasedGenerator(),
+    "full_body": FullBodyGenerator(),
     "infilling": InfillingGenerator(),
     "prompt": Prompt(),
 }

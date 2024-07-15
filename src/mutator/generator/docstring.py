@@ -6,7 +6,7 @@ from .config import GeneratorConfig
 from .generator import Mutation, NoMutationPossible, SimpleMutationGenerator
 
 
-class DocStringBasedGenerator(SimpleMutationGenerator):
+class DocstringGenerator(SimpleMutationGenerator):
     def _generate_prompt(self, node: ts.Node) -> tuple[str, str]:
         context = Context(node)
         docstring = context.docstring()

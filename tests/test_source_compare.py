@@ -39,7 +39,7 @@ def foo(a: int, b: int) -> int:
     assert b_node is None
 
 
-def test_modified_doc_comment():
+def test_modified_docstring():
     source_a = b"""
 def foo(a: int, b: int) -> int:
     "foo"
@@ -58,7 +58,7 @@ def foo(a: int, b: int) -> int:
     assert b_node is None
 
 
-def test_removed_doc_comment():
+def test_removed_docstring():
     source_a = b"""
 def foo(a: int, b: int) -> int:
     "foo"

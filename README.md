@@ -57,11 +57,11 @@ with the usage of LLMs. The generators used in this project can be divided into 
 
 1. Generating mutations based on function signature and some extra information:
 
-	- The first and most basic generator is the `doc_string` generator. This generator
-	  will prompt the LLM only with the signature and doc string.
+	- The first and most basic generator is the `docstring` generator. This generator
+	  will prompt the LLM only with the signature and docstring.
 	- The second generator `full_body` will extend on this information and will provide the LLM
 	  with additional context, including class signature, the full constructor and all referenced
-	  member functions with signature and doc comment.
+	  member functions with signature and docstring.
 	- The third and last generator `comment_rewrite` will additionally write the original
 	  function commented out before the member function signature.
 
