@@ -7,7 +7,7 @@ from .config import GeneratorConfig
 from .generator import Mutation, MutationGenerator
 
 
-class ForcedBranchGenerator(MutationGenerator):
+class PrefixGenerator(MutationGenerator):
     def generate_sample_prompt(
         self, source_node: ts.Node, mutation_node: ts.Node
     ) -> str:
@@ -28,7 +28,7 @@ class ForcedBranchGenerator(MutationGenerator):
 
         def generate():
             prompt = definition + indent + target.content().decode()
-            results += mutator.ai.llm.llm.force_branch(
+            return mutator.ai.llm.llm.prompt_with_random_prefix(
                 prompt,
                 transform_result=trim_prompt(definition + indent),
                 keep_prefix_len=len(definition)

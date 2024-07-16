@@ -143,7 +143,7 @@ class LLM:
         gc.collect()
         return results
 
-    def force_branch(
+    def prompt_with_random_prefix(
         self,
         prompt: str,
         transform_result: Callable[[str], str],

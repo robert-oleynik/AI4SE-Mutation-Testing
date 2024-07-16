@@ -1,8 +1,8 @@
 from .config import GeneratorConfig
 from .docstring import DocstringGenerator
-from .forced_branch import ForcedBranchGenerator
 from .generator import Mutation, MutationGenerator
 from .infilling import InfillingGenerator
+from .prefix import PrefixGenerator
 from .prompt import Prompt
 from .rewrite import CommentRewriteContextGenerator, CommentRewriteGenerator
 
@@ -31,7 +31,7 @@ __all__ = [
     "CommentRewriteGenerator",
     "CommentRewriteContextGenerator",
     "DocstringGenerator",
-    "ForcedBranchGenerator",
+    "PrefixGenerator",
     "GeneratorConfig",
     "GeneratorConfigNotFound",
     "GeneratorNotFound",

@@ -9,11 +9,11 @@ from ..generator import (
     CommentRewriteContextGenerator,
     CommentRewriteGenerator,
     DocstringGenerator,
-    ForcedBranchGenerator,
     GeneratorConfig,
     GeneratorConfigNotFound,
     GeneratorNotFound,
     InfillingGenerator,
+    PrefixGenerator,
     Prompt,
 )
 from ..helper.timed import timed
@@ -26,8 +26,8 @@ generators = {
     "docstring": DocstringGenerator(),
     "comment_rewrite": CommentRewriteGenerator(),
     "comment_rewrite_context": CommentRewriteContextGenerator(),
-    "forced_branch": ForcedBranchGenerator(),
     "infilling": InfillingGenerator(),
+    "prefix": PrefixGenerator(),
     "prompt": Prompt(),
 }
 

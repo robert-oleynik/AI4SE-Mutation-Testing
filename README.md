@@ -65,8 +65,8 @@ with the usage of LLMs. The generators used in this project can be divided into 
 
 2. Reusing parts of the existing implementation and prompting the LLM to rewrite parts of it:
 
-	- The `force_branch` generator, will provide the same context as the `full_body` generator.
-	  But unlike this generator, `force_branch` will arbitrary cut off the tokens inside
+	- The `prefix` generator, will provide the same context as the `full_body` generator.
+	  But unlike this generator, `prefix` will arbitrary cut off the tokens inside
 	  the source function and prompt the LLM with this result.
 	- The `infilling` generator, will work similar using the same context. But instead of
 	  cutting of tokens it relies on TreeSitter to sample expression statements of the source
