@@ -11,8 +11,6 @@ from .limiter.special_tokens import SpecialTokensLimiter
 from .llm_result import LLMResult
 from .llm_stats import LLMStats
 
-MAX_TOKEN_COUNT = 2048
-
 
 class LLM:
     def __init__(
@@ -55,10 +53,6 @@ class LLM:
         **extra_args,
     ) -> list[LLMResult]:
         input_token_count = inputs["input_ids"].shape[1]
-        if input_token_count >= MAX_TOKEN_COUNT:
-            print(f"\nwarning: prompt too long ({input_token_count}), skip")
-            self.stats.input_too_long_count += 1
-            return []
         self.stats.generate_count += 1
 
         bos_len = len(self.tokenizer.bos_token)
