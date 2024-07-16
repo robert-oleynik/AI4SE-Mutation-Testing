@@ -67,29 +67,24 @@ class LLM:
             return transform_result(result[bos_len:])
 
         limiters = [limiter_class() for limiter_class in self.limiter_classes]
-        bad_words = [
+        eos_tokens = [
+            self.tokenizer.eos_token,
+            "<unk>",
             "<pad>",
             "<|fim_prefix|>",
             "<|fim_suffix|>",
             "<|fim_middle|>",
-            "<|file_seperator|>",
+            "<|file_separator|>",
         ]
-        bad_words = list(set(bad_words))
-        bad_word_ids = self.tokenizer.convert_tokens_to_ids(bad_words) + [
+        eos_tokens = list(set(eos_tokens))
+        eos_token_ids = self.tokenizer.convert_tokens_to_ids(eos_tokens) + [
             self.tokenizer.eos_token_id
         ]
-        stop_tokens = [
-            self.tokenizer.eos_token,
-            "<|file_separator|>",
-            *bad_words,
-        ]
-        limiters.append(SpecialTokensLimiter(stop_tokens))
-        # del extra_args["bad_words"]
+        limiters.append(SpecialTokensLimiter(eos_tokens))
         kwargs = {
             **self.generate_kwargs,
             **extra_args,
-            # "bad_words_ids": bad_word_ids,
-            "eos_token_id": bad_word_ids,
+            "eos_token_id": eos_token_ids,
             "stopping_criteria": transformers.StoppingCriteriaList(
                 [
                     OutputStoppingCriteria(limiter, self.tokenizer, transform)
