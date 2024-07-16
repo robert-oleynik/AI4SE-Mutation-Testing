@@ -27,7 +27,6 @@ generators = {
     "comment_rewrite": CommentRewriteGenerator(),
     "comment_rewrite_context": CommentRewriteContextGenerator(),
     "forced_branch": ForcedBranchGenerator(),
-    # "full_body": FullBodyGenerator(),
     "infilling": InfillingGenerator(),
     "prompt": Prompt(),
 }

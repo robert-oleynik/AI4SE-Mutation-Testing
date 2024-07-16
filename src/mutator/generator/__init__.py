@@ -1,11 +1,9 @@
 from .config import GeneratorConfig
 from .docstring import DocstringGenerator
 from .forced_branch import ForcedBranchGenerator
-from .full_body import FullBodyGenerator
 from .generator import Mutation, MutationGenerator
 from .infilling import InfillingGenerator
 from .prompt import Prompt
-from .repeat import RepeatGenerator
 from .rewrite import CommentRewriteContextGenerator, CommentRewriteGenerator
 
 
@@ -34,14 +32,12 @@ __all__ = [
     "CommentRewriteContextGenerator",
     "DocstringGenerator",
     "ForcedBranchGenerator",
-    "FullBodyGenerator",
     "GeneratorConfig",
     "GeneratorConfigNotFound",
     "GeneratorNotFound",
     "InfillingGenerator",
     "Mutation",
     "MutationGenerator",
-    "RepeatGenerator",
     "Prompt",
     "configs",
     "generators",
