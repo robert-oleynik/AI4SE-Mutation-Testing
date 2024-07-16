@@ -171,7 +171,6 @@ def generate(
         return 1
 
     num_targets = sum(len(source_file.targets) for source_file in source_files)
-    target_index = 0
 
     models_and_checkpoints = [*model, *checkpoint]
     if len(models_and_checkpoints) == 0:
@@ -183,6 +182,8 @@ def generate(
             model_or_checkpoint,
         )
         mutator.ai.llm.llm = LLM(device, model_or_checkpoint, [FunctionLimiter])
+
+        target_index = 0
 
         for source_file in source_files:
             for target in source_file.targets:
