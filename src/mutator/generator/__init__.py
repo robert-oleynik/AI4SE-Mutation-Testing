@@ -6,7 +6,7 @@ from .generator import Mutation, MutationGenerator
 from .infilling import InfillingGenerator
 from .prompt import Prompt
 from .repeat import RepeatGenerator
-from .rewrite import CommentRewriteGenerator
+from .rewrite import CommentRewriteContextGenerator, CommentRewriteGenerator
 
 
 class GeneratorNotFound(Exception):
@@ -31,6 +31,7 @@ class GeneratorConfigNotFound(Exception):
 
 __all__ = [
     "CommentRewriteGenerator",
+    "CommentRewriteContextGenerator",
     "DocstringGenerator",
     "ForcedBranchGenerator",
     "FullBodyGenerator",
