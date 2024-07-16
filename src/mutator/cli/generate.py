@@ -6,10 +6,10 @@ import traceback
 import click
 
 from ..generator import (
+    CommentRewriteContextGenerator,
     CommentRewriteGenerator,
     DocstringGenerator,
     ForcedBranchGenerator,
-    FullBodyGenerator,
     GeneratorConfig,
     GeneratorConfigNotFound,
     GeneratorNotFound,
@@ -24,8 +24,9 @@ from ..treesitter.tree_walker import compare
 generators = {
     "docstring": DocstringGenerator(),
     "comment_rewrite": CommentRewriteGenerator(),
+    "comment_rewrite_context": CommentRewriteContextGenerator(),
     "forced_branch": ForcedBranchGenerator(),
-    "full_body": FullBodyGenerator(),
+    # "full_body": FullBodyGenerator(),
     "infilling": InfillingGenerator(),
     "prompt": Prompt(),
 }
