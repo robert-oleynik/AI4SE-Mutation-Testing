@@ -32,37 +32,63 @@ generators = {
 }
 
 configs = {
-    "single_result": GeneratorConfig(
-        {
-            "num_return_sequences": 1,
-            "max_new_tokens": 4096,
-        },
-        tries_per_target=1,
-    ),
     "multi_sample": GeneratorConfig(
         {
             "do_sample": True,
-            "num_return_sequences": 3,
+            "top_p": 0.8,
             "max_new_tokens": 4096,
         },
         tries_per_target=8,
     ),
-    "multi_sample_e": GeneratorConfig(
+    "multi_sample_cold": GeneratorConfig(
         {
             "do_sample": True,
+            "top_p": 0.8,
+            "temperature": 0.66,
             "max_new_tokens": 4096,
         },
-        tries_per_target=24,
+        tries_per_target=8,
+    ),
+    "multi_sample_hot": GeneratorConfig(
+        {
+            "do_sample": True,
+            "top_p": 0.8,
+            "temperature": 1.5,
+            "max_new_tokens": 4096,
+        },
+        tries_per_target=8,
     ),
     "beam_search": GeneratorConfig(
         {
             "do_sample": True,
-            "num_beams": 8,
-            "no_repeat_ngram_size": 32,
+            "top_p": 0.8,
+            "num_beams": 4,
             "num_return_sequences": 4,
             "max_new_tokens": 4096,
         },
-        tries_per_target=4,
+        tries_per_target=2,
+    ),
+    "beam_search_hot": GeneratorConfig(
+        {
+            "do_sample": True,
+            "top_p": 0.8,
+            "temperature": 1.5,
+            "num_beams": 4,
+            "num_return_sequences": 4,
+            "max_new_tokens": 4096,
+        },
+        tries_per_target=2,
+    ),
+    "beam_search_cold": GeneratorConfig(
+        {
+            "do_sample": True,
+            "top_p": 0.8,
+            "temperature": 0.66,
+            "num_beams": 4,
+            "num_return_sequences": 4,
+            "max_new_tokens": 4096,
+        },
+        tries_per_target=2,
     ),
 }
 
