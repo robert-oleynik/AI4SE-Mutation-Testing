@@ -13,7 +13,7 @@ class CommentRewriteGenerator(SimpleMutationGenerator):
     the AI to regenerate this function.
     """
 
-    def generate_prompt(self, node: ts.Node) -> str:
+    def _generate_prompt(self, node: ts.Node) -> str:
         method_context = Context(node)
         _, indent = method_context.relevant_class_definition()
         prompt = ""
@@ -25,7 +25,14 @@ class CommentRewriteGenerator(SimpleMutationGenerator):
         prompt += "\n\n"
         for decorator_node in method_context.decorators():
             prompt += indent + decorator_node.text.decode() + "\n"
-        prompt += indent + method_context.fn_signature() + "\n"
+        prompt += indent
+        strip_len = len(prompt)
+        docstring = method_context.docstring()
+        prompt += node.text[: docstring.end_byte - node.start_byte].decode()
+        return prompt, strip_len
+
+    def generate_prompt(self, node: ts.Node) -> str:
+        prompt, _ = self._generate_prompt(node)
         return prompt
 
     def generate(
@@ -33,8 +40,7 @@ class CommentRewriteGenerator(SimpleMutationGenerator):
     ) -> list[Mutation]:
         import mutator.ai.llm
 
-        prompt = self.generate_prompt(target.node)
-        strip_len = len(prompt) - (len(Context(target.node).fn_signature()) + 1)
+        prompt, strip_len = self._generate_prompt(target.node)
 
         def transform(result: str) -> str:
             return result[strip_len:]
