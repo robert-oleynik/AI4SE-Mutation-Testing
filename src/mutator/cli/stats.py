@@ -2,6 +2,7 @@ import pathlib
 
 import click
 
+from ..helper.timed import timed
 from ..result import Result
 from ..store import MutationStore
 
@@ -33,6 +34,7 @@ from ..store import MutationStore
     help="Attributes by which to group the statistics. "
     + "Specify none to get a total across all mutations.",
 )
+@timed
 def stats(out_dir, group_by, show_dropped):
     store = MutationStore(out_dir)
     groups = {}

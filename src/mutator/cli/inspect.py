@@ -2,6 +2,7 @@ import pathlib
 
 import click
 
+from ..helper.timed import timed
 from ..inspect.app import InspectApp
 
 
@@ -28,6 +29,7 @@ from ..inspect.app import InspectApp
     show_default=True,
     help="Path to project directory",
 )
+@timed
 def inspect(out_dir, project):
     app = InspectApp(project, out_dir)
     app.run()

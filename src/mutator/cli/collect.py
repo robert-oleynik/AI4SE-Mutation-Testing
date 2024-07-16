@@ -9,6 +9,7 @@ from ..cli.generate import generators
 from ..collect import TestMods
 from ..generator.generator import NoMutationPossible
 from ..helper.metrics import dstrloc, locfrac, strloc
+from ..helper.timed import timed
 
 strategies = {"test_mods": TestMods()}
 
@@ -126,6 +127,7 @@ def generate_samples(
     use multiple generators, it is not recommended.
     """,
 )
+@timed
 def collect(
     out_dir,
     bare,

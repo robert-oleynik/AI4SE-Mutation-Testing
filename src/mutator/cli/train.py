@@ -6,6 +6,8 @@ import shutil
 
 import click
 
+from ..helper.timed import timed
+
 
 @click.command(
     help="""
@@ -98,6 +100,7 @@ import click
     show_default=True,
     help="Set the rank value for LoRa training.",
 )
+@timed
 def train(
     out_dir,
     model_id,

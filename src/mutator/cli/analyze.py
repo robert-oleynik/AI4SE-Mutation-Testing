@@ -4,6 +4,7 @@ import pathlib
 import click
 
 from ..helper.metrics import dstrloc, locfrac, strloc
+from ..helper.timed import timed
 
 
 @click.command(help="Analyze the dataset generated with `collect`.")
@@ -24,6 +25,7 @@ from ..helper.metrics import dstrloc, locfrac, strloc
     Metric used to inspect dataset. If not specified the full dataset will be dumped.
     """,
 )
+@timed
 def dataset(dataset, metric):
     import datasets
     import matplotlib.pyplot as plt
@@ -95,6 +97,7 @@ def dataset(dataset, metric):
     default=2.0,
     help="Ignore all training samples with a loss less than this value.",
 )
+@timed
 def train_result(dir, dataset, min_loss):
     import datasets
     import matplotlib.pyplot as plt

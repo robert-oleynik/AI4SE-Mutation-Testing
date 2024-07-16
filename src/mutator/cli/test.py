@@ -4,6 +4,7 @@ import time
 
 import click
 
+from ..helper.timed import timed
 from ..result import Result
 from ..source import Filter
 from ..store import MutationStore
@@ -51,6 +52,7 @@ from .spinner import Spinner
     show_default=True,
     help="Also run tests on dropped mutations. Used for testing purposes.",
 )
+@timed
 def test(out_dir, project, filter, timeout, git_reset, test_dropped):
     filters = Filter(filter)
 

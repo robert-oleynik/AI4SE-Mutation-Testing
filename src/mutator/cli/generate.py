@@ -16,6 +16,7 @@ from ..generator import (
     InfillingGenerator,
     Prompt,
 )
+from ..helper.timed import timed
 from ..source import Filter, SourceFile
 from ..store import MutationStore
 from ..treesitter.python import tsParser
@@ -135,6 +136,7 @@ configs = {
     is_flag=True,
     help="Regenerate all mutations. Warning: Will delete all existing mutations.",
 )
+@timed
 def generate(
     out_dir,
     generator,
