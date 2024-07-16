@@ -1,5 +1,6 @@
 import tree_sitter as ts
 
+from ..helper.tries import tries
 from ..source import MutationTarget
 from ..treesitter.context import Context
 from .config import GeneratorConfig
@@ -24,8 +25,8 @@ class ForcedBranchGenerator(MutationGenerator):
         signature = target.get_signature().decode()
         docstring = context.docstring()
         docstring_len = len(docstring.text.decode()) if docstring else 0
-        results = []
-        for _ in range(config.tries_per_target):
+
+        def generate():
             prompt = definition + indent + target.content().decode()
             results += mutator.ai.llm.llm.force_branch(
                 prompt,
@@ -36,4 +37,5 @@ class ForcedBranchGenerator(MutationGenerator):
                 + docstring_len,
                 **config.model_kwargs,
             )
-        return Mutation.map(results)
+
+        return Mutation.map(tries(config.tries_per_target, generate))
