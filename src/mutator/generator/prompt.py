@@ -1,6 +1,7 @@
 import autopep8
 import tree_sitter as ts
 
+from ..helper.tries import tries
 from ..source import MutationTarget
 from ..treesitter.context import Context
 from .config import GeneratorConfig
@@ -59,4 +60,7 @@ class Prompt(SimpleMutationGenerator):
                 ]
             )[indent:]
 
-        return [Mutation(add_indent(result.final), result) for result in results]
+        def generate():
+            return [Mutation(add_indent(result.final), result) for result in results]
+
+        return tries(config.tries_per_target, generate)

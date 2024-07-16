@@ -1,5 +1,6 @@
 import tree_sitter as ts
 
+from ..helper.tries import tries
 from ..source import MutationTarget
 from ..treesitter.context import Context
 from .config import GeneratorConfig
@@ -31,9 +32,12 @@ class DocstringGenerator(SimpleMutationGenerator):
             prompt, to_trim = self._generate_prompt(target.node)
         except NoMutationPossible:
             return []
-        results = mutator.ai.llm.llm.prompt(
-            prompt,
-            transform_result=trim_prompt(to_trim),
-            **config.model_kwargs,
-        )
-        return Mutation.map(results)
+
+        def generate():
+            return mutator.ai.llm.llm.prompt(
+                prompt,
+                transform_result=trim_prompt(to_trim),
+                **config.model_kwargs,
+            )
+
+        return Mutation.map(tries(config.tries_per_target, generate))
