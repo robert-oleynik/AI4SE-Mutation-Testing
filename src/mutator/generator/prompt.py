@@ -9,7 +9,9 @@ from .generator import Mutant, SimpleMutantGenerator
 
 _prompt = """
 # Context
-You are an AI Agent, part of the Software Quality Assurance Team. Your task is to modify code in ways that will test the robustness of the test suite. You will be provided with a function block to introduce a mutant that must:
+You are an AI Agent, part of the Software Quality Assurance Team. Your task is to modify
+code in ways that will test the robustness of the test suite. You will be provided with
+a function block to introduce a mutant that must:
 
 1. Be syntactically correct.
 2. Avoid trivial modifications, such as:
@@ -23,7 +25,8 @@ You are an AI Agent, part of the Software Quality Assurance Team. Your task is t
     * Tweaking condition checks and logical operators.
     * Changing control flow constructs.
     * Modifying error handling mechanisms.
-4. Focus on critical areas such as error handling, boundary conditions, and logical branches. Ensure these areas are robustly tested.
+4. Focus on critical areas such as error handling, boundary conditions,
+   and logical branches. Ensure these areas are robustly tested.
 """.strip()
 
 
