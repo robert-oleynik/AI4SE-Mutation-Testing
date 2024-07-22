@@ -67,7 +67,6 @@ def test(out_dir, project, filter, timeout, git_reset, test_dropped):
 
     result = Result()
 
-    timeout *= 10
     for module_name, module in mutation.items():
         print("Testing Module:", module_name)
         for target_name, target in sorted(list(module.items()), key=lambda v: v[0]):
