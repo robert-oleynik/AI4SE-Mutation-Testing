@@ -1,0 +1,16 @@
+@startuml
+start
+repeat :Select Next Mutation;
+	if (Mutation matches filter?) then (yes)
+		partition Mutation Runner {
+			:Register Import Hook;
+			:Run PyTest;
+			:Replace Source with Mutation;
+		}
+		:Evaluate Test Result;
+	else (no)
+	endif
+repeat while (Found Next Mutation?) is (yes)
+->no;
+stop
+@enduml

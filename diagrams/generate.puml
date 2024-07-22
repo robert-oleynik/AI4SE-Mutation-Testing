@@ -1,0 +1,17 @@
+@startuml
+start
+repeat :Select Next Target;
+	if (Target matches Filter?) then (yes)
+		while (Found Next Generator and Config Pair?) is (yes)
+			:Generate Mutation;
+			if (Mutation is unique?) then (yes)
+				:Store Mutation;
+			else (no)
+			endif
+		endwhile(no)
+	else (no)
+	endif
+repeat while (Found Next Target?) is (yes)
+->no;
+stop
+@enduml
