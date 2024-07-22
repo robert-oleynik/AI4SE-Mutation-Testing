@@ -1,4 +1,5 @@
 import pathlib
+from collections import Counter
 
 import click
 
@@ -56,10 +57,10 @@ def stats(out_dir, group_by, show_dropped):
         for key_name in group_by:
             key.append(metadata.get(key_name, "unknown"))
         key = tuple(key)
-        group = groups.setdefault(key, {})
+        group = groups.setdefault(key, Counter())
 
         def stat(category: str, value=1):
-            group[category] = group.get(category, 0) + value  # noqa: B023
+            group.update({category: value})  # noqa: B023
 
         stat("mutants")
         if metadata.get("dropped", False):
@@ -111,6 +112,6 @@ def stats(out_dir, group_by, show_dropped):
             section = f" {section} "
             print(f"{section:-^40}")
             for category in annotation_categories:
-                count = group.get(category, 0)
+                count = group[category]
                 category = category + ":"
                 print(f"{category:<30}{count:>10}")
