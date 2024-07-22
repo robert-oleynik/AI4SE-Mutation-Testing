@@ -14,10 +14,10 @@ from ..result import Result
 
 
 class Target(ListItem):
-    def __init__(self, name: str, mutations: list[(str, dict)], **kwargs):
+    def __init__(self, name: str, mutants: list[(str, dict)], **kwargs):
         super().__init__(**kwargs)
         self._name = name
-        self._mutations = mutations
+        self._mutants = mutants
 
     def render(self) -> RenderResult:
         if self.is_everything_caught():
@@ -25,24 +25,24 @@ class Target(ListItem):
         return f"[red]{self._name}[/red]"
 
     def is_everything_caught(self) -> bool:
-        return all(m["caught"] for _, m in self._mutations)
+        return all(m["caught"] for _, m in self._mutants)
 
 
 class TargetList(Widget):
     def __init__(self, result: Result, **kwargs):
         super().__init__(**kwargs)
 
-        def mutations_sort_key(item):
-            _, mutation = item
-            return mutation["caught"]
+        def mutants_sort_key(item):
+            _, mutant = item
+            return mutant["caught"]
 
         targets = [
             Target(
                 f"{modname}:{name}",
-                list(sorted(mutations.items(), key=mutations_sort_key)),
+                list(sorted(mutants.items(), key=mutants_sort_key)),
             )
             for modname, module in result.modules.items()
-            for name, mutations in module.items()
+            for name, mutants in module.items()
         ]
         self.modules = sorted(targets, key=lambda m: m.is_everything_caught())
 
@@ -54,33 +54,33 @@ class TargetHeader(Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._name = None
-        self._mutations = None
+        self._mutants = None
         self._selected = 0
         self.lbl_module = Static(classes="header-first")
-        self.lbl_mutation = Static(classes="header-last")
+        self.lbl_mutant = Static(classes="header-last")
 
     def on_mount(self) -> None:
         self._update()
 
-    def update(self, name: str, mutations) -> None:
+    def update(self, name: str, mutants) -> None:
         if self._name != name:
             self._name = name
-            self._mutations = mutations
+            self._mutants = mutants
             self._selected = 0
         self._update()
 
     def _update(self) -> None:
-        if self._mutations is not None and self._selected < len(self._mutations):
-            id, mutation = self._mutations[self._selected]
+        if self._mutants is not None and self._selected < len(self._mutants):
+            id, mutant = self._mutants[self._selected]
             self.lbl_module.update(
-                f"[{self._selected + 1}/{len(self._mutations)}] (id {id}) {self._name}"
+                f"[{self._selected + 1}/{len(self._mutants)}] (id {id}) {self._name}"
             )
             label = ""
-            if mutation["caught"]:
+            if mutant["caught"]:
                 label += "[green]"
-                if mutation.get("syntax_error", False):
+                if mutant.get("syntax_error", False):
                     label += "syntax error"
-                elif mutation.get("timeout", False):
+                elif mutant.get("timeout", False):
                     label += "timeout"
                 else:
                     label += "caught"
@@ -91,15 +91,15 @@ class TargetHeader(Widget):
                 label += "[red]missed[/red]"
                 self.remove_class("valid")
                 self.add_class("invalid")
-            self.lbl_mutation.update(label)
+            self.lbl_mutant.update(label)
 
     def cycle_selected(self, offset: int) -> None:
-        self._selected = (self._selected + offset) % len(self._mutations)
+        self._selected = (self._selected + offset) % len(self._mutants)
         self._update()
 
     def compose(self) -> ComposeResult:
         yield self.lbl_module
-        yield self.lbl_mutation
+        yield self.lbl_mutant
 
 
 class TargetDiff(TextArea):
@@ -153,7 +153,7 @@ class TargetDiff(TextArea):
         except KeyError:
             return (
                 f"The llm result stage {self.llm_result_key()} "
-                + "is not defined for this mutation"
+                + "is not defined for this mutant"
             )
 
 
@@ -176,7 +176,7 @@ class TargetInfo(Widget):
         try:
             file = (self.out_dir / target["file"]).with_suffix(".json")
             metadata = json.load(open(file))
-            for key in ["mutation", "llm"]:
+            for key in ["mutant", "llm"]:
                 if key in metadata:
                     del metadata[key]
             self._meta = metadata
@@ -198,24 +198,24 @@ class TargetView(Widget):
         self._annotation_editor = Input(
             value="", name="annotation", classes="annotation-input valid"
         )
-        self._mutation = None
+        self._mutant = None
         self._out_dir = out_dir
 
-    def update(self, name: str, mutations) -> None:
-        self._header.update(name, mutations)
-        _, mutation = mutations[self._header._selected]
-        self._content.update(mutation)
-        self._log.update(mutation)
-        self._info.update(mutation)
+    def update(self, name: str, mutants) -> None:
+        self._header.update(name, mutants)
+        _, mutant = mutants[self._header._selected]
+        self._content.update(mutant)
+        self._log.update(mutant)
+        self._info.update(mutant)
         self._annotation_editor.value = ", ".join(
             self._info._meta.get("annotations", [])
         )
-        self._mutation = mutation
+        self._mutant = mutant
 
     def update_with_current(self):
-        self.update(self._header._name, self._header._mutations)
+        self.update(self._header._name, self._header._mutants)
 
-    def action_cycle_mutation(self, offset: int):
+    def action_cycle_mutant(self, offset: int):
         self._header.cycle_selected(offset)
         self.update_with_current()
 
@@ -224,39 +224,39 @@ class TargetView(Widget):
         self.update_with_current()
 
     def action_annotate(self):
-        if self._mutation is None:
+        if self._mutant is None:
             return
 
         def annotate(annotation: str) -> None:
             annotation = annotation.strip()
             if annotation == "":
                 return
-            file = (self._out_dir / self._mutation["file"]).with_suffix(".json")
+            file = (self._out_dir / self._mutant["file"]).with_suffix(".json")
             metadata = json.load(open(file))
             metadata["annotations"] = metadata.get("annotations", []) + [annotation]
             self._annotation_editor.value = ", ".join(metadata["annotations"])
             json.dump(metadata, open(file, "w"))
-            del metadata["mutation"]
+            del metadata["mutant"]
             self._info._pretty.update(metadata)
 
         self.app.push_screen(AnnotateScreen(), annotate)
 
     def on_button_pressed(self, ev: Button.Pressed) -> None:
         if ev.button.name == "next":
-            self.action_cycle_mutation(1)
+            self.action_cycle_mutant(1)
         elif ev.button.name == "prev":
-            self.action_cycle_mutation(-1)
+            self.action_cycle_mutant(-1)
 
     def on_input_changed(self, ev: Input.Changed) -> None:
-        if ev.input.name == "annotation" and self._mutation is not None:
+        if ev.input.name == "annotation" and self._mutant is not None:
             annotations = [
                 annotation.strip() for annotation in ev.input.value.split(",")
             ]
-            file = (self._out_dir / self._mutation["file"]).with_suffix(".json")
+            file = (self._out_dir / self._mutant["file"]).with_suffix(".json")
             metadata = json.load(open(file))
             metadata["annotations"] = annotations
             json.dump(metadata, open(file, "w"))
-            del metadata["mutation"]
+            del metadata["mutant"]
             self._info._pretty.update(metadata)
 
     def compose(self) -> ComposeResult:

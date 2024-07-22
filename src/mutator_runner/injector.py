@@ -6,7 +6,7 @@ import sys
 import types
 
 
-class MutationLoader(importlib.abc.SourceLoader):
+class MutantLoader(importlib.abc.SourceLoader):
     def __init__(self, module: str, path: pathlib.Path):
         self.module = module
         self.path = path
@@ -34,7 +34,7 @@ class DependencyInjector(importlib.abc.MetaPathFinder):
         target: types.ModuleType | None = ...,
     ) -> importlib.machinery.ModuleSpec | None:
         if fullname == self.module:
-            loader = MutationLoader(self.module, self.path)
+            loader = MutantLoader(self.module, self.path)
             return importlib.machinery.ModuleSpec(fullname, loader)
         return None
 

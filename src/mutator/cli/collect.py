@@ -7,7 +7,7 @@ from git import Repo
 
 from ..cli.generate import generators
 from ..collect import TestMods
-from ..generator.generator import NoMutationPossible
+from ..generator.generator import NoMutantPossible
 from ..helper.metrics import dstrloc, locfrac, strloc
 from ..helper.timed import timed
 
@@ -34,7 +34,7 @@ def generate_samples(
                         s = sample.to_dict(generators[name])
                         s["formatter"] = name
                         yield s
-                    except NoMutationPossible:
+                    except NoMutantPossible:
                         pass
 
     return _gen
@@ -42,7 +42,7 @@ def generate_samples(
 
 @click.command(
     help="""
-    Collect mutation samples from git repositories and generate a dataset for training.
+    Collect mutant samples from git repositories and generate a dataset for training.
     """
 )
 @click.option(
@@ -59,7 +59,7 @@ def generate_samples(
     multiple=True,
     type=pathlib.Path,
     help="""
-    Specify path to a bare git repository used to extract mutation samples from.
+    Specify path to a bare git repository used to extract mutant samples from.
     Can be used multiple times.
     """,
 )
@@ -69,7 +69,7 @@ def generate_samples(
     multiple=True,
     type=pathlib.Path,
     help="""
-    Specify path to a git repository used to extract mutation samples from.
+    Specify path to a git repository used to extract mutant samples from.
     Can be used multiple times.
     """,
 )
@@ -78,7 +78,7 @@ def generate_samples(
     default=20,
     type=int,
     help="""
-    Remove all samples with a change in lines of code from source to mutation greater
+    Remove all samples with a change in lines of code from source to mutant greater
     than this values.
     """,
 )
@@ -87,7 +87,7 @@ def generate_samples(
     default=10.0,
     type=float,
     help="""
-    Remove all samples with a ration of lines of code for mutation to source greater
+    Remove all samples with a ration of lines of code for mutant to source greater
     than this value.
     """,
 )
@@ -144,7 +144,7 @@ def collect(
     datasets.disable_caching()
 
     def _loc_ratio(row):
-        f = locfrac(row["source"], row["mutation"])
+        f = locfrac(row["source"], row["mutant"])
         return 1 / max_loc_ratio <= f and f <= max_loc_ratio
 
     cache_dir = out_dir / "cache"
@@ -162,7 +162,7 @@ def collect(
                     "start": datasets.Value(dtype="int64"),
                     "end": datasets.Value(dtype="int64"),
                     "source": datasets.Value(dtype="large_string"),
-                    "mutation": datasets.Value(dtype="large_string"),
+                    "mutant": datasets.Value(dtype="large_string"),
                     "prompt": datasets.Value(dtype="large_string"),
                     "formatter": datasets.Value(dtype="string"),
                 }
@@ -172,7 +172,7 @@ def collect(
     print(data)
 
     data = data.filter(
-        lambda row: abs(dstrloc(row["source"], row["mutation"])) < max_dloc,
+        lambda row: abs(dstrloc(row["source"], row["mutant"])) < max_dloc,
         load_from_cache_file=False,
     )
     data = data.filter(

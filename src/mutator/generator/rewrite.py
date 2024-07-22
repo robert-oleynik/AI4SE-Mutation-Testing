@@ -1,15 +1,15 @@
 import tree_sitter as ts
 
 from ..helper.tries import tries
-from ..source import MutationTarget
+from ..source import MutantTarget
 from ..treesitter.context import Context
 from .config import GeneratorConfig
-from .generator import Mutation, SimpleMutationGenerator
+from .generator import Mutant, SimpleMutantGenerator
 
 
-class CommentRewriteGenerator(SimpleMutationGenerator):
+class CommentRewriteGenerator(SimpleMutantGenerator):
     """
-    Tries to regenerate a mutation by commenting out the old function and prompting
+    Tries to regenerate a mutant by commenting out the old function and prompting
     the AI to regenerate this function.
     """
 
@@ -37,8 +37,8 @@ class CommentRewriteGenerator(SimpleMutationGenerator):
         return prompt
 
     def generate(
-        self, target: MutationTarget, config: GeneratorConfig
-    ) -> list[Mutation]:
+        self, target: MutantTarget, config: GeneratorConfig
+    ) -> list[Mutant]:
         import mutator.ai.llm
 
         prompt, strip_len = self._generate_prompt(target.node)
@@ -57,12 +57,12 @@ class CommentRewriteGenerator(SimpleMutationGenerator):
                 **model_kwargs,
             )
 
-        return Mutation.map(tries(config.tries_per_target, generate))
+        return Mutant.map(tries(config.tries_per_target, generate))
 
 
 class CommentRewriteContextGenerator(CommentRewriteGenerator):
     """
-    Tries to regenerate a mutation by commenting out the old function and prompting
+    Tries to regenerate a mutant by commenting out the old function and prompting
     the AI to regenerate this function, while providing the surrounding
     class definition.
     """

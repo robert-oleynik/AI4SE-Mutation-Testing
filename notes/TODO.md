@@ -1,4 +1,4 @@
-# Ideas for Mutation Generators
+# Ideas for Mutant Generators
 
 - [x] Replace e.g. a condition, call parameter or similars with the `<infilling>` tag and query the AI for the missing bits.
 - [x] Strip everything except function signature and docstring. Use the LLM to generate the missing bits.
@@ -8,7 +8,7 @@
 
 # Technical Features
 
-- [ ] Pass decorators into MutationTargets
+- [ ] Pass decorators into MutantTargets
 - [x] Provide function context (e. g. class around method)
 - [x] Provide more context to avoid loops
 - [x] Use version 1.1 2b of model
@@ -32,7 +32,7 @@
 
 # Report
 
-- Measure number of syntax errors, caught mutations, missed mutations and timeouts
+- Measure number of syntax errors, caught mutants, missed mutants and timeouts
   - Per generator
   - Per model + fine-tuned models
   - Against traditional mutation testers

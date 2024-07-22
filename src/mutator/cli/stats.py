@@ -4,7 +4,7 @@ import click
 
 from ..helper.timed import timed
 from ..result import Result
-from ..store import MutationStore
+from ..store import MutantStore
 
 
 @click.command(
@@ -14,16 +14,16 @@ from ..store import MutationStore
     "-o",
     "--out-dir",
     type=pathlib.Path,
-    default=pathlib.Path("out", "mutations"),
+    default=pathlib.Path("out", "mutants"),
     show_default=True,
-    help="Path to mutation directories.",
+    help="Path to mutant directories.",
 )
 @click.option(
     "--show-dropped",
     is_flag=True,
     default=False,
     show_default=True,
-    help="Include stats of dropped mutations.",
+    help="Include stats of dropped mutants.",
 )
 @click.option(
     "-g",
@@ -32,14 +32,14 @@ from ..store import MutationStore
     multiple=True,
     default=[],
     help="Attributes by which to group the statistics. "
-    + "Specify none to get a total across all mutations.",
+    + "Specify none to get a total across all mutants.",
 )
 @timed
 def stats(out_dir, group_by, show_dropped):
-    store = MutationStore(out_dir)
+    store = MutantStore(out_dir)
     groups = {}
     count_categories = [
-        "mutations",
+        "mutants",
         "dropped",
         "kept",
         "missed",
@@ -51,7 +51,7 @@ def stats(out_dir, group_by, show_dropped):
     annotation_categories = set()
 
     test_result = Result.read(out_dir / "test-result.json")
-    for module, target, path, _, metadata in store.list_mutation():
+    for module, target, path, _, metadata in store.list_mutants():
         key = []
         for key_name in group_by:
             key.append(metadata.get(key_name, "unknown"))
@@ -61,7 +61,7 @@ def stats(out_dir, group_by, show_dropped):
         def stat(category: str, value=1):
             group[category] = group.get(category, 0) + value  # noqa: B023
 
-        stat("mutations")
+        stat("mutants")
         if metadata.get("dropped", False):
             stat("dropped")
             if not show_dropped:

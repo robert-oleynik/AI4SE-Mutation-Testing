@@ -5,13 +5,13 @@ import typing
 from dataclasses import asdict
 
 from .ai.llm_stats import LLMStats
-from .generator import GeneratorConfig, Mutation
-from .source import MutationTarget
+from .generator import GeneratorConfig, Mutant
+from .source import MutantTarget
 
 
-class MutationStore:
+class MutantStore:
     """
-    Manage the filesystem storage of all mutations.
+    Manage the filesystem storage of all mutants.
     """
 
     def __init__(self, out: pathlib.Path):
@@ -21,8 +21,8 @@ class MutationStore:
 
     def add(
         self,
-        target: MutationTarget,
-        mutation: Mutation,
+        target: MutantTarget,
+        mutant: Mutant,
         model_or_checkpoint: str | pathlib.Path,
         generator: str,
         config_name: str,
@@ -41,18 +41,18 @@ class MutationStore:
             self.counter[path] += 1
         content = (
             target.source.content[: target.node.start_byte]
-            + mutation.content
+            + mutant.content
             + target.source.content[target.node.end_byte :]
         )
-        if mutation.llm_result is None:
+        if mutant.llm_result is None:
             llm_metadata = {}
         else:
-            llm_metadata = {"llm": asdict(mutation.llm_result)}
+            llm_metadata = {"llm": asdict(mutant.llm_result)}
         json.dump(
             {
                 "dropped": is_dropped,
                 "file": str(target.source.path),
-                "mutation": mutation.content.decode(),
+                "mutant": mutant.content.decode(),
                 "start": target.node.start_point,
                 "end": target.node.end_point,
                 "model_or_checkpoint": str(model_or_checkpoint),
@@ -73,7 +73,7 @@ class MutationStore:
         except FileNotFoundError:
             return True
 
-    def list_mutation(
+    def list_mutants(
         self,
     ) -> typing.Generator[
         tuple[str, str, pathlib.Path, pathlib.Path, dict], None, None

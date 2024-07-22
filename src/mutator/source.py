@@ -87,10 +87,10 @@ class SourceFile:
             symbol = Symbol(self.content, captures["target"])
             if filter.match(self.module, symbol.name):
                 self.symbols.append(symbol)
-        self.targets = [MutationTarget(self, lines, symbol) for symbol in self.symbols]
+        self.targets = [MutantTarget(self, lines, symbol) for symbol in self.symbols]
 
 
-class MutationTarget:
+class MutantTarget:
     """
     Stores offset/positions of target identifier and content.
     """

@@ -16,7 +16,7 @@
         <mxCell id="WOu1JFI7bPLgPp-yoU6n-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WOu1JFI7bPLgPp-yoU6n-0" source="WOu1JFI7bPLgPp-yoU6n-4" target="WOu1JFI7bPLgPp-yoU6n-7">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="WOu1JFI7bPLgPp-yoU6n-4" value="Scan for Mutation Targets" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="WOu1JFI7bPLgPp-yoU6n-0">
+        <mxCell id="WOu1JFI7bPLgPp-yoU6n-4" value="Scan for Mutant Targets" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="WOu1JFI7bPLgPp-yoU6n-0">
           <mxGeometry x="60" y="140" width="160" height="40" as="geometry" />
         </mxCell>
         <mxCell id="WOu1JFI7bPLgPp-yoU6n-6" value="AI (LLM)" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="WOu1JFI7bPLgPp-yoU6n-0">
@@ -33,7 +33,7 @@
             <mxPoint x="-40" y="140" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="WOu1JFI7bPLgPp-yoU6n-9" value="Query Mutations" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="WOu1JFI7bPLgPp-yoU6n-6">
+        <mxCell id="WOu1JFI7bPLgPp-yoU6n-9" value="Query Mutants" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="WOu1JFI7bPLgPp-yoU6n-6">
           <mxGeometry x="40" y="120" width="160" height="40" as="geometry" />
         </mxCell>
         <mxCell id="WOu1JFI7bPLgPp-yoU6n-14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="WOu1JFI7bPLgPp-yoU6n-0" source="WOu1JFI7bPLgPp-yoU6n-13" target="WOu1JFI7bPLgPp-yoU6n-9">
@@ -42,7 +42,7 @@
         <mxCell id="WOu1JFI7bPLgPp-yoU6n-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="WOu1JFI7bPLgPp-yoU6n-0" source="WOu1JFI7bPLgPp-yoU6n-13" target="WOu1JFI7bPLgPp-yoU6n-15">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="WOu1JFI7bPLgPp-yoU6n-13" value="Store Mutation Results" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="WOu1JFI7bPLgPp-yoU6n-0">
+        <mxCell id="WOu1JFI7bPLgPp-yoU6n-13" value="Store Mutant Results" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="WOu1JFI7bPLgPp-yoU6n-0">
           <mxGeometry x="60" y="220" width="160" height="40" as="geometry" />
         </mxCell>
         <mxCell id="WOu1JFI7bPLgPp-yoU6n-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;dashed=1;dashPattern=1 2;" edge="1" parent="WOu1JFI7bPLgPp-yoU6n-0" source="WOu1JFI7bPLgPp-yoU6n-15" target="WOu1JFI7bPLgPp-yoU6n-17">

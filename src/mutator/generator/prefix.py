@@ -1,22 +1,22 @@
 import tree_sitter as ts
 
 from ..helper.tries import tries
-from ..source import MutationTarget
+from ..source import MutantTarget
 from ..treesitter.context import Context
 from .config import GeneratorConfig
-from .generator import Mutation, MutationGenerator
+from .generator import Mutant, MutantGenerator
 
 
-class PrefixGenerator(MutationGenerator):
+class PrefixGenerator(MutantGenerator):
     def generate_sample_prompt(
-        self, source_node: ts.Node, mutation_node: ts.Node
+        self, source_node: ts.Node, mutant_node: ts.Node
     ) -> str:
-        definition, indent = Context(mutation_node).relevant_class_definition()
-        return definition + indent + mutation_node.text.decode()
+        definition, indent = Context(mutant_node).relevant_class_definition()
+        return definition + indent + mutant_node.text.decode()
 
     def generate(
-        self, target: MutationTarget, config: GeneratorConfig
-    ) -> list[Mutation]:
+        self, target: MutantTarget, config: GeneratorConfig
+    ) -> list[Mutant]:
         import mutator.ai.llm
         from mutator.ai.transform import trim_prompt
 
@@ -38,4 +38,4 @@ class PrefixGenerator(MutationGenerator):
                 **config.model_kwargs,
             )
 
-        return Mutation.map(tries(config.tries_per_target, generate))
+        return Mutant.map(tries(config.tries_per_target, generate))

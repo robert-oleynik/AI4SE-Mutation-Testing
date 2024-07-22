@@ -6,17 +6,17 @@ import click
 from ..helper.timed import timed
 from ..result import Result
 from ..source import Filter
-from ..store import MutationStore
+from ..store import MutantStore
 
 
-@click.command(help="Runs the hole test suite for all mutations.")
+@click.command(help="Runs the hole test suite for all mutants.")
 @click.option(
     "-o",
     "--out-dir",
-    default=pathlib.Path("out", "mutations"),
+    default=pathlib.Path("out", "mutants"),
     type=pathlib.Path,
     show_default=True,
-    help="Directory to read mutations from and to store.",
+    help="Directory to read mutants from and to store.",
 )
 @click.option(
     "-p",
@@ -31,7 +31,7 @@ from ..store import MutationStore
     "--filter",
     multiple=True,
     default=["*"],
-    help="Specify select filter for identifying mutations.",
+    help="Specify select filter for identifying mutants.",
 )
 @click.option(
     "-t", "--timeout", type=int, default=60, help="Test suite timeout in seconds."
@@ -48,26 +48,26 @@ from ..store import MutationStore
     is_flag=True,
     default=False,
     show_default=True,
-    help="Also run tests on dropped mutations. Used for testing purposes.",
+    help="Also run tests on dropped mutants. Used for testing purposes.",
 )
 @timed
 def test(out_dir, project, filter, timeout, git_reset, test_dropped):
     filters = Filter(filter)
 
-    mutation = {}
-    store = MutationStore(out_dir)
-    for module, target, path, source, metadata in store.list_mutation():
+    mutants = {}
+    store = MutantStore(out_dir)
+    for module, target, path, source, metadata in store.list_mutants():
         if not test_dropped and metadata.get("dropped", False):
             continue
-        if module not in mutation:
-            mutation[module] = {}
-        if target not in mutation[module]:
-            mutation[module][target] = []
-        mutation[module][target].append((path, source))
+        if module not in mutants:
+            mutants[module] = {}
+        if target not in mutants[module]:
+            mutants[module][target] = []
+        mutants[module][target].append((path, source))
 
     result = Result()
 
-    for module_name, module in mutation.items():
+    for module_name, module in mutants.items():
         print("Testing Module:", module_name)
         for target_name, target in sorted(list(module.items()), key=lambda v: v[0]):
             if not filters.match(module_name, target_name):
@@ -86,7 +86,7 @@ def test(out_dir, project, filter, timeout, git_reset, test_dropped):
                     **kwargs,
                 )
 
-            for i, (mutation, source) in enumerate(target):
+            for i, (mutant, source) in enumerate(target):
                 status_update(i, end="\r")
                 if git_reset:
                     subprocess.run(
@@ -99,7 +99,7 @@ def test(out_dir, project, filter, timeout, git_reset, test_dropped):
                     "-m",
                     module_name,
                     "-p",
-                    mutation,
+                    mutant,
                 ]
                 try:
                     is_timeout = False
@@ -122,8 +122,8 @@ def test(out_dir, project, filter, timeout, git_reset, test_dropped):
                 result.insert(
                     module_name,
                     target_name,
-                    mutation.stem,
-                    mutation.absolute().relative_to(out_dir.resolve("./mutations")),
+                    mutant.stem,
+                    mutant.absolute().relative_to(out_dir.resolve("./mutants")),
                     source,
                     is_caught,
                     is_syntax_error,

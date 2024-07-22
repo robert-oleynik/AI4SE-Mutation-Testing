@@ -1,6 +1,6 @@
 from .config import GeneratorConfig
 from .docstring import DocstringGenerator
-from .generator import Mutation, MutationGenerator
+from .generator import Mutant, MutantGenerator
 from .infilling import InfillingGenerator
 from .prefix import PrefixGenerator
 from .prompt import Prompt
@@ -36,8 +36,8 @@ __all__ = [
     "GeneratorConfigNotFound",
     "GeneratorNotFound",
     "InfillingGenerator",
-    "Mutation",
-    "MutationGenerator",
+    "Mutant",
+    "MutantGenerator",
     "Prompt",
     "configs",
     "generators",

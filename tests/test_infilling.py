@@ -48,7 +48,7 @@ class Foo:
 
 
 def test_generate_prompt():
-    source, mutation = setup(
+    source, mutant = setup(
         source1,
         b"""
 def bar(self) -> str:
@@ -80,5 +80,5 @@ class Foo:
             if <|fim_suffix|> == 42 * 100:
                 print(i)
         return "foobar"<|fim_middle|>2 * i"""
-    prompt = InfillingGenerator().generate_sample_prompt(source, mutation)
+    prompt = InfillingGenerator().generate_sample_prompt(source, mutant)
     assert prompt == expected

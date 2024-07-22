@@ -4,7 +4,7 @@ from textual.app import App, ComposeResult
 from textual.widgets import ListView
 
 from ..result import Result
-from ..store import MutationStore
+from ..store import MutantStore
 from .module_view import Target, TargetList, TargetView
 
 
@@ -69,8 +69,8 @@ class InspectApp(App):
     """
 
     BINDINGS = [
-        ("left", "select_prev_mutation()", "Select Previous Mutation"),
-        ("right", "select_next_mutation()", "Select Next Mutation"),
+        ("left", "select_prev_mutant()", "Select Previous Mutant"),
+        ("right", "select_next_mutant()", "Select Next Mutant"),
         (
             "ctrl+left",
             "select_prev_llm_result_stage()",
@@ -96,22 +96,22 @@ class InspectApp(App):
     def on_list_view_highlighted(self, ev: ListView.Highlighted) -> None:
         target = ev.item
         if isinstance(target, Target):
-            self.target_view.update(target._name, target._mutations)
+            self.target_view.update(target._name, target._mutants)
 
     def update_all_annotations(self):
         self.all_annotations.clear()
-        for _, _, _, _, metadata in MutationStore(self.out_dir).list_mutation():
+        for _, _, _, _, metadata in MutantStore(self.out_dir).list_mutants():
             for annotation in metadata.get("annotations", []):
                 self.all_annotations.add(annotation)
 
     def action_annotate(self):
         self.target_view.action_annotate()
 
-    def action_select_next_mutation(self):
-        self.target_view.action_cycle_mutation(1)
+    def action_select_next_mutant(self):
+        self.target_view.action_cycle_mutant(1)
 
-    def action_select_prev_mutation(self):
-        self.target_view.action_cycle_mutation(-1)
+    def action_select_prev_mutant(self):
+        self.target_view.action_cycle_mutant(-1)
 
     def action_select_next_llm_result_stage(self):
         self.target_view.action_cycle_llm_result_stage(1)
@@ -121,7 +121,7 @@ class InspectApp(App):
 
     def on_mount(self) -> None:
         target = self.target_list.modules[0]
-        self.target_view.update(target._name, target._mutations)
+        self.target_view.update(target._name, target._mutants)
 
     def compose(self) -> ComposeResult:
         yield self.target_list

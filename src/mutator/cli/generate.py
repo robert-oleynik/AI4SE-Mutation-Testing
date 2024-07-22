@@ -18,7 +18,7 @@ from ..generator import (
 )
 from ..helper.timed import timed
 from ..source import Filter, SourceFile
-from ..store import MutationStore
+from ..store import MutantStore
 from ..treesitter.python import tsParser
 from ..treesitter.tree_walker import compare
 
@@ -94,15 +94,15 @@ configs = {
 
 
 @click.command(
-    help="Generate mutations for the specified project and function targets."
+    help="Generate mutants for the specified project and function targets."
 )
 @click.option(
     "-o",
     "--out-dir",
-    default=pathlib.Path("out", "mutations"),
+    default=pathlib.Path("out", "mutants"),
     type=pathlib.Path,
     show_default=True,
-    help="Directory used to store mutations in.",
+    help="Directory used to store mutants in.",
 )
 @click.option(
     "-g",
@@ -111,7 +111,7 @@ configs = {
     type=click.Choice(generators.keys()),
     default=list(generators.keys()),
     show_default=True,
-    help="Specify generator used for generating mutations.",
+    help="Specify generator used for generating mutants.",
 )
 @click.option(
     "-c",
@@ -135,14 +135,14 @@ configs = {
     "--filter",
     multiple=True,
     default=["*"],
-    help="Specify select filter for identifying mutations.",
+    help="Specify select filter for identifying mutants.",
 )
 @click.option(
     "-m",
     "--model",
     multiple=True,
     default=[],
-    help="LLM model used to generate mutations.",
+    help="LLM model used to generate mutants.",
 )
 @click.option(
     "--checkpoint",
@@ -161,7 +161,7 @@ configs = {
 @click.option(
     "--clean",
     is_flag=True,
-    help="Regenerate all mutations. Warning: Will delete all existing mutations.",
+    help="Regenerate all mutants. Warning: Will delete all existing mutants.",
 )
 @timed
 def generate(
@@ -192,9 +192,9 @@ def generate(
 
     if clean and out_dir.exists():
         shutil.rmtree(out_dir)
-    store = MutationStore(out_dir)
+    store = MutantStore(out_dir)
     if not store.isclean():
-        print("error: found existing mutations. use flag `--clean` to generate new.")
+        print("error: found existing mutants. use flag `--clean` to generate new.")
         return 1
 
     num_targets = sum(len(source_file.targets) for source_file in source_files)
@@ -225,7 +225,7 @@ def generate(
                         f"\r[{target_index:>{len(str(num_targets))}}/{num_targets}]",  # noqa: B023
                         f"{target_path:<80}",  # noqa: B023
                         f"[generators: {generator_index}/{len(generator)}",  # noqa: B023
-                        f"mutations: {counter}",  # noqa: B023
+                        f"mutants: {counter}",  # noqa: B023
                         f"dropped: {dropped}] ",  # noqa: B023
                         end="",
                     )
@@ -245,13 +245,13 @@ def generate(
                             c = configs[conf]
                             mutator.ai.llm.llm.reset_stats()
                             try:
-                                mutations = g.generate(target, c)
+                                mutants = g.generate(target, c)
                             except Exception as e:
                                 print("\nwarning: caught exception, skip")
                                 traceback.print_exception(e)
                                 continue
-                            for mutation in mutations:
-                                new_tree = tsParser.parse(mutation.content).root_node
+                            for mutant in mutants:
+                                new_tree = tsParser.parse(mutant.content).root_node
                                 is_dropped = any(
                                     compare(tree.walk(), new_tree.walk(), False)[0]
                                     for tree in trees
@@ -259,7 +259,7 @@ def generate(
                                 llm_stats = mutator.ai.llm.llm.stats
                                 store.add(
                                     target,
-                                    mutation,
+                                    mutant,
                                     model_or_checkpoint,
                                     gen,
                                     conf,

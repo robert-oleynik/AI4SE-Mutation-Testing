@@ -1,18 +1,18 @@
 import tree_sitter as ts
 
 from ..helper.tries import tries
-from ..source import MutationTarget
+from ..source import MutantTarget
 from ..treesitter.context import Context
 from .config import GeneratorConfig
-from .generator import Mutation, NoMutationPossible, SimpleMutationGenerator
+from .generator import Mutant, NoMutantPossible, SimpleMutantGenerator
 
 
-class DocstringGenerator(SimpleMutationGenerator):
+class DocstringGenerator(SimpleMutantGenerator):
     def _generate_prompt(self, node: ts.Node) -> tuple[str, str]:
         context = Context(node)
         docstring = context.docstring()
         if not docstring:
-            raise NoMutationPossible()
+            raise NoMutantPossible()
         definition, indent = context.relevant_class_definition()
         to_trim = definition + indent
         prompt = to_trim + node.text[: docstring.end_byte - node.start_byte].decode()
@@ -23,14 +23,14 @@ class DocstringGenerator(SimpleMutationGenerator):
         return prompt
 
     def generate(
-        self, target: MutationTarget, config: GeneratorConfig
-    ) -> list[Mutation]:
+        self, target: MutantTarget, config: GeneratorConfig
+    ) -> list[Mutant]:
         import mutator.ai.llm
         from mutator.ai.transform import trim_prompt
 
         try:
             prompt, to_trim = self._generate_prompt(target.node)
-        except NoMutationPossible:
+        except NoMutantPossible:
             return []
 
         def generate():
@@ -40,4 +40,4 @@ class DocstringGenerator(SimpleMutationGenerator):
                 **config.model_kwargs,
             )
 
-        return Mutation.map(tries(config.tries_per_target, generate))
+        return Mutant.map(tries(config.tries_per_target, generate))

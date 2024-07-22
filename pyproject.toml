@@ -29,7 +29,7 @@ dependencies = [
 
 [project.scripts]
 mutator = "mutator:cli_main"
-mutation-runner = "mutator_runner:cli_main"
+mutator-runner = "mutator_runner:cli_main"
 
 [tool.pyright]
 pythonVersion = "3.12"

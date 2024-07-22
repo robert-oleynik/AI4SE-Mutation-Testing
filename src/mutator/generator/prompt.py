@@ -2,14 +2,14 @@ import autopep8
 import tree_sitter as ts
 
 from ..helper.tries import tries
-from ..source import MutationTarget
+from ..source import MutantTarget
 from ..treesitter.context import Context
 from .config import GeneratorConfig
-from .generator import Mutation, SimpleMutationGenerator
+from .generator import Mutant, SimpleMutantGenerator
 
 _prompt = """
 # Context
-You are an AI Agent, part of the Software Quality Assurance Team. Your task is to modify code in ways that will test the robustness of the test suite. You will be provided with a function block to introduce a mutation that must:
+You are an AI Agent, part of the Software Quality Assurance Team. Your task is to modify code in ways that will test the robustness of the test suite. You will be provided with a function block to introduce a mutant that must:
 
 1. Be syntactically correct.
 2. Avoid trivial modifications, such as:
@@ -27,18 +27,18 @@ You are an AI Agent, part of the Software Quality Assurance Team. Your task is t
 """.strip()
 
 
-class Prompt(SimpleMutationGenerator):
+class Prompt(SimpleMutantGenerator):
     def generate_prompt(self, node: ts.Node) -> str:
         context = Context(node)
         prompt = _prompt + "\n\n"
         # TODO: Remove indent from function body
         prompt += "Source:\n" + autopep8.fix_code(node.text.decode()) + "\n\n"
-        prompt += "Mutation:\n" + context.fn_signature() + "\n"
+        prompt += "Mutant:\n" + context.fn_signature() + "\n"
         return prompt
 
     def generate(
-        self, target: MutationTarget, config: GeneratorConfig
-    ) -> list[Mutation]:
+        self, target: MutantTarget, config: GeneratorConfig
+    ) -> list[Mutant]:
         import mutator.ai.llm
 
         indent = target.node.start_point[1]
@@ -61,6 +61,6 @@ class Prompt(SimpleMutationGenerator):
             )[indent:]
 
         def generate():
-            return [Mutation(add_indent(result.final), result) for result in results]
+            return [Mutant(add_indent(result.final), result) for result in results]
 
         return tries(config.tries_per_target, generate)

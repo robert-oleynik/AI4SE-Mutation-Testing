@@ -18,7 +18,7 @@ from ..helper.timed import timed
 @click.option(
     "--metric",
     type=click.Choice(
-        ["dloc", "source_loc", "mutation_loc", "loc_frac", "prompt_loc"],
+        ["dloc", "source_loc", "mutant_loc", "loc_frac", "prompt_loc"],
         case_sensitive=False,
     ),
     help="""
@@ -36,7 +36,7 @@ def dataset(dataset, metric):
 
     fig, ax = plt.subplots()
     if metric == "dloc":
-        data = [dstrloc(row["source"], row["mutation"]) for row in dataset]
+        data = [dstrloc(row["source"], row["mutant"]) for row in dataset]
         dloc = pandas.Series(name="dloc", data=data)
         print(dloc.quantile([0.5, 0.75, 0.9, 0.95, 0.995]))
         dloc = dloc.value_counts().sort_index()
@@ -49,15 +49,15 @@ def dataset(dataset, metric):
         loc = loc.value_counts().sort_index()
         loc.plot(ax=ax, kind="line")
         ax.set_yscale("log")
-    elif metric == "mutation_loc":
-        data = [strloc(entry["mutation"]) for entry in dataset]
-        loc = pandas.Series(name="mutation loc", data=data)
+    elif metric == "mutant_loc":
+        data = [strloc(entry["mutant"]) for entry in dataset]
+        loc = pandas.Series(name="mutant loc", data=data)
         print(loc.quantile([0.5, 0.75, 0.9, 0.95, 0.995]))
         loc = loc.value_counts().sort_index()
         loc.plot(ax=ax, kind="line")
         ax.set_yscale("log")
     elif metric == "loc_frac":
-        data = [locfrac(entry["source"], entry["mutation"]) for entry in dataset]
+        data = [locfrac(entry["source"], entry["mutant"]) for entry in dataset]
         loc = pandas.Series(name="source loc", data=data)
         print(loc.quantile([0.5, 0.75, 0.9, 0.95, 0.995]))
         loc.plot(ax=ax, kind="hist")

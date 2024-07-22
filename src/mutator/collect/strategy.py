@@ -5,7 +5,7 @@ import autopep8
 import git
 import tree_sitter as ts
 
-from ..generator.generator import MutationGenerator
+from ..generator.generator import MutantGenerator
 
 
 class Sample:
@@ -14,22 +14,22 @@ class Sample:
         commit: git.Commit,
         diff: git.Diff,
         source_node: ts.Node,
-        mutation_node: ts.Node,
+        mutant_node: ts.Node,
     ):
         self.commit = commit
         self.diff = diff
         self.source_node = source_node
-        self.mutation_node = mutation_node
+        self.mutant_node = mutant_node
 
-    def to_dict(self, generator: MutationGenerator) -> dict:
-        prompt = generator.generate_sample_prompt(self.source_node, self.mutation_node)
+    def to_dict(self, generator: MutantGenerator) -> dict:
+        prompt = generator.generate_sample_prompt(self.source_node, self.mutant_node)
         return {
             "commit": self.commit.hexsha,
             "file": self.diff.b_path,
-            "start": self.mutation_node.start_byte,
-            "end": self.mutation_node.end_byte,
+            "start": self.mutant_node.start_byte,
+            "end": self.mutant_node.end_byte,
             "source": autopep8.fix_code(self.source_node.text.decode("utf-8")),
-            "mutation": autopep8.fix_code(self.mutation_node.text.decode("utf-8")),
+            "mutant": autopep8.fix_code(self.mutant_node.text.decode("utf-8")),
             "prompt": prompt,
         }
 

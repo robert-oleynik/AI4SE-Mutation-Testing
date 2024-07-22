@@ -2,12 +2,12 @@ import random
 
 import tree_sitter as ts
 
-from ..source import MutationTarget
+from ..source import MutantTarget
 from ..treesitter.context import Context
 from ..treesitter.python import tsLang
 from ..treesitter.tree_walker import compare
 from .config import GeneratorConfig
-from .generator import Mutation, MutationGenerator, NoMutationPossible
+from .generator import Mutant, MutantGenerator, NoMutantPossible
 
 _docstring_query = tsLang.query("""
 (function_definition body: (block . (expression_statement (string) @docstring)))
@@ -18,7 +18,7 @@ _targets_query = tsLang.query("""
 """)
 
 
-class InfillingGenerator(MutationGenerator):
+class InfillingGenerator(MutantGenerator):
     def create_prompt(
         self, source_node: ts.Node, start_byte: int, end_byte: int, middle=""
     ):
@@ -30,20 +30,20 @@ class InfillingGenerator(MutationGenerator):
         return prompt, prefix, suffix
 
     def generate_sample_prompt(
-        self, source_node: ts.Node, mutation_node: ts.Node
+        self, source_node: ts.Node, mutant_node: ts.Node
     ) -> str:
-        equal, source, mutation = compare(source_node.walk(), mutation_node.walk())
+        equal, source, mutant = compare(source_node.walk(), mutant_node.walk())
         if equal:
-            raise NoMutationPossible()
-        start_byte = source.start_byte if source else mutation.start_byte
-        end_byte = source.end_byte if source else mutation.start_byte
-        middle = mutation.text.decode() if mutation else ""
+            raise NoMutantPossible()
+        start_byte = source.start_byte if source else mutant.start_byte
+        end_byte = source.end_byte if source else mutant.start_byte
+        middle = mutant.text.decode() if mutant else ""
         prompt, _, _ = self.create_prompt(source_node, start_byte, end_byte, middle)
         return prompt
 
     def generate(
-        self, target: MutationTarget, config: GeneratorConfig
-    ) -> list[Mutation]:
+        self, target: MutantTarget, config: GeneratorConfig
+    ) -> list[Mutant]:
         import mutator.ai.llm
 
         body = target.node.child_by_field_name("body")
@@ -76,4 +76,4 @@ class InfillingGenerator(MutationGenerator):
                 transform_result=transform,
                 **config.model_kwargs,
             )
-        return Mutation.map(results)
+        return Mutant.map(results)
