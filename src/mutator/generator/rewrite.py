@@ -36,9 +36,7 @@ class CommentRewriteNoContextGenerator(SimpleMutantGenerator):
         prompt, _ = self._generate_prompt(node)
         return prompt
 
-    def generate(
-        self, target: MutantTarget, config: GeneratorConfig
-    ) -> list[Mutant]:
+    def generate(self, target: MutantTarget, config: GeneratorConfig) -> list[Mutant]:
         import mutator.ai.llm
 
         prompt, strip_len = self._generate_prompt(target.node)

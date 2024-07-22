@@ -29,9 +29,7 @@ class InfillingGenerator(MutantGenerator):
         prompt += f"<|fim_suffix|>{suffix}<|fim_middle|>{middle}"
         return prompt, prefix, suffix
 
-    def generate_sample_prompt(
-        self, source_node: ts.Node, mutant_node: ts.Node
-    ) -> str:
+    def generate_sample_prompt(self, source_node: ts.Node, mutant_node: ts.Node) -> str:
         equal, source, mutant = compare(source_node.walk(), mutant_node.walk())
         if equal:
             raise NoMutantPossible()
@@ -41,9 +39,7 @@ class InfillingGenerator(MutantGenerator):
         prompt, _, _ = self.create_prompt(source_node, start_byte, end_byte, middle)
         return prompt
 
-    def generate(
-        self, target: MutantTarget, config: GeneratorConfig
-    ) -> list[Mutant]:
+    def generate(self, target: MutantTarget, config: GeneratorConfig) -> list[Mutant]:
         import mutator.ai.llm
 
         body = target.node.child_by_field_name("body")

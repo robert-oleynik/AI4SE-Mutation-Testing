@@ -8,15 +8,11 @@ from .generator import Mutant, MutantGenerator
 
 
 class PrefixGenerator(MutantGenerator):
-    def generate_sample_prompt(
-        self, source_node: ts.Node, mutant_node: ts.Node
-    ) -> str:
+    def generate_sample_prompt(self, source_node: ts.Node, mutant_node: ts.Node) -> str:
         definition, indent = Context(mutant_node).relevant_class_definition()
         return definition + indent + mutant_node.text.decode()
 
-    def generate(
-        self, target: MutantTarget, config: GeneratorConfig
-    ) -> list[Mutant]:
+    def generate(self, target: MutantTarget, config: GeneratorConfig) -> list[Mutant]:
         import mutator.ai.llm
         from mutator.ai.transform import trim_prompt
 

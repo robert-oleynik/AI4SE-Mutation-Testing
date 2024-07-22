@@ -19,9 +19,7 @@ class Mutant:
 
 class MutantGenerator(abc.ABC):
     @abc.abstractmethod
-    def generate_sample_prompt(
-        self, source_node: ts.Node, mutant_node: ts.Node
-    ) -> str:
+    def generate_sample_prompt(self, source_node: ts.Node, mutant_node: ts.Node) -> str:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -34,9 +32,7 @@ class SimpleMutantGenerator(MutantGenerator):
     def generate_prompt(self, node: ts.Node) -> str:
         raise NotImplementedError
 
-    def generate_sample_prompt(
-        self, source_node: ts.Node, mutant_node: ts.Node
-    ) -> str:
+    def generate_sample_prompt(self, source_node: ts.Node, mutant_node: ts.Node) -> str:
         prompt = self.generate_prompt(source_node)
         indent = "    "
         for c in prompt.splitlines(False)[-1]:
@@ -44,9 +40,7 @@ class SimpleMutantGenerator(MutantGenerator):
                 indent += c
             else:
                 break
-        prompt += indent + mutant_node.child_by_field_name("body").text.decode(
-            "utf-8"
-        )
+        prompt += indent + mutant_node.child_by_field_name("body").text.decode("utf-8")
         return prompt
 
 

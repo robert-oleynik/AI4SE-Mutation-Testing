@@ -93,9 +93,7 @@ configs = {
 }
 
 
-@click.command(
-    help="Generate mutants for the specified project and function targets."
-)
+@click.command(help="Generate mutants for the specified project and function targets.")
 @click.option(
     "-o",
     "--out-dir",

@@ -36,9 +36,7 @@ class Prompt(SimpleMutantGenerator):
         prompt += "Mutant:\n" + context.fn_signature() + "\n"
         return prompt
 
-    def generate(
-        self, target: MutantTarget, config: GeneratorConfig
-    ) -> list[Mutant]:
+    def generate(self, target: MutantTarget, config: GeneratorConfig) -> list[Mutant]:
         import mutator.ai.llm
 
         indent = target.node.start_point[1]

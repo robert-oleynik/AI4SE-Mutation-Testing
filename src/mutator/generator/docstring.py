@@ -22,9 +22,7 @@ class DocstringGenerator(SimpleMutantGenerator):
         prompt, _ = self.generate_prompt(node)
         return prompt
 
-    def generate(
-        self, target: MutantTarget, config: GeneratorConfig
-    ) -> list[Mutant]:
+    def generate(self, target: MutantTarget, config: GeneratorConfig) -> list[Mutant]:
         import mutator.ai.llm
         from mutator.ai.transform import trim_prompt
 
