@@ -7,7 +7,7 @@ from .config import GeneratorConfig
 from .generator import Mutant, SimpleMutantGenerator
 
 
-class CommentRewriteGenerator(SimpleMutantGenerator):
+class CommentRewriteNoContextGenerator(SimpleMutantGenerator):
     """
     Tries to regenerate a mutant by commenting out the old function and prompting
     the AI to regenerate this function.
@@ -60,7 +60,7 @@ class CommentRewriteGenerator(SimpleMutantGenerator):
         return Mutant.map(tries(config.tries_per_target, generate))
 
 
-class CommentRewriteContextGenerator(CommentRewriteGenerator):
+class CommentRewriteGenerator(CommentRewriteNoContextGenerator):
     """
     Tries to regenerate a mutant by commenting out the old function and prompting
     the AI to regenerate this function, while providing the surrounding

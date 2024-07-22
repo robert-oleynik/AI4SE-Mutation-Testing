@@ -4,7 +4,7 @@ from .generator import Mutant, MutantGenerator
 from .infilling import InfillingGenerator
 from .prefix import PrefixGenerator
 from .prompt import Prompt
-from .rewrite import CommentRewriteContextGenerator, CommentRewriteGenerator
+from .rewrite import CommentRewriteGenerator, CommentRewriteNoContextGenerator
 
 
 class GeneratorNotFound(Exception):
@@ -29,7 +29,7 @@ class GeneratorConfigNotFound(Exception):
 
 __all__ = [
     "CommentRewriteGenerator",
-    "CommentRewriteContextGenerator",
+    "CommentRewriteNoContextGenerator",
     "DocstringGenerator",
     "PrefixGenerator",
     "GeneratorConfig",

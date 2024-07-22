@@ -59,9 +59,10 @@ with the usage of LLMs. The generators used in this project can be divided into 
 
 	- The first and most basic generator is the `docstring` generator. This generator
 	  will prompt the LLM only with the signature and docstring.
-	- The third and last generator `comment_rewrite` will additionally write the original
+	- The second generator `comment_rewrite` will additionally write the original
 	  function commented out before the member function signature.
-	- TODO: `comment_rewrite` with context
+	- The `comment_rewrite_no_context` generator is a variation of the previous generator,
+	  that does not provide context for the surrounding class.
 
 2. Reusing parts of the existing implementation and prompting the LLM to rewrite parts of it:
 

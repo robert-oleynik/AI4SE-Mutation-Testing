@@ -6,8 +6,8 @@ import traceback
 import click
 
 from ..generator import (
-    CommentRewriteContextGenerator,
     CommentRewriteGenerator,
+    CommentRewriteNoContextGenerator,
     DocstringGenerator,
     GeneratorConfig,
     GeneratorConfigNotFound,
@@ -25,7 +25,7 @@ from ..treesitter.tree_walker import compare
 generators = {
     "docstring": DocstringGenerator(),
     "comment_rewrite": CommentRewriteGenerator(),
-    "comment_rewrite_context": CommentRewriteContextGenerator(),
+    "comment_rewrite_no_context": CommentRewriteNoContextGenerator(),
     "infilling": InfillingGenerator(),
     "prefix": PrefixGenerator(),
     "prompt": Prompt(),
