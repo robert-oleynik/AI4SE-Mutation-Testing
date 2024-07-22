@@ -28,7 +28,8 @@ class CommentRewriteGenerator(SimpleMutationGenerator):
         prompt += indent
         strip_len = len(prompt)
         docstring = method_context.docstring()
-        prompt += node.text[: docstring.end_byte - node.start_byte].decode()
+        if docstring is not None:
+            prompt += node.text[: docstring.end_byte - node.start_byte].decode()
         return prompt, strip_len
 
     def generate_prompt(self, node: ts.Node) -> str:
