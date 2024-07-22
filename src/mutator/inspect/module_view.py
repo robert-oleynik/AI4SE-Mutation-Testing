@@ -176,7 +176,7 @@ class TargetInfo(Widget):
         try:
             file = (self.out_dir / target["file"]).with_suffix(".json")
             metadata = json.load(open(file))
-            for key in ["mutant", "llm"]:
+            for key in ["mutant", "mutation", "llm"]:
                 if key in metadata:
                     del metadata[key]
             self._meta = metadata
@@ -237,8 +237,7 @@ class TargetView(Widget):
             metadata["annotations"] = metadata.get("annotations", []) + [annotation]
             self._annotation_editor.value = ", ".join(metadata["annotations"])
             json.dump(metadata, open(file, "w"))
-            del metadata["mutant"]
-            self._info._pretty.update(metadata)
+            self._info.update(self._mutant)
 
         self.app.push_screen(AnnotateScreen(), annotate)
 
@@ -260,8 +259,7 @@ class TargetView(Widget):
             self.app.add_annotations(annotations)
             metadata["annotations"] = annotations
             json.dump(metadata, open(file, "w"))
-            del metadata["mutant"]
-            self._info._pretty.update(metadata)
+            self._info.update(self._mutant)
 
     def compose(self) -> ComposeResult:
         yield self._header
