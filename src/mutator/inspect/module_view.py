@@ -233,6 +233,7 @@ class TargetView(Widget):
                 return
             file = (self._out_dir / self._mutant["file"]).with_suffix(".json")
             metadata = json.load(open(file))
+            self.app.add_annotations([annotation])
             metadata["annotations"] = metadata.get("annotations", []) + [annotation]
             self._annotation_editor.value = ", ".join(metadata["annotations"])
             json.dump(metadata, open(file, "w"))
@@ -252,8 +253,11 @@ class TargetView(Widget):
             annotations = [
                 annotation.strip() for annotation in ev.input.value.split(",")
             ]
+            annotations = [annotation for annotation in annotations if annotation != ""]
             file = (self._out_dir / self._mutant["file"]).with_suffix(".json")
             metadata = json.load(open(file))
+            self.app.remove_annotations(metadata.get("annotations", []))
+            self.app.add_annotations(annotations)
             metadata["annotations"] = annotations
             json.dump(metadata, open(file, "w"))
             del metadata["mutant"]
@@ -276,10 +280,9 @@ class TargetView(Widget):
 class AnnotateScreen(ModalScreen[str]):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.app.update_all_annotations()
         self.input = Input(
             value="",
-            suggester=SuggestFromList(self.app.all_annotations),
+            suggester=SuggestFromList(list(self.app.all_annotations.keys())),
         )
 
     def compose(self):

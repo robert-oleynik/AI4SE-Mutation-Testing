@@ -1,4 +1,5 @@
 import pathlib
+from collections import Counter
 
 from textual.app import App, ComposeResult
 from textual.widgets import ListView
@@ -90,7 +91,7 @@ class InspectApp(App):
         self.result = Result(path=out_dir / "test-result.json")
         self.target_list = TargetList(self.result, classes="module-list")
         self.target_view = TargetView(base_dir, out_dir, classes="module-view")
-        self.all_annotations = set()
+        self.all_annotations = Counter()
         self.update_all_annotations()
 
     def on_list_view_highlighted(self, ev: ListView.Highlighted) -> None:
@@ -101,8 +102,15 @@ class InspectApp(App):
     def update_all_annotations(self):
         self.all_annotations.clear()
         for _, _, _, _, metadata in MutantStore(self.out_dir).list_mutants():
-            for annotation in metadata.get("annotations", []):
-                self.all_annotations.add(annotation)
+            self.add_annotations(metadata.get("annotations", []))
+
+    def add_annotations(self, annotations: list[str]):
+        self.all_annotations.update(annotations)
+
+    def remove_annotations(self, annotations: list[str]):
+        self.all_annotations.subtract(annotations)
+        # remove non-positive keys
+        self.all_annotations += {}
 
     def action_annotate(self):
         self.target_view.action_annotate()
