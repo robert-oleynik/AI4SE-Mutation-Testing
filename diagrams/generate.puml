@@ -4,10 +4,7 @@ repeat :Select next target;
 	if (Target matches filter?) then (yes)
 		while (Found next generator and config pair?) is (yes)
 			:Generate mutants;
-			if (Is mutant unique?) then (yes)
-				:Store mutants;
-			else (no)
-			endif
+			:Store unique mutants;
 		endwhile(no)
 	else (no)
 	endif
