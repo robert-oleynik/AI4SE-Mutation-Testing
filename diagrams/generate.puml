@@ -1,14 +1,14 @@
 @startuml
 start
-repeat :Select next target;
-	if (Target matches filter?) then (yes)
-		while (Found next generator and config pair?) is (yes)
+while (Next model available?) is (yes)
+	:Load model;
+	while (Next triple (mutant target, generator, generator config) available?) is (yes)
+		if (Mutant target matches filter?) then (yes)
 			:Generate mutants;
-			:Store unique mutants;
-		endwhile(no)
-	else (no)
-	endif
-repeat while (Found next target?) is (yes)
-->no;
+			:Mark duplicate mutants;
+			:Store mutants;
+		endif
+	endwhile (no)
+endwhile (no)
 stop
 @enduml
