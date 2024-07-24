@@ -17,6 +17,14 @@ class InspectApp(App):
     .module-list {
         border: solid white;
         width: 1fr;
+
+        ListItem {
+            background: $panel;
+        }
+
+        ListView > ListItem.--highlight {
+            background: blue;
+        }
     }
     .module-view {
         layout: vertical;
