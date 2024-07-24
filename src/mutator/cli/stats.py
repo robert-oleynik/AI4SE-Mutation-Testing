@@ -35,8 +35,16 @@ from ..store import MutantStore
     help="Attributes by which to group the statistics. "
     + "Specify none to get a total across all mutants.",
 )
+@click.option(
+    "-c",
+    "--csv",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Output in csv format",
+)
 @timed
-def stats(out_dir, group_by, show_dropped):
+def stats(out_dir, group_by, show_dropped, csv):
     store = MutantStore(out_dir)
     groups = {}
     count_categories = [
@@ -94,24 +102,41 @@ def stats(out_dir, group_by, show_dropped):
                 if is_category:
                     stat(category)
 
-    category_sections = [
-        ("counts", count_categories),
-        ("llm", list(sorted(llm_categories))),
-        ("annotations", list(sorted(annotation_categories))),
-    ]
-    for key, group in groups.items():
-        print("=" * 40)
-        for name, value in zip(group_by, key, strict=True):
-            name = f"{name}: {value}"
-            print(f"{name:^40}")
-        if len(group_by) == 0:
-            print(f"{'total':^40}")
-        for section, annotation_categories in category_sections:
-            if len(annotation_categories) == 0:
-                continue
-            section = f" {section} "
-            print(f"{section:-^40}")
-            for category in annotation_categories:
-                count = group[category]
-                category = category + ":"
-                print(f"{category:<30}{count:>10}")
+    llm_categories = list(sorted(llm_categories))
+    annotation_categories = list(sorted(annotation_categories))
+    if csv:
+        all_categories = [
+            *count_categories,
+            *llm_categories,
+            *annotation_categories,
+        ]
+        print(
+            *group_by,
+            *all_categories,
+            sep=",",
+        )
+        for key, group in groups.items():
+            values = [group[category] for category in all_categories]
+            print(*key, *values, sep=",")
+    else:
+        category_sections = [
+            ("counts", count_categories),
+            ("llm", llm_categories),
+            ("annotations", annotation_categories),
+        ]
+        for key, group in groups.items():
+            print("=" * 40)
+            for name, value in zip(group_by, key, strict=True):
+                name = f"{name}: {value}"
+                print(f"{name:^40}")
+            if len(group_by) == 0:
+                print(f"{'total':^40}")
+            for section, annotation_categories in category_sections:
+                if len(annotation_categories) == 0:
+                    continue
+                section = f" {section} "
+                print(f"{section:-^40}")
+                for category in annotation_categories:
+                    count = group[category]
+                    category = category + ":"
+                    print(f"{category:<30}{count:>10}")
