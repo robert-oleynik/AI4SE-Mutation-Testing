@@ -40,6 +40,13 @@ from ..store import MutantStore
     + "Specify none to get a total across all mutants.",
 )
 @click.option(
+    "-m",
+    "--merge",
+    multiple=True,
+    default=[],
+    help="Merge multiple categories into one. Format: new_category=old_category_1,old_category_2,old_category_3"
+)
+@click.option(
     "-c",
     "--show-category",
     multiple=True,
@@ -62,7 +69,7 @@ from ..store import MutantStore
     help="If format is plot, save the plot to this file.",
 )
 @timed
-def stats(out, show_dropped, group_by, show_category, format, save_plot):
+def stats(out, show_dropped, group_by, merge, show_category, format, save_plot):
     groups = {}
     all_categories = set(
         [
@@ -142,6 +149,14 @@ def stats(out, show_dropped, group_by, show_category, format, save_plot):
                 ]:
                     if is_category:
                         stat("count:" + category)
+
+    for spec in merge:
+        new_category, old_categories = spec.split("=", maxsplit=1)
+        old_categories = old_categories.split(",")
+        for group in groups.values():
+            group[new_category] = sum(group[category] for category in old_categories)
+        all_categories -= set(old_categories)
+        all_categories.add(new_category)
 
     regexes = [pattern_to_regex(pattern) for pattern in show_category]
     shown_categories = [
