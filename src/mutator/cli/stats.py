@@ -1,8 +1,11 @@
+import csv
 import pathlib
+import sys
 from collections import Counter
 
 import click
 
+from ..helper.pattern import pattern_to_regex
 from ..helper.timed import timed
 from ..result import Result
 from ..store import MutantStore
@@ -13,11 +16,12 @@ from ..store import MutantStore
 )
 @click.option(
     "-o",
-    "--out-dir",
+    "--out",
     type=pathlib.Path,
     default=pathlib.Path("out", "mutants"),
     show_default=True,
-    help="Path to mutant directories.",
+    help="Path to mutant directories or a csv file that was "
+    + "previously exported by this command.",
 )
 @click.option(
     "--show-dropped",
@@ -37,93 +41,131 @@ from ..store import MutantStore
 )
 @click.option(
     "-c",
-    "--csv",
-    is_flag=True,
-    default=False,
+    "--show-category",
+    multiple=True,
+    default=["count:*", "llm_stat:*", "annotation:*"],
+)
+@click.option(
+    "-f",
+    "--format",
+    default="table",
+    type=click.Choice(["table", "csv", "plot"]),
     show_default=True,
-    help="Output in csv format",
+    help="Specify output format.",
+)
+@click.option(
+    "-p",
+    "--save-plot",
+    default=None,
+    type=pathlib.Path,
+    show_default=True,
+    help="If format is plot, save the plot to this file.",
 )
 @timed
-def stats(out_dir, group_by, show_dropped, csv):
-    store = MutantStore(out_dir)
+def stats(out, show_dropped, group_by, show_category, format, save_plot):
     groups = {}
-    count_categories = [
-        "mutants",
-        "dropped",
-        "kept",
-        "missed",
-        "caught",
-        "syntax_error",
-        "timeout",
-    ]
-    llm_categories = set()
-    annotation_categories = set()
-
-    test_result = Result.read(out_dir / "test-result.json")
-    for module, target, path, _, metadata in store.list_mutants():
-        key = []
-        for key_name in group_by:
-            key.append(metadata.get(key_name, "unknown"))
-        key = tuple(key)
-        group = groups.setdefault(key, Counter())
-
-        def stat(category: str, value=1):
-            group.update({category: value})  # noqa: B023
-
-        stat("mutants")
-        if metadata.get("dropped", False):
-            stat("dropped")
-            if not show_dropped:
-                continue
-        else:
-            stat("kept")
-        for annotation in metadata.get("annotations", []):
-            annotation_categories.add(annotation)
-            stat(annotation)
-        for llm_stat, value in metadata.get("llm_stats", {}).items():
-            llm_categories.add(llm_stat)
-            stat(llm_stat, value)
-        if test_result:
-            try:
-                result = test_result[module][target][path.stem]
-            except AttributeError:
-                continue
-            syntax_error = result.get("syntax_error", False)
-            timeout = result.get("timeout", False)
-            caught = result.get("caught", False)
-            missed = not caught
-            caught = caught and not timeout and not syntax_error
-            for category, is_category in [
-                ("caught", caught),
-                ("syntax_error", syntax_error),
-                ("timeout", timeout),
-                ("missed", missed),
-            ]:
-                if is_category:
-                    stat(category)
-
-    llm_categories = list(sorted(llm_categories))
-    annotation_categories = list(sorted(annotation_categories))
-    if csv:
-        all_categories = [
-            *count_categories,
-            *llm_categories,
-            *annotation_categories,
+    all_categories = set(
+        [
+            "count:" + category
+            for category in [
+                "mutants",
+                "dropped",
+                "kept",
+                "missed",
+                "caught",
+                "syntax_error",
+                "timeout",
+            ]
         ]
-        print(
-            *group_by,
-            *all_categories,
-            sep=",",
+    )
+    if out.suffix == ".csv":
+        with open(out) as out_file:
+            header, *rows = csv.reader(out_file)
+        for row in rows:
+
+            def find_key(name: str):
+                index = header.index(name)
+                if index < 0:
+                    print(
+                        "The specified csv file does not contain",
+                        f"the group-by key {name}, aborting.",
+                    )
+                    sys.exit(1)
+                return row[index]  # noqa: B023
+
+            key = tuple(find_key(key_name) for key_name in group_by)
+            group = groups.setdefault(key, Counter())
+            for category, value in zip(header, row, strict=True):
+                try:
+                    value = int(value)
+                except ValueError:
+                    continue
+                all_categories.add(category)
+                group.update({category: value})
+    else:
+        store = MutantStore(out)
+        test_result = Result.read(out / "test-result.json")
+        for module, target, path, _, metadata in store.list_mutants():
+            key = tuple(metadata.get(key_name, "unknown") for key_name in group_by)
+            group = groups.setdefault(key, Counter())
+
+            def stat(category: str, value=1):
+                all_categories.add(category)
+                group.update({category: value})  # noqa: B023
+
+            stat("count:mutants")
+            if metadata.get("dropped", False):
+                stat("count:dropped")
+                if not show_dropped:
+                    continue
+            else:
+                stat("count:kept")
+            for annotation in metadata.get("annotations", []):
+                stat("annotation:" + annotation)
+            for llm_stat, value in metadata.get("llm_stats", {}).items():
+                stat("llm_stat:" + llm_stat, value)
+            if test_result:
+                try:
+                    result = test_result[module][target][path.stem]
+                except AttributeError:
+                    continue
+                syntax_error = result.get("syntax_error", False)
+                timeout = result.get("timeout", False)
+                caught = result.get("caught", False)
+                missed = not caught
+                caught = caught and not timeout and not syntax_error
+                for category, is_category in [
+                    ("caught", caught),
+                    ("syntax_error", syntax_error),
+                    ("timeout", timeout),
+                    ("missed", missed),
+                ]:
+                    if is_category:
+                        stat("count:" + category)
+
+    regexes = [pattern_to_regex(pattern) for pattern in show_category]
+    shown_categories = [
+        category
+        for regex in regexes
+        for category in sorted(
+            category
+            for category in all_categories
+            if regex.fullmatch(category) is not None
+        )
+    ]
+    if format == "csv":
+        writer = csv.writer(sys.stdout)
+        writer.writerow(
+            [
+                *group_by,
+                *shown_categories,
+            ]
         )
         for key, group in groups.items():
-            values = [group[category] for category in all_categories]
-            print(*key, *values, sep=",")
-    else:
-        category_sections = [
-            ("counts", count_categories),
-            ("llm", llm_categories),
-            ("annotations", annotation_categories),
-        ]
+            values = [group[category] for category in shown_categories]
+            writer.writerow([*key, *values])
+        return
+    if format == "table":
         for key, group in groups.items():
             print("=" * 40)
             for name, value in zip(group_by, key, strict=True):
@@ -131,12 +173,75 @@ def stats(out_dir, group_by, show_dropped, csv):
                 print(f"{name:^40}")
             if len(group_by) == 0:
                 print(f"{'total':^40}")
-            for section, annotation_categories in category_sections:
-                if len(annotation_categories) == 0:
+            last_section = None
+            for category in shown_categories:
+                section, category_name = category.split(":", maxsplit=1)
+                if len(category_name) == 0:
                     continue
-                section = f" {section} "
-                print(f"{section:-^40}")
-                for category in annotation_categories:
-                    count = group[category]
-                    category = category + ":"
-                    print(f"{category:<30}{count:>10}")
+                if section != last_section:
+                    last_section = section
+                    section = f" {section} "
+                    print(f"{section:-^40}")
+                count = group[category]
+                category_name = category_name + ":"
+                print(f"{category_name:<30}{count:>10}")
+        return
+    if format == "plot":
+        import matplotlib.pyplot as plt
+
+        plt.figure(dpi=300)
+        axes = plt.subplot()
+        bottom = [0] * len(groups)
+        groups = list(sorted(groups.items()))
+        for category in shown_categories:
+            _, label = category.split(":", maxsplit=1)
+            heights = [group[category] for _, group in groups]
+            axes.bar(
+                [
+                    "/".join(key_shorthand(key_part) for key_part in key)
+                    for key, _ in groups
+                ],
+                heights,
+                width=0.5,
+                label=label,
+                bottom=bottom,
+            )
+            for index, height in enumerate(heights):
+                bottom[index] += height
+        axes.set_ylim(bottom=0, top=max(*bottom) * 1.05)
+        plt.subplots_adjust(right=0.8)
+        plt.legend(loc="upper left", bbox_to_anchor=(1, 1), reverse=True)
+        if save_plot is None:
+            plt.show()
+        else:
+            aspect = 4 / 3
+            scale = 1.2
+            plt.tight_layout(rect=(0, 0, aspect * scale, scale))
+            plt.savefig(save_plot, bbox_inches="tight")
+
+
+shorthands = {
+    # models
+    "google/codegemma-1.1-2b": "2b",
+    "google/codegemma-7b": "7b",
+    # generators
+    "comment_rewrite": "crn",
+    "comment_rewrite_context": "crc",
+    "docstring": "ds",
+    "infilling": "if",
+    "prefix": "pf",
+    # configs
+    "beam_search": "bs_d",
+    "beam_search_cold": "bs_c",
+    "beam_search_hot": "bs_h",
+    "multi_sample": "ms_d",
+    "multi_sample_cold": "ms_c",
+    "multi_sample_hot": "ms_h",
+}
+
+
+def key_shorthand(key: str) -> str:
+    try:
+        return shorthands[key]
+    except KeyError:
+        return key

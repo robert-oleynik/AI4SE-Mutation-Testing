@@ -1,9 +1,9 @@
 import pathlib
-import re
 import typing
 
 import tree_sitter as ts
 
+from .helper.pattern import pattern_to_regex
 from .treesitter.python import tsLang, tsParser
 
 _tsFunctionQuery = tsLang.query("""
@@ -41,9 +41,7 @@ class Symbol:
 class Filter:
     class Matcher:
         def __init__(self, f: str):
-            self.regex = re.compile(
-                "^" + f.replace(".", "\\.").replace("*", ".*") + "$"
-            )
+            self.regex = pattern_to_regex(f)
 
         def match(self, module: str, symbol: str) -> bool:
             return self.regex.fullmatch(f"{module}:{symbol}") is not None
