@@ -223,8 +223,6 @@ def stats(
     if format in ["bar_chart", "pie_chart"]:
         import matplotlib.pyplot as plt
 
-        groups = list(sorted(groups.items()))
-
         def key_label(key: tuple) -> list[str]:
             parts = (
                 (abbreviate_key_part(key_part) for key_part in key)
@@ -233,6 +231,7 @@ def stats(
             )
             return "/".join(parts)
 
+        groups = list(sorted(groups.items(), key=lambda item: key_label(item[0])))
         labels = [category.split(":", maxsplit=1)[1] for category in shown_categories]
         if format == "bar_chart":
             figure, axes = plt.subplots()
