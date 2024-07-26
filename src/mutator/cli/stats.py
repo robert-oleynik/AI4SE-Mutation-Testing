@@ -66,7 +66,9 @@ from ..store import MutantStore
     "-f",
     "--format",
     default="table",
-    type=click.Choice(["table", "csv", "bar_chart", "pie_chart"]),
+    type=click.Choice(
+        ["table", "csv", "stacked_bar_chart", "grouped_bar_chart", "pie_chart"]
+    ),
     show_default=True,
     help="Specify output format.",
 )
@@ -220,7 +222,7 @@ def stats(
                 category_name = category_name + ":"
                 print(f"{category_name:<30}{count:>10}")
         return
-    if format in ["bar_chart", "pie_chart"]:
+    if format.endswith("_chart"):
         import matplotlib.pyplot as plt
 
         def key_label(key: tuple) -> list[str]:
@@ -233,16 +235,42 @@ def stats(
 
         groups = list(sorted(groups.items(), key=lambda item: key_label(item[0])))
         labels = [category.split(":", maxsplit=1)[1] for category in shown_categories]
-        if format == "bar_chart":
+        if format.endswith("_bar_chart"):
             figure, axes = plt.subplots()
-            bottom = [0] * len(groups)
-            for category in shown_categories:
-                bar_labels = [key_label(key) for key, _ in groups]
-                heights = [group[category] for _, group in groups]
-                axes.bar(bar_labels, heights, width=0.5, bottom=bottom)
-                for index, height in enumerate(heights):
-                    bottom[index] += height
-            axes.set_ylim(bottom=0, top=max(*bottom) * 1.05)
+            if format == "stacked_bar_chart":
+                bottom = [0] * len(groups)
+                for category in shown_categories:
+                    bar_labels = [key_label(key) for key, _ in groups]
+                    heights = [group[category] for _, group in groups]
+                    axes.bar(bar_labels, heights, width=0.5, bottom=bottom)
+                    for index, height in enumerate(heights):
+                        bottom[index] += height
+                max_height = max(*bottom)
+            elif format == "grouped_bar_chart":
+                width = 0.5
+                gap = width * 4
+                step = width * len(shown_categories) + gap
+                xs = [x * step for x in range(len(groups))]
+                offset = 0
+                for category in shown_categories:
+                    axes.bar(
+                        [x + offset for x in xs],
+                        [group[category] for _, group in groups],
+                        width,
+                    )
+                    offset += width
+                axes.set_xticks(
+                    [x + width * (len(shown_categories) - 1) / 2 for x in xs],
+                    labels=[key_label(key) for key, _ in groups],
+                )
+                max_height = max(
+                    *[
+                        group[category]
+                        for _, group in groups
+                        for category in shown_categories
+                    ]
+                )
+            axes.set_ylim(bottom=0, top=max_height * 1.05)
             plt.legend(
                 labels,
                 loc="upper left",
