@@ -7,9 +7,9 @@ import tempfile
 
 import click
 
+from ..helper.pattern import Filter
 from ..helper.timed import timed
 from ..result import Result
-from ..source import Filter
 from ..store import MutantStore
 
 
@@ -158,7 +158,7 @@ def test(out_dir, project, filter, timeout, git_reset, test_dropped, jobs):
         for module_name, module in mutants.items()
         for target_name, target in sorted(list(module.items()), key=lambda v: v[0])
         for i, (mutant, source) in enumerate(target)
-        if filters.match(module_name, target_name)
+        if filters.should_include(f"{module_name}:{target_name}")
     ]
     timeout_count = 0
     syntax_error_count = 0

@@ -16,8 +16,9 @@ from ..generator import (
     PrefixGenerator,
     Prompt,
 )
+from ..helper.pattern import Filter
 from ..helper.timed import timed
-from ..source import Filter, SourceFile
+from ..source import SourceFile
 from ..store import MutantStore
 from ..treesitter.python import tsParser
 from ..treesitter.tree_walker import compare

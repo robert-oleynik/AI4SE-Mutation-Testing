@@ -6,7 +6,7 @@ from collections import Counter
 
 import click
 
-from ..helper.pattern import pattern_to_regex
+from ..helper.pattern import Pattern
 from ..helper.timed import timed
 from ..result import Result
 from ..store import MutantStore
@@ -179,14 +179,12 @@ def stats(
         all_categories -= set(old_categories)
         all_categories.add(new_category)
 
-    regexes = [pattern_to_regex(pattern) for pattern in show_category]
+    category_patterns = [Pattern(category) for category in show_category]
     shown_categories = [
         category
-        for regex in regexes
+        for pattern in category_patterns
         for category in sorted(
-            category
-            for category in all_categories
-            if regex.fullmatch(category) is not None
+            category for category in all_categories if pattern.matches(category)
         )
     ]
     if format == "csv":

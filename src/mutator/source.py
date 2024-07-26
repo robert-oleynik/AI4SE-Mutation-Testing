@@ -3,7 +3,7 @@ import typing
 
 import tree_sitter as ts
 
-from .helper.pattern import pattern_to_regex
+from .helper.pattern import Filter
 from .treesitter.python import tsLang, tsParser
 
 _tsFunctionQuery = tsLang.query("""
@@ -38,30 +38,6 @@ class Symbol:
         self.name = self.name[:-1]
 
 
-class Filter:
-    class Matcher:
-        def __init__(self, f: str):
-            self.regex = pattern_to_regex(f)
-
-        def match(self, module: str, symbol: str) -> bool:
-            return self.regex.fullmatch(f"{module}:{symbol}") is not None
-
-    def __init__(self, filters: list[str]):
-        self.include = []
-        self.exclude = []
-        for f in filters:
-            if f.startswith("!"):
-                self.exclude.append(self.Matcher(f[1:]))
-            else:
-                self.include.append(self.Matcher(f))
-
-    def match(self, module: str, symbol: str) -> bool:
-        def _match(m):
-            return m.match(module, symbol)
-
-        return any(map(_match, self.include)) and not any(map(_match, self.exclude))
-
-
 class SourceFile:
     """
     Stores all information associated with a python source file.
@@ -83,7 +59,7 @@ class SourceFile:
         lines = self.content.splitlines(keepends=True)
         for _, captures in _tsFunctionQuery.matches(self.tree.root_node):
             symbol = Symbol(self.content, captures["target"])
-            if filter.match(self.module, symbol.name):
+            if filter.should_include(f"{self.module}:{symbol.name}"):
                 self.symbols.append(symbol)
         self.targets = [MutantTarget(self, lines, symbol) for symbol in self.symbols]
 
