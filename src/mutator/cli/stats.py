@@ -322,8 +322,8 @@ abbreviations = {
     "google/codegemma-1.1-2b": "2b",
     "google/codegemma-7b": "7b",
     # generators
-    "comment_rewrite": "crn",
-    "comment_rewrite_context": "crc",
+    "comment_rewrite_no_context": "crn",
+    "comment_rewrite": "crc",
     "docstring": "ds",
     "infilling": "if",
     "prefix": "pf",
