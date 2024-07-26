@@ -1,4 +1,5 @@
 import csv
+import math
 import pathlib
 import sys
 from collections import Counter
@@ -44,7 +45,8 @@ from ..store import MutantStore
     "--merge",
     multiple=True,
     default=[],
-    help="Merge multiple categories into one. Format: new_category=old_category_1,old_category_2,old_category_3"
+    help="Merge multiple categories into one. "
+    + "Format: new_category=old_category_1,old_category_2,old_category_3",
 )
 @click.option(
     "-c",
@@ -56,7 +58,7 @@ from ..store import MutantStore
     "-f",
     "--format",
     default="table",
-    type=click.Choice(["table", "csv", "plot"]),
+    type=click.Choice(["table", "csv", "bar_chart", "pie_chart"]),
     show_default=True,
     help="Specify output format.",
 )
@@ -66,7 +68,7 @@ from ..store import MutantStore
     default=None,
     type=pathlib.Path,
     show_default=True,
-    help="If format is plot, save the plot to this file.",
+    help="If format is a type of plot, save the plot to this file.",
 )
 @timed
 def stats(out, show_dropped, group_by, merge, show_category, format, save_plot):
@@ -201,31 +203,53 @@ def stats(out, show_dropped, group_by, merge, show_category, format, save_plot):
                 category_name = category_name + ":"
                 print(f"{category_name:<30}{count:>10}")
         return
-    if format == "plot":
+    if format in ["bar_chart", "pie_chart"]:
         import matplotlib.pyplot as plt
 
-        plt.figure(dpi=300)
-        axes = plt.subplot()
-        bottom = [0] * len(groups)
         groups = list(sorted(groups.items()))
-        for category in shown_categories:
-            _, label = category.split(":", maxsplit=1)
-            heights = [group[category] for _, group in groups]
-            axes.bar(
-                [
-                    "/".join(key_shorthand(key_part) for key_part in key)
-                    for key, _ in groups
-                ],
-                heights,
-                width=0.5,
-                label=label,
-                bottom=bottom,
+
+        def key_label(key: tuple) -> list[str]:
+            return "/".join(key_shorthand(key_part) for key_part in key)
+
+        labels = [category.split(":", maxsplit=1)[1] for category in shown_categories]
+        if format == "bar_chart":
+            figure, axes = plt.subplots()
+            bottom = [0] * len(groups)
+            for category in shown_categories:
+                bar_labels = [key_label(key) for key, _ in groups]
+                heights = [group[category] for _, group in groups]
+                axes.bar(bar_labels, heights, width=0.5, bottom=bottom)
+                for index, height in enumerate(heights):
+                    bottom[index] += height
+            axes.set_ylim(bottom=0, top=max(*bottom) * 1.05)
+            plt.legend(
+                labels,
+                loc="upper left",
+                bbox_to_anchor=(1, 1),
+                reverse=True,
             )
-            for index, height in enumerate(heights):
-                bottom[index] += height
-        axes.set_ylim(bottom=0, top=max(*bottom) * 1.05)
+        elif format == "pie_chart":
+            num_charts = len(groups)
+            num_rows = math.floor(math.sqrt(num_charts))
+            num_columns = math.ceil(num_charts / num_rows)
+            figure, group_axes = plt.subplots(num_rows, num_columns)
+            group_axes = group_axes.flatten()
+            for index, ((key, group), axes) in enumerate(
+                zip(groups, group_axes, strict=False)
+            ):
+                axes.pie([group[category] for category in shown_categories])
+                axes.set_title(key_label(key))
+                if index == num_columns - 1:
+                    axes.legend(
+                        labels=labels,
+                        loc="upper left",
+                        bbox_to_anchor=(1, 1),
+                        reverse=True,
+                    )
+            for axes in group_axes[num_charts:]:
+                axes.axis("off")
+        figure.dpi = 300
         plt.subplots_adjust(right=0.8)
-        plt.legend(loc="upper left", bbox_to_anchor=(1, 1), reverse=True)
         if save_plot is None:
             plt.show()
         else:
