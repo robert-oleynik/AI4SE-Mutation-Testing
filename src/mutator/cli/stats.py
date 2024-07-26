@@ -32,6 +32,13 @@ from ..store import MutantStore
     help="Include stats of dropped mutants.",
 )
 @click.option(
+    "--only-annotated",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Only include stats from mutants that have annotations.",
+)
+@click.option(
     "-g",
     "--group-by",
     type=click.Choice(["model_or_checkpoint", "generator", "config_name"]),
@@ -84,6 +91,7 @@ from ..store import MutantStore
 def stats(
     out,
     show_dropped,
+    only_annotated,
     group_by,
     abbreviate,
     merge,
@@ -140,6 +148,9 @@ def stats(
             def stat(category: str, value=1):
                 all_categories.add(category)
                 group.update({category: value})  # noqa: B023
+
+            if only_annotated and len(metadata.get("annotations", [])) == 0:
+                continue
 
             stat("count:mutants")
             if metadata.get("dropped", False):
