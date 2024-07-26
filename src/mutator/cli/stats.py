@@ -41,6 +41,14 @@ from ..store import MutantStore
     + "Specify none to get a total across all mutants.",
 )
 @click.option(
+    "-a/-A",
+    "--abbreviate/--no-abbreviate",
+    is_flag=True,
+    default=True,
+    show_default=True,
+    help="Abbreviate group labels in plots.",
+)
+@click.option(
     "-m",
     "--merge",
     multiple=True,
@@ -71,7 +79,16 @@ from ..store import MutantStore
     help="If format is a type of plot, save the plot to this file.",
 )
 @timed
-def stats(out, show_dropped, group_by, merge, show_category, format, save_plot):
+def stats(
+    out,
+    show_dropped,
+    group_by,
+    abbreviate,
+    merge,
+    show_category,
+    format,
+    save_plot,
+):
     groups = {}
     all_categories = set(
         [
@@ -209,7 +226,12 @@ def stats(out, show_dropped, group_by, merge, show_category, format, save_plot):
         groups = list(sorted(groups.items()))
 
         def key_label(key: tuple) -> list[str]:
-            return "/".join(key_shorthand(key_part) for key_part in key)
+            parts = (
+                (abbreviate_key_part(key_part) for key_part in key)
+                if abbreviate
+                else key
+            )
+            return "/".join(parts)
 
         labels = [category.split(":", maxsplit=1)[1] for category in shown_categories]
         if format == "bar_chart":
@@ -259,7 +281,7 @@ def stats(out, show_dropped, group_by, merge, show_category, format, save_plot):
             plt.savefig(save_plot, bbox_inches="tight")
 
 
-shorthands = {
+abbreviations = {
     # models
     "google/codegemma-1.1-2b": "2b",
     "google/codegemma-7b": "7b",
@@ -279,8 +301,8 @@ shorthands = {
 }
 
 
-def key_shorthand(key: str) -> str:
+def abbreviate_key_part(key: str) -> str:
     try:
-        return shorthands[key]
+        return abbreviations[key]
     except KeyError:
         return key
