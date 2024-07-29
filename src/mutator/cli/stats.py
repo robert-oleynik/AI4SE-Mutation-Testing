@@ -311,7 +311,7 @@ def stats(
         if save_plot is None:
             plt.show()
         else:
-            aspect = 4 / 3
+            aspect = 11 / 9 if format == "pie_chart" else 4 / 3
             scale = 1.2
             plt.tight_layout(rect=(0, 0, aspect * scale, scale))
             plt.savefig(save_plot, bbox_inches="tight")
