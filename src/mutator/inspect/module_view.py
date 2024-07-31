@@ -20,12 +20,12 @@ class Target(ListItem):
         self._mutants = mutants
 
     def render(self) -> RenderResult:
-        if self.is_everything_caught():
+        if self.is_everything_dead():
             return f"[green]{self._name}[/green]"
         return f"[red]{self._name}[/red]"
 
-    def is_everything_caught(self) -> bool:
-        return all(m["caught"] for _, m in self._mutants)
+    def is_everything_dead(self) -> bool:
+        return all(m["dead"] for _, m in self._mutants)
 
 
 class TargetList(Widget):
@@ -34,7 +34,7 @@ class TargetList(Widget):
 
         def mutants_sort_key(item):
             _, mutant = item
-            return mutant["caught"]
+            return mutant["dead"]
 
         targets = [
             Target(
@@ -44,7 +44,7 @@ class TargetList(Widget):
             for modname, module in result.modules.items()
             for name, mutants in module.items()
         ]
-        self.modules = sorted(targets, key=lambda m: m.is_everything_caught())
+        self.modules = sorted(targets, key=lambda m: m.is_everything_dead())
 
     def compose(self) -> ComposeResult:
         yield ListView(*self.modules)
@@ -76,19 +76,19 @@ class TargetHeader(Widget):
                 f"[{self._selected + 1}/{len(self._mutants)}] (id {id}) {self._name}"
             )
             label = ""
-            if mutant["caught"]:
+            if mutant["dead"]:
                 label += "[green]"
                 if mutant.get("syntax_error", False):
                     label += "syntax error"
                 elif mutant.get("timeout", False):
                     label += "timeout"
                 else:
-                    label += "caught"
+                    label += "dead"
                 label += "[/green]"
                 self.remove_class("invalid")
                 self.add_class("valid")
             else:
-                label += "[red]missed[/red]"
+                label += "[red]live[/red]"
                 self.remove_class("valid")
                 self.add_class("invalid")
             self.lbl_mutant.update(label)
@@ -176,7 +176,7 @@ class TargetInfo(Widget):
         try:
             file = (self.out_dir / target["file"]).with_suffix(".json")
             metadata = json.load(open(file))
-            for key in ["mutant", "mutation", "llm"]:
+            for key in ["mutant", "llm"]:
                 if key in metadata:
                     del metadata[key]
             self._meta = metadata

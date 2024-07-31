@@ -107,8 +107,8 @@ def stats(
                 "mutants",
                 "dropped",
                 "kept",
-                "missed",
-                "caught",
+                "live",
+                "dead",
                 "syntax_error",
                 "timeout",
             ]
@@ -170,14 +170,14 @@ def stats(
                     continue
                 syntax_error = result.get("syntax_error", False)
                 timeout = result.get("timeout", False)
-                caught = result.get("caught", False)
-                missed = not caught
-                caught = caught and not timeout and not syntax_error
+                dead = result.get("dead", False)
+                live = not dead
+                dead = dead and not timeout and not syntax_error
                 for category, is_category in [
-                    ("caught", caught),
+                    ("dead", dead),
                     ("syntax_error", syntax_error),
                     ("timeout", timeout),
-                    ("missed", missed),
+                    ("live", live),
                 ]:
                     if is_category:
                         stat("count:" + category)

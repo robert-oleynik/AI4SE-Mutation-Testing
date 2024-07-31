@@ -32,7 +32,7 @@
 
 # Report
 
-- Measure number of syntax errors, caught mutants, missed mutants and timeouts
+- Measure number of syntax errors, dead mutants, live mutants and timeouts
   - Per generator
   - Per model + fine-tuned models
   - Against traditional mutation testers

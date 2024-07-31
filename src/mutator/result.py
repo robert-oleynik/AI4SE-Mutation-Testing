@@ -28,7 +28,7 @@ class Result:
         mutant: str,
         file: pathlib.Path,
         source: pathlib.Path,
-        is_caught: bool,
+        is_dead: bool,
         is_syntax_error: bool,
         is_timeout: bool,
         output: str,
@@ -40,7 +40,7 @@ class Result:
         if mutant not in self.modules[module][symbol]:
             self.modules[module][symbol][mutant] = {
                 "file": f"{file}",
-                "caught": is_caught,
+                "dead": is_dead,
                 "syntax_error": is_syntax_error,
                 "source": source,
                 "timeout": is_timeout,

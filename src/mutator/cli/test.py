@@ -62,14 +62,14 @@ def _run_tester(x):
         output_err = "<timeout>"
 
     is_syntax_error = exit_code is not None and exit_code > 1 and not is_timeout
-    is_caught = exit_code != 0
+    is_dead = exit_code != 0
     output = output if output != "" else output_err
     return (
         module_name,
         target_name,
         mutant,
         source,
-        is_caught,
+        is_dead,
         is_syntax_error,
         is_timeout,
         output,
@@ -162,14 +162,14 @@ def test(out_dir, project, filter, timeout, git_reset, test_dropped, jobs):
     ]
     timeout_count = 0
     syntax_error_count = 0
-    caught = 0
+    dead = 0
     count = len(targets)
 
     def status_update(name: str, index: int):
-        missed = index - caught - syntax_error_count - timeout_count  # noqa: B023
+        live = index - dead - syntax_error_count - timeout_count  # noqa: B023
         print(
             f"{name:<80} [{index}/{count}]",  # noqa: B023
-            f"caught: {caught} missed: {missed}",  # noqa: B023
+            f"dead: {dead} live: {live}",  # noqa: B023
             f"syntax errors: {syntax_error_count} timeout: {timeout_count}",  # noqa: B023
             end="\r",
         )
@@ -182,7 +182,7 @@ def test(out_dir, project, filter, timeout, git_reset, test_dropped, jobs):
                 target_name,
                 mutant,
                 source,
-                is_caught,
+                is_dead,
                 is_syntax_error,
                 is_timeout,
                 output,
@@ -194,13 +194,13 @@ def test(out_dir, project, filter, timeout, git_reset, test_dropped, jobs):
                 mutant.stem,
                 mutant.absolute().relative_to(out_dir.resolve("./mutants")),
                 source,
-                is_caught,
+                is_dead,
                 is_syntax_error,
                 is_timeout,
                 output,
             )
-            if is_caught and not is_syntax_error and not is_timeout:
-                caught += 1
+            if is_dead and not is_syntax_error and not is_timeout:
+                dead += 1
             if is_syntax_error:
                 syntax_error_count += 1
             if is_timeout:
