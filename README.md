@@ -66,12 +66,11 @@ with the usage of LLMs. The generators used in this project can be divided into 
 
 2. Reusing parts of the existing implementation and prompting the LLM to rewrite parts of it:
 
-	- The `prefix` generator, will provide the same context as the `full_body` generator.
-	  But unlike this generator, `prefix` will arbitrary cut off the tokens inside
-	  the source function and prompt the LLM with this result.
-	- The `infilling` generator, will work similar using the same context. But instead of
-	  cutting of tokens it relies on TreeSitter to sample expression statements of the source
-	  function and prompt the LLM to regenerate this.
+	- The `prefix` generator will arbitrarily cut off the source function after a random token
+	  and prompt the LLM with this result.
+	- The `infilling` generator will work similarly using the same context. But instead of
+	  cutting of tokens, it relies on TreeSitter to sample expressions or statements of the source
+	  function and prompt the LLM to regenerate them.
 
 #### Generator Configs
 
@@ -86,6 +85,8 @@ retries/repetitions a generator is supposed to do. Therefore, we provide followi
 - For each of the above, two additional configs with suffixes `_cold` and `_hold`, that set the
   temperature lower and higher, respectively.
 
+Each config will produce the same number of mutants - 8 per source function.
+
 #### Generating Mutants
 
 To generate mutants, we will first need a project we want to test. For this, we will use the
@@ -97,11 +98,11 @@ cd flask
 ```
 
 Now we can use our tool on this repository to generate mutants.
-We will start with the `infilling` generator with the `single_result`.
+We will start with the `infilling` generator with the `multi_sample`.
 These can be set by the `-g/--generator` and `-c/--config` respectively.
 
 ```
-mutator generate --generator infilling --config single_result --filter "flask.app:Flask.*"
+mutator generate --generator infilling --config multi_sample --filter "flask.app:Flask.*"
 ```
 
 > **Note:**
@@ -134,6 +135,8 @@ Like `mutator generate` the `-o/--out-dir` can be used to change mutants work di
 The results of this test run can be viewed with `mutator inspect`.
 This will open a TUI application showing the mutant as a diff and some additional
 information including test output.
+Use the list on the left to select a source function, the horizontal arrow keys to
+select a mutant and ctrl + the horizontal arrow keys to cycle through the LLM's output stages.
 Like `mutator generate` and `mutator test` the `-o/--out-dir` can be used to change
 mutants work directory.
 
