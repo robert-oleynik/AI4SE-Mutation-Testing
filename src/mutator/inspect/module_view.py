@@ -25,7 +25,7 @@ class Target(ListItem):
         return f"[red]{self._name}[/red]"
 
     def is_everything_dead(self) -> bool:
-        return all(m["dead"] for _, m in self._mutants)
+        return all(m.get("dead") or m["caught"] for _, m in self._mutants)
 
 
 class TargetList(Widget):
@@ -34,7 +34,7 @@ class TargetList(Widget):
 
         def mutants_sort_key(item):
             _, mutant = item
-            return mutant["dead"]
+            return mutant.get("dead") or mutant["caught"]
 
         targets = [
             Target(
@@ -76,7 +76,7 @@ class TargetHeader(Widget):
                 f"[{self._selected + 1}/{len(self._mutants)}] (id {id}) {self._name}"
             )
             label = ""
-            if mutant["dead"]:
+            if mutant.get("dead") or mutant["caught"]:
                 label += "[green]"
                 if mutant.get("syntax_error", False):
                     label += "syntax error"
@@ -176,7 +176,7 @@ class TargetInfo(Widget):
         try:
             file = (self.out_dir / target["file"]).with_suffix(".json")
             metadata = json.load(open(file))
-            for key in ["mutant", "llm"]:
+            for key in ["mutant", "mutation", "llm"]:
                 if key in metadata:
                     del metadata[key]
             self._meta = metadata
