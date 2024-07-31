@@ -64,6 +64,14 @@ from ..store import MutantStore
     + "Format: new_category=old_category_1,old_category_2,old_category_3",
 )
 @click.option(
+    "-n",
+    "--normalize",
+    default=None,
+    type=str,
+    show_default=True,
+    help="Normalize this category to 1 (100%).",
+)
+@click.option(
     "-c",
     "--show-category",
     multiple=True,
@@ -95,6 +103,7 @@ def stats(
     group_by,
     abbreviate,
     merge,
+    normalize,
     show_category,
     format,
     save_plot,
@@ -190,6 +199,27 @@ def stats(
         all_categories -= set(old_categories)
         all_categories.add(new_category)
 
+    def key_label(key: tuple) -> list[str]:
+        parts = (
+            (abbreviate_key_part(key_part) for key_part in key) if abbreviate else key
+        )
+        return "/".join(parts)
+
+    if normalize is not None:
+        for key, group in groups.items():
+            normalized_value = group[normalize]
+            if normalized_value == 0:
+                print(
+                    "warning:",
+                    key_label(key),
+                    "could not be normalized, as it has value 0 for the category",
+                    normalize,
+                )
+                continue
+            factor = 100 / normalized_value
+            for category, value in group.items():
+                group[category] = value * factor
+
     category_patterns = [Pattern(category) for category in show_category]
     shown_categories = [
         category
@@ -233,14 +263,7 @@ def stats(
         return
     if format.endswith("_chart"):
         import matplotlib.pyplot as plt
-
-        def key_label(key: tuple) -> list[str]:
-            parts = (
-                (abbreviate_key_part(key_part) for key_part in key)
-                if abbreviate
-                else key
-            )
-            return "/".join(parts)
+        import matplotlib.ticker as mtick
 
         groups = list(sorted(groups.items(), key=lambda item: key_label(item[0])))
         labels = [category.split(":", maxsplit=1)[1] for category in shown_categories]
@@ -279,7 +302,10 @@ def stats(
                         for category in shown_categories
                     ]
                 )
-            axes.set_ylim(bottom=0, top=max_height * 1.05)
+            if normalize is None:
+                axes.set_ylim(bottom=0, top=max_height * 1.05)
+            else:
+                axes.yaxis.set_major_formatter(mtick.PercentFormatter())
             plt.legend(
                 labels,
                 loc="upper left",
