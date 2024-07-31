@@ -80,10 +80,11 @@ modify the arguments passed to the LLMs generation method. We will refer to thes
 generator configs. In addition to the LLM arguments these configs also contains the number of
 retries/repetitions a generator is supposed to do. Therefore, we provide following configs:
 
-- `single_result` Prompts the LLM for a single with a max of `4096` new tokens.
-- `multi_sample` Prompts the LLM to return multiple return sequences with sampling enabled.
-- `beam_search` Prompts the LLM to return multiple return sequences with beam search and
+- `multi_sample` prompts the LLM to return multiple return sequences with sampling enabled.
+- `beam_search` prompts the LLM to return multiple return sequences with beam search and
   sampling enabled.
+- For each of the above, two additional configs with suffixes `_cold` and `_hold`, that set the
+  temperature lower and higher, respectively.
 
 #### Generating Mutants
 
